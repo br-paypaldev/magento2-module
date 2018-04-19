@@ -1,0 +1,54 @@
+/* you may have to adjust the selector a bit*/
+
+@font-face {
+  font-family: 'icomoon';
+  src:  url('fonts/icomoon.eot?cri69m');
+  src:  url('fonts/icomoon.eot?cri69m#iefix') format('embedded-opentype'),
+    url('fonts/icomoon.ttf?cri69m') format('truetype'),
+    url('fonts/icomoon.woff?cri69m') format('woff'),
+    url('fonts/icomoon.svg?cri69m#icomoon') format('svg');
+  font-weight: normal;
+  font-style: normal;
+}
+
+[class^="icon-"], [class*=" icon-"] {
+  /* use !important to prevent issues with browser extensions that change fonts */
+  font-family: 'icomoon' !important;
+  speak: none;
+  font-style: normal;
+  font-weight: normal;
+  font-variant: normal;
+  text-transform: none;
+  line-height: 1;
+
+  /* Better Font Rendering =========== */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.icon-paypal:before {
+  content: "\e900";
+}
+.icon-paypal2:before {
+  content: "\e901";
+}
+.icon-brand:before {
+  content: "\e902";
+  color: #00457c;
+}
+.icon-paypal3:before {
+  content: "\e902";
+  color: #00457c;
+}
+.icon-paypal4:before {
+  content: "\ead8";
+}
+
+.admin__menu .level-0.item-paypalbr > a:before {
+	font-family: 'icomoon' !important;
+    content: '\e900';
+}
+
+.admin__data-grid-wrap .data-grid .data-grid-draggable .data-row .data-grid-thumbnail-cell .admin__control-thumbnail > img:before {
+    border:none;
+}

@@ -1,0 +1,24 @@
+<?xml version="1.0"?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:Event/etc/events.xsd">
+    <event name="checkout_submit_all_after">
+        <observer name="PayPalBR_PayPal_Payment_Data" instance="PayPalBR\PayPal\Observer\clearPaymentDataAfterSaveOrder"/>
+    </event>
+    <event name="admin_system_config_changed_section_customer">
+        <observer name="PayPalBR_PayPal_DataAssign" instance="PayPalBR\PayPal\Observer\DataAssign" />
+    </event>
+    <event name="admin_system_config_changed_section_payment">
+        <observer name="PayPalBR_PayPal_DataAssign" instance="PayPalBR\PayPal\Observer\DataAssign" />
+    </event>
+    <event name="payment_method_assign_data_paypalbr_paypalplus">
+        <observer name="paypalbr_payment_method_assign_data_paypalbr_paypalplus" instance="PayPalBR\PayPal\Observer\PayPalPlusDataAssignObserver" />
+    </event>
+    <event name="payment_method_assign_data_paypalbr_expresscheckout">
+        <observer name="paypalbr_payment_method_assign_data_paypalbr_expresscheckout" instance="PayPalBR\PayPal\Observer\PayPalExpressCheckoutDataAssignObserver" />
+    </event>
+    <event name="sales_order_place_after">
+       <observer name="paypalbr_payment_method_paypalbr_paypalplus_after_place_order" instance="PayPalBR\PayPal\Observer\SalesOrderPlaceAfter" />
+    </event>
+    <event name="sales_order_payment_refund">
+       <observer name="paypalbr_payment_method_paypalbr_paypalplus_payment_refund" instance="PayPalBR\PayPal\Observer\Refund" />
+    </event>
+</config>

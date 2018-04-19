@@ -1,0 +1,12 @@
+<?php /** @var $block PayPalBR\PayPal\Block\Checkout\Success */ ?>
+
+<?php $block->_initOrder(); ?>
+
+<?php if($block->getIsMethodActive()) : ?>
+    <?php if ($block->isPaymentPending() && !empty($block->getPendingMessage())) : ?>
+        <div id="warning" class="message notice">
+            <div><?php echo $block->escapeHtml($block->getPendingMessage()) ?></div>
+        </div>
+    <?php endif; ?>
+<?php endif; ?>
+

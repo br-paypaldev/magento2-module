@@ -1,0 +1,5 @@
+<p><span><?php echo __('PayPal Express Checkout') ?></span></p>
+<p><span><b><?php echo __('Transaction Id: ') ?></b><?php echo $block->getLastTransId() ?></span></p>
+<p><span><b><?php echo __('State Payment: ') ?><?php echo $block->getStatePayPal() ?></b></span></p>
+<p><span><b><?php echo __('Installments: ') ?></b><?php echo $block->getTerm() ?></span></p>
+<p><span><b><?php echo __('Token PayPal: ') ?></b><?php echo $block->getToken() ?></span></p>

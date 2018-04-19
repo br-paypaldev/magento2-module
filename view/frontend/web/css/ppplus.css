@@ -1,0 +1,135 @@
+@font-face {
+    font-family: PayPal regular;
+    src: url(../fonts/PayPalSansBig-Regular.otf);
+}
+@font-face {
+    font-family: PayPal light;
+    src: url(../fonts/PayPalSansBig-Light.otf);
+}
+
+#ppplus{
+    min-height: 500px;
+}
+.why-buy-with-paypal {
+	width: 100%;
+    max-width: 750px;
+    background-color: #f5f5f5;
+    border: 1px solid #e4e4e4;
+    border-radius: 10px;
+    margin: 0 auto 22px;
+    text-align: center;
+    padding: 30px 0 15px;
+    font-family: 'PayPal light'
+}
+.why-buy-with-paypal .paypal-top-info > p {
+    color: #159bd7;
+    font-size: 33px;
+    letter-spacing: 1px;
+    word-spacing: 1px;
+    margin-bottom: 22px;
+}
+.why-buy-with-paypal .payment-options {
+	font-size: 14px;
+	color: #2c2e2f;
+    font-weight: 900;
+}
+.why-buy-with-paypal .payment-options .paypal-cards {
+	margin-top: 14px;
+}
+.why-buy-with-paypal .paypal-middle-info {
+	background-color: #fff;
+	margin-top: 30px;
+	display: -ms-flexbox;
+    display: -webkit-flex;
+    display: flex;
+    -webkit-justify-content: space-between;
+    -ms-flex-pack: justify;
+    justify-content: space-between;
+    text-align: left;
+    padding: 20px 30px;
+}
+.paypal-info-1, .paypal-info-2 {
+	width: 40%;
+	padding: 0 15px;
+	display: -ms-flexbox;
+    display: -webkit-flex;
+    display: flex;
+    -webkit-align-items: center;
+    -ms-flex-align: center;
+    align-items: center;
+}
+.paypal-info-1 p, .paypal-info-2 p {
+	margin: 0;
+}
+.bold-span {
+	font-weight: 900;
+}
+.paypal-middle-info img {
+	margin-right: 10px;
+}
+.paypal-bottom-info {
+	display: -ms-flexbox;
+    display: -webkit-flex;
+    display: flex;
+    -webkit-justify-content: space-between;
+    -ms-flex-pack: justify;
+    justify-content: space-between;
+    -webkit-align-items: center;
+    -ms-flex-align: center;
+    align-items: center;
+}
+.paypal-bottom-info > div {
+	padding: 20px 35px 0;
+	font-size: 18px;
+	font-weight: 900;
+    text-align: left;
+}
+.paypal-bottom-info > div:first-child {
+    padding-right: 0;
+}
+.paypal-bottom-info > div:last-child {
+    padding-left: 0;
+}
+.paypal-bottom-info-alt {
+	color: #159bd7;
+}
+.checkout-index-index #paypal-button-container {
+    margin-left: 60%;
+}
+
+@media only screen and (max-width: 530px) {
+    .why-buy-with-paypal .paypal-middle-info {
+        display: block;
+    }
+    .paypal-info-1, .paypal-info-2 {
+        width: 100%;
+        margin: 0 auto;
+        padding: 10px 15px;
+    }
+    #paypal-button-container {
+        margin: 0;
+    }
+    .paypal-bottom-info > div {
+        padding: 20px 10px 0;
+    }
+}
+
+@media only screen and (max-width: 400px) {
+    .paypal-bottom-info > div {
+        font-size: 16px;
+    }
+}
+
+.login_paypalBr {
+    display: block;    
+    margin-top: 0.83em;
+    margin-bottom: -0.1em;
+    margin-left: 0;
+    margin-right: 0;
+
+}
+
+.orPayment{
+    text-align: center;
+    margin-top: 10px;
+}

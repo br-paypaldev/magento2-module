@@ -1,0 +1,30 @@
+<!--
+/**
+ * Copyright © Magento, Inc. All rights reserved.
+ * See COPYING.txt for license details.
+ */
+-->
+<!-- ko ifnot: isCustomerLoggedIn() -->
+
+<!-- ko foreach: getRegion('before-login-form') -->
+<!-- ko template: getTemplate() --><!-- /ko -->
+<!-- /ko -->
+<form class="form form-login" data-role="email-with-possible-login"
+      data-bind="submit:login"
+      method="post">
+    <h2 class="login_paypalBr" data-role="title" data-bind="i18n: 'Login with PayPal'"></h2>
+    <hr>
+    <fieldset id="customer-email-fieldset-paypal" class="fieldset" data-bind="blockLoader: isLoading">
+        <!-- ko if: loginPayPalActive() -->
+        <div class="field">
+            <label class="label" for="paypal-button-container">
+                <span data-bind="i18n: 'Use your PayPal account to pay faster'"></span>
+            </label>
+            <div id="paypal-button-container-login"></div>
+            <!-- ko text: buttonLoginPayPal() --><!-- /ko -->
+            <!-- /ko -->
+        </div>
+        <!-- /ko -->
+    </fieldset>
+</form>
+
