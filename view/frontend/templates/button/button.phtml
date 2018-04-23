@@ -1,0 +1,76 @@
+<?php
+/**
+ * Copyright © Magento, Inc. All rights reserved.
+ * See COPYING.txt for license details.
+ */
+// @codingStandardsIgnoreFile
+
+/** @var \Magento\Customer\Block\Form\Login $block */
+?>
+<?php if ($block->getCartItemsCount() && $block->getLoginPayPalActive()) { ?>
+    <script src="https://www.paypalobjects.com/api/checkout.js"></script>
+    <script>
+        var miniCart = window.checkout.payment.paypalbr_expresscheckout.mini_cart;
+        var mode = window.checkout.payment.paypalbr_expresscheckout.mode;
+
+        paypal.Button.render({
+
+            env:  mode, // sandbox | production
+            locale: 'pt_BR',
+
+            style: {
+                label: 'pay',
+                size: 'responsive', // small | medium | large | responsive
+                shape: 'rect', // pill | rect
+                color: 'blue', // gold | blue | silver | black
+                tagline: false
+            },
+
+            // Show the buyer a 'Pay Now' button in the checkout flow
+            commit: true,
+
+            // payment() is called when the button is clicked
+            payment: function () {
+
+                // Set up a url on your server to create the payment
+                var CREATE_URL = '<?php echo $block->getCreateUrl(); ?>';
+
+                // Make a call to your server to set up the payment
+                return paypal.request.post(CREATE_URL)
+                        .then(function (res) {
+                            // console.log(res.paymentID);
+                            return res.paymentID;
+                        });
+            },
+
+            // onAuthorize() is called when the buyer approves the payment
+            onAuthorize: function (data, actions) {
+
+                // Set up a url on your server to execute the payment
+                var EXECUTE_URL = '<?php echo $block->getExecuteUrl(); ?>';
+
+                // Set up the data you need to pass to ypayour server
+                var data = {
+                    paymentID: data.paymentID,
+                    payerID: data.payerID
+                };
+
+                // Make a call to your server to execute the payment
+                return paypal.request.post(EXECUTE_URL, data)
+                        .then(function (res) {
+                            window.location.href = res.redirect;
+                        });
+            }
+
+        }, '#paypal-button-container');
+    </script>
+<?php } ?>
+<?php if ($block->getButtonActive() == 1): ?>
+    <p class="orPayment">- ou -</p>
+    <div class="block block-customer-login">
+        <?php if ($block->getCartItemsCount() && $block->getLoginPayPalActive()) { ?>
+            <div id="paypal-button-container"></div>
+            <br>
+        <?php } ?>        
+    </div>
+<?php endif; ?>

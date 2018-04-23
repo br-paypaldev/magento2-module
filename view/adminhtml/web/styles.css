@@ -1,0 +1,17 @@
+.paypalbr-section .heading {
+	background: url("images/paypalbr_logo.png") no-repeat 0 50% / 18rem auto; 
+	padding-left: 20rem;
+}
+
+.paypalbr-section .button-container {
+	float: right;
+}
+
+.paypalexpresscheckout-section .heading {
+	background: url("images/pp-logo-200px.png") no-repeat 0 50% / 18rem auto; 
+	padding-left: 20rem;
+}
+
+.paypalexpresscheckout-section .button-container {
+	float: right;
+}

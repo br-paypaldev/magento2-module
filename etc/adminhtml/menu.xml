@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Backend:etc/menu.xsd">
+    <menu>
+        <add id="PayPalBR_PayPal::PayPalBR" 
+             title="PayPal" 
+             module="PayPalBR_PayPal" 
+             sortOrder="70"
+             action = "adminhtml/system_config/edit/section/payment"
+             resource="PayPalBR_PayPal::PayPalBR"/>
+
+    </menu>
+</config>

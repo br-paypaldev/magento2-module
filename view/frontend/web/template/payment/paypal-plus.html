@@ -1,0 +1,91 @@
+<!-- ko if: (isActive())-->
+    <div class="payment-method" data-bind="css: {'_active': (getCode() == isChecked())}" id="ppplus-method">
+        <div class="payment-method-title field choice">
+            <input type="radio"
+                   name="payment[method]"
+                   class="radio"
+                   data-bind="attr: {'id': getCode()}, value: getCode(), checked: isChecked, click: selectPaymentMethod, visible: isRadioButtonVisible()"/>
+
+            <label data-bind="attr: {'for': getCode()}" class="label"><span data-bind="text: getNamePay()"></span></label>
+        </div>
+        <div id="iframe-error" data-bind="visible: false" class="message notice">
+            <div><!-- ko i18n: "We cannot process PayPal Payments at this time. Please try again later" --><!-- /ko --></div>
+        </div>
+        <div id="iframe-error-payment-not-ready" data-bind="visible: false" class="message notice">
+            <div><!-- ko i18n: "In order to use this payment method, please select it and add a Billing Address." --><!-- /ko --></div>
+        </div>
+        <div id="iframe-error-email" data-bind="visible: false" class="message notice">
+            <div><!-- ko i18n: "Please specify an e-mail address and try again" --><!-- /ko --></div>
+        </div>
+        <div class="payment-method-content">
+            <!-- ko foreach: getRegion('messages') -->
+                <!-- ko template: getTemplate() --><!-- /ko -->
+            <!--/ko-->
+            <div class="payment-method-billing-address">
+                <!-- ko foreach: $parent.getRegion(getBillingAddressFormName()) -->
+                    <!-- ko template: getTemplate() --><!-- /ko -->
+                <!--/ko-->
+            </div>
+            <div class="checkout-agreements-block">
+                <!-- ko foreach: $parent.getRegion('before-place-order') -->
+                <!-- ko template: getTemplate() --><!-- /ko -->
+                <!--/ko-->
+            </div>
+            <div data-bind="visible: false" id="auth-div-success">
+                <span class="success"><!-- ko i18n: 'Payment has been authorized.' --><!-- /ko --></span>
+            </div>
+            <div data-bind="visible: false" id="auth-div-error">
+                <span class="error-msg"><!-- ko i18n: 'Payment has been rejected, please try again with a different card.' --><!-- /ko --></span>
+            </div>
+            <div style="width: 100%; max-height: 600px;" id="ppplus"></div>
+            <div style="width: 100%;" id="ppplus-information">
+                <input type="hidden"
+                    name="payment[payId]"
+                    class="input-text"
+                    value=""
+                    data-bind="attr: {id: getCode() + '_payId', 'data-container': getCode() + '-payId'},
+                    value: payId
+                    ">
+                <input type="hidden"
+                    name="payment[rememberedCardsToken]"
+                    class="input-text"
+                    value=""
+                    data-bind="attr: {id: getCode() + '_rememberedCardsToken', 'data-container': getCode() + '-rememberedCardsToken'},
+                    value: rememberedCardsToken
+                    ">
+                <input type="hidden"
+                    name="payment[payerId]"
+                    class="input-text"
+                    value=""
+                    data-bind="attr: {id: getCode() + '_payerId', 'data-container': getCode() + '-payerId'},
+                    value: payerId
+                    ">
+                <input type="hidden"
+                    name="payment[token]"
+                    class="input-text"
+                    value=""
+                    data-bind="attr: {id: getCode() + '_token', 'data-container': getCode() + '-token'},
+                    value: token
+                    ">
+                <input type="hidden"
+                    name="payment[term]"
+                    class="input-text"
+                    value=""
+                    data-bind="attr: {id: getCode() + '_term', 'data-container': getCode() + '-term'},
+                    value: term
+                    ">
+            </div>
+            <div class="actions-toolbar" data-bind="visible: true">
+                <div class="primary">
+                    <button
+                        id="continueButton"
+                        type="submit"
+                        data-bind="click: doContinue, attr: {title: $t('Continue')}"
+                        class="action primary checkout">
+                        <span data-bind="i18n: 'Place Order'"></span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+<!-- /ko -->

@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:ObjectManager/etc/config.xsd">
+    <type name="Magento\Checkout\Model\CompositeConfigProvider">
+        <arguments>
+            <argument name="configProviders" xsi:type="array">
+                <item name="paypalbr_paypalplus_config_provider" xsi:type="object">PayPalBR\PayPal\Model\Ui\PayPalPlus\PayPalPlusConfigProvider</item>
+                <item name="paypalbr_paypaexpresscheckout_config_provider" xsi:type="object">PayPalBR\PayPal\Model\Ui\PayPalExpressCheckout\PayPalExpressCheckoutConfigProvider</item>
+            </argument>
+        </arguments>
+    </type>
+    <type name="Magento\Checkout\Block\Cart\Sidebar">
+        <plugin name="paypal_cart" type="PayPalBR\PayPal\Model\Cart\ConfigPlugin" />
+    </type>
+    <type name="Magento\Framework\View\Result\Page">
+        <arguments>
+            <argument name="template" xsi:type="string">PayPalBR_PayPal::root.phtml</argument>
+        </arguments>
+    </type>
+</config>

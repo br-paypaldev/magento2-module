@@ -1,0 +1,85 @@
+<!-- ko if: (isActive())-->
+    <div class="payment-method" data-bind="css: {'_active': (getCode() == isChecked())}" id="ppplus-method">
+        <div class="payment-method-title field choice">
+            <input type="radio"
+                   name="payment[method]"
+                   class="radio"
+                   data-bind="attr: {'id': getCode()}, value: getCode(), checked: isChecked, click: selectPaymentMethod, visible: isRadioButtonVisible()"/>
+
+            <label data-bind="attr: {'for': getCode()}" class="label"><span data-bind="text: getNamePay()"></span></label>
+        </div>
+        <div class="payment-method-content">
+            <div class="why-buy-with-paypal">
+                <div class="paypal-top-info">
+                    <p><!-- ko i18n: "Why buy from PayPal?" --><!-- /ko --></p>
+                    <div class="payment-options">
+                        <span><!-- ko i18n: "Pay with credit cards:" --><!-- /ko -->
+                            
+                        </span>
+                        <div class="paypal-cards">
+                            <img alt="Visa" data-bind="attr: { src: getUrlMagento()+'visa-card.png' }">
+                            <img alt="MasterCard" data-bind="attr: { src: getUrlMagento()+'master-card.png' }" >
+                            <img alt="American Express" data-bind="attr: { src: getUrlMagento()+'american-card.png' }" >
+                            <img alt="Elo" data-bind="attr: { src: getUrlMagento()+'elo-card.png' }" >
+                            <img alt="Hipercard" data-bind="attr: { src: getUrlMagento()+'hipercard-card.png' }" >
+                            <img alt="Hiper"  data-bind="attr: { src: getUrlMagento()+'hiper-card.png' }" >
+                        </div>
+                    </div>
+                </div>
+                <div class="paypal-middle-info">
+                    <div class="paypal-info-1">
+                        <img alt="Person Image" data-bind="attr: { src: getUrlMagento()+'person-image.png' }" >
+                        <p>
+                            <span class="bold-span"><!-- ko i18n: "It's free, easy and secure" --><!-- /ko --></span> <br />
+                            <!-- ko i18n: "Open your account, register your credit cards and start buying with just email and password." --><!-- /ko --> <br />
+                        </p>
+                    </div>
+                    <div class="paypal-info-2">
+                        <img alt="Aeroplane Image" data-bind="attr: { src: getUrlMagento()+'aeroplane-image.png' }" >
+                        <p>
+                            <span class="bold-span">
+                                <!-- ko i18n: "Continue to earn miles on your credit card" --><!-- /ko --> <br />
+                            </span>
+                        </p>
+                    </div>
+                </div>
+                <div class="paypal-bottom-info">                
+                    <div><span class="paypal-bottom-info-alt"><!-- ko i18n: "Questions you can call" --><!-- /ko --></span> <span><!-- ko i18n: "0800-047-4482" --><!-- /ko --></span></div>
+                    <div><img alt="PayPal"  data-bind="attr: { src: getUrlMagento()+'paypal.png' }" ></div>
+                </div>
+            </div>
+            <div id="paypal-button-container"></div>
+            <div style="width: 100%;" id="ppplus-information">
+                <input type="hidden"
+                    name="payment[payId_expresscheckout]"
+                    class="input-text"
+                    value=""
+                    data-bind="attr: {id: getCode() + '_payId', 'data-container': getCode() + '-payId'},
+                    value: payId_expresscheckout
+                    ">
+                <input type="hidden"
+                    name="payment[payerId_expresscheckout]"
+                    class="input-text"
+                    value=""
+                    data-bind="attr: {id: getCode() + '_payerId', 'data-container': getCode() + '-payerId'},
+                    value: payerId_expresscheckout
+                    ">
+                <input type="hidden"
+                    name="payment[token_expresscheckout]"
+                    class="input-text"
+                    value=""
+                    data-bind="attr: {id: getCode() + '_token', 'data-container': getCode() + '-token'},
+                    value: token_expresscheckout
+                    ">
+                <input type="hidden"
+                    name="payment[term_expresscheckout]"
+                    class="input-text"
+                    value=""
+                    data-bind="attr: {id: getCode() + '_term', 'data-container': getCode() + '-term'},
+                    value: term_expresscheckout
+                    ">
+            </div>
+        </div>
+        
+    </div>
+<!-- /ko -->

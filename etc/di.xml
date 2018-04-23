@@ -1,0 +1,132 @@
+<?xml version="1.0" ?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:ObjectManager/etc/config.xsd">
+    <preference for="PayPalBR\PayPal\Api\WebHookManagementInterface" type="PayPalBR\PayPal\Model\WebHookManagement"/>
+    <preference for="PayPalBR\PayPal\Api\EventsInterface" type="PayPalBR\PayPal\Model\Webhook\Event"/>
+    <preference for="PayPalBR\PayPal\Gateway\Transaction\Base\Config\ConfigInterface" type="PayPalBR\PayPal\Gateway\Transaction\Base\Config\Config"/>
+    <preference for="PayPalBR\PayPal\Api\CartItemRequestDataProviderInterface" type="PayPalBR\PayPal\Gateway\Transaction\Base\ResourceGateway\Request\CartItemRequestDataProvider"/>
+    <preference for="PayPalBR\PayPal\Api\PayPalPlusRequestDataProviderInterface" type="PayPalBR\PayPal\Gateway\Transaction\PayPalPlus\ResourceGateway\Create\RequestDataProvider"/>
+    <preference for="Magento\Checkout\Block\Checkout\AttributeMerger" type="PayPalBR\PayPal\Block\Checkout\AttributeMerger"/>
+    <preference for="PayPalBR\PayPal\Api\LoginPayPalCreateManagementInterface" type="PayPalBR\PayPal\Model\LoginPayPalManagementApi"/>
+
+    <!-- PayPalPlus Adapter -->
+	<virtualType name="PayPalPlusRemoteMethodAdapter" type="Magento\Payment\Model\Method\Adapter">
+        <arguments>
+            <argument name="code" xsi:type="const">PayPalBR\PayPal\Model\PayPalPlus::PAYMENT_METHOD_PAYPALPLUS_CODE</argument>
+            <argument name="valueHandlerPool" xsi:type="object">PayPalPlusValueHandlerPool</argument>
+            <argument name="commandPool" xsi:type="object">PayPalPlusCommandPool</argument>
+            <argument name="formBlockType" xsi:type="string">Magento\Payment\Block\Form</argument>
+            <argument name="infoBlockType" xsi:type="string">PayPalBR\PayPal\Block\Payment\Info\PayPalPlus</argument>
+        </arguments>
+    </virtualType> 
+
+    <!-- Value Handler Pool -->
+    <virtualType name="PayPalPlusValueHandlerPool" type="Magento\Payment\Gateway\Config\ValueHandlerPool">
+        <arguments>
+            <argument name="handlers" xsi:type="array">
+                <item name="default" xsi:type="string">PayPalPlusConfigValueHandler</item>
+            </argument>
+        </arguments>
+    </virtualType>
+
+    <virtualType name="PayPalPlusConfigValueHandler" type="Magento\Payment\Gateway\Config\ConfigValueHandler">
+        <arguments>
+            <argument name="configInterface" xsi:type="object">PayPalPlusConfig</argument>
+        </arguments>
+    </virtualType>
+
+    <virtualType name="PayPalPlusConfig" type="Magento\Payment\Gateway\Config\Config">
+        <arguments>
+            <argument name="methodCode" xsi:type="const">PayPalBR\PayPal\Model\PayPalPlus::PAYMENT_METHOD_PAYPALPLUS_CODE</argument>
+        </arguments>
+    </virtualType>
+    <!-- /Value Handler Pool -->
+
+    <!-- Command Pool -->
+    <virtualType name="PayPalPlusCommandPool" type="Magento\Payment\Gateway\Command\CommandPool">
+        <arguments>
+            <argument name="commands" xsi:type="array">
+                <item name="initialize" xsi:type="string">PayPalBR\PayPal\Gateway\Transaction\Base\Command\InitializeCommand</item>
+                <item name="authorize" xsi:type="string">PayPalPlusAuthorizeCommand</item>
+            </argument>
+        </arguments>
+    </virtualType>
+
+    <virtualType name="PayPalPlusAuthorizeCommand" type="PayPalBR\PayPal\Gateway\Transaction\PayPalPlus\Command\AuthorizeCommand">
+        <arguments>
+            <argument name="requestBuilder" xsi:type="object">PayPalBR\PayPal\Gateway\Transaction\PayPalPlus\ResourceGateway\Create\RequestBuilder</argument>
+            <argument name="responseHandler" xsi:type="object">PayPalPlusAuthorizeCommandResponseHandlerPool</argument>
+            <argument name="validator" xsi:type="object">PayPalBR\PayPal\Gateway\Transaction\PayPalPlus\ResourceGateway\Create\Response\Validator</argument>
+        </arguments>
+    </virtualType>
+
+    <virtualType name="PayPalPlusAuthorizeCommandResponseHandlerPool" type="Magento\Payment\Gateway\Response\HandlerChain">
+        <arguments>
+            <argument name="handlers" xsi:type="array">
+                <item name="general" xsi:type="string">PayPalBR\PayPal\Gateway\Transaction\PayPalPlus\ResourceGateway\Create\Response\GeneralHandler</item>
+            </argument>
+        </arguments>
+    </virtualType>
+    <!-- /Command Pool -->
+    <!-- /PayPalPlus Adapter -->
+
+    <!-- PayPalExpressCheckout Adapter -->
+    <virtualType name="PayPalExpressCheckoutRemoteMethodAdapter" type="Magento\Payment\Model\Method\Adapter">
+        <arguments>
+            <argument name="code" xsi:type="const">PayPalBR\PayPal\Model\PayPalExpressCheckout::PAYMENT_METHOD_PAYPALEXPRESSCHECKOUT_CODE</argument>
+            <argument name="valueHandlerPool" xsi:type="object">PayPalExpressCheckoutValueHandlerPool</argument>
+            <argument name="commandPool" xsi:type="object">PayPalExpressCheckoutCommandPool</argument>
+            <argument name="formBlockType" xsi:type="string">Magento\Payment\Block\Form</argument>
+            <argument name="infoBlockType" xsi:type="string">PayPalBR\PayPal\Block\Payment\Info\PayPalExpressCheckout</argument>
+        </arguments>
+    </virtualType> 
+
+    <!-- Value Handler Pool -->
+    <virtualType name="PayPalExpressCheckoutValueHandlerPool" type="Magento\Payment\Gateway\Config\ValueHandlerPool">
+        <arguments>
+            <argument name="handlers" xsi:type="array">
+                <item name="default" xsi:type="string">PayPalExpressCheckoutConfigValueHandler</item>
+            </argument>
+        </arguments>
+    </virtualType>
+
+    <virtualType name="PayPalExpressCheckoutConfigValueHandler" type="Magento\Payment\Gateway\Config\ConfigValueHandler">
+        <arguments>
+            <argument name="configInterface" xsi:type="object">PayPalExpressCheckoutConfig</argument>
+        </arguments>
+    </virtualType>
+
+    <virtualType name="PayPalExpressCheckoutConfig" type="Magento\Payment\Gateway\Config\Config">
+        <arguments>
+            <argument name="methodCode" xsi:type="const">PayPalBR\PayPal\Model\PayPalExpressCheckout::PAYMENT_METHOD_PAYPALEXPRESSCHECKOUT_CODE</argument>
+        </arguments>
+    </virtualType>
+    <!-- /Value Handler Pool -->
+
+    <!-- Command Pool -->
+    <virtualType name="PayPalExpressCheckoutCommandPool" type="Magento\Payment\Gateway\Command\CommandPool">
+        <arguments>
+            <argument name="commands" xsi:type="array">
+                <item name="initialize" xsi:type="string">PayPalBR\PayPal\Gateway\Transaction\Base\Command\InitializeCommand</item>
+                <item name="authorize" xsi:type="string">PayPalExpressCheckoutAuthorizeCommand</item>
+            </argument>
+        </arguments>
+    </virtualType>
+
+    <virtualType name="PayPalExpressCheckoutAuthorizeCommand" type="PayPalBR\PayPal\Gateway\Transaction\PayPalExpressCheckout\Command\AuthorizeCommand">
+        <arguments>
+            <argument name="requestBuilder" xsi:type="object">PayPalBR\PayPal\Gateway\Transaction\PayPalExpressCheckout\ResourceGateway\Create\RequestBuilder</argument>
+            <argument name="responseHandler" xsi:type="object">PayPalExpressCheckoutAuthorizeCommandResponseHandlerPool</argument>
+            <argument name="validator" xsi:type="object">PayPalBR\PayPal\Gateway\Transaction\PayPalExpressCheckout\ResourceGateway\Create\Response\Validator</argument>
+        </arguments>
+    </virtualType>
+
+    <virtualType name="PayPalExpressCheckoutAuthorizeCommandResponseHandlerPool" type="Magento\Payment\Gateway\Response\HandlerChain">
+        <arguments>
+            <argument name="handlers" xsi:type="array">
+                <item name="general" xsi:type="string">PayPalBR\PayPal\Gateway\Transaction\PayPalExpressCheckout\ResourceGateway\Create\Response\GeneralHandler</item>
+            </argument>
+        </arguments>
+    </virtualType>
+    <!-- /Command Pool -->
+    <!-- /PayPalExpressCheckout Adapter -->
+</config>

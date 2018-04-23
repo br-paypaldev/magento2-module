@@ -1,0 +1,19 @@
+<?php
+
+$objectManager = \Magento\Framework\App\ObjectManager::getInstance();
+$rootTemplate = $objectManager->create('PayPalBR\PayPal\Block\View\Root');
+?>
+<!doctype html>
+<html <?php echo $htmlAttributes ?>>
+    <head <?php  echo $headAttributes ?>>
+        <?php if($rootTemplate->canIncludePayPalScript()) : ?>
+            <script type="text/javascript" src="<?php echo $rootTemplate->getScriptSource() ?>"></script>
+        <?php endif; ?>
+        <?php  echo $requireJs ?>
+        <?php  echo $headContent ?>
+        <?php  echo $headAdditional ?>
+    </head>
+    <body data-container="body" data-mage-init='{"loaderAjax": {}, "loader": { "icon": "<?php  echo $loaderIcon; ?>"}}' <?php echo $bodyAttributes ?>>
+        <?php  echo $layoutContent ?>
+    </body>
+</html>
