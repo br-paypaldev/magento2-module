@@ -93,10 +93,11 @@ define([
 
             var self = this;
             // Config buttons
-            var colorButton = window.checkoutConfig.payment.paypalbr_expresscheckout.color;
-            var shapeButton = window.checkoutConfig.payment.paypalbr_expresscheckout.shape;
+            var colorButton  = window.checkoutConfig.payment.paypalbr_expresscheckout.color;
+            var shapeButton  = window.checkoutConfig.payment.paypalbr_expresscheckout.shape;
             var buttonButton = window.checkoutConfig.payment.paypalbr_expresscheckout.button;
-            var mode = window.checkoutConfig.payment.paypalbr_expresscheckout.mode;
+            var mode         = window.checkoutConfig.payment.paypalbr_expresscheckout.mode;
+            var locale       = window.checkoutConfig.payment.paypalbr_expresscheckout.locale;
 
             // fullScreenLoaderPayPal.startLoader();
 
@@ -105,7 +106,7 @@ define([
             this.paypalObject = paypal.Button.render({
 
                 env: mode, // sandbox | production
-                locale: 'pt_BR',
+                locale: locale,
 
                 // Show the buyer a 'Pay Now' button in the checkout flow
                 // commit: true,
@@ -133,14 +134,14 @@ define([
                     $('#paypalbr_expresscheckout_payId').val(data.paymentID);
                     $('#paypalbr_expresscheckout_payerId').val(data.payerID);
                     $('#paypalbr_v_token').val(data.paymentToken);
-                    
+
                     return actions.payment.get().then(function (data) {
                         var term;
                         if (typeof data.credit_financing_offered === 'undefined') {
                             term = '1';
                             term = term;
                         } else {
-                            term = data.credit_financing_offered.term;                            
+                            term = data.credit_financing_offered.term;
                         }
 
                         $('#paypalbr_expresscheckout_term').val(term);

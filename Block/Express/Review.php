@@ -348,9 +348,12 @@ class Review extends \Magento\Framework\View\Element\Template
 
         $array['mode'] = $this->_config->getModeToString();
         $array['base_url'] = $this->_storeManager->getStore()->getBaseUrl(\Magento\Framework\UrlInterface::URL_TYPE_WEB);
+        $array['locale'] = $this->_config->getLocaleStore();
         return json_encode($array, JSON_HEX_TAG);
        
     }
+
+
     
     
     

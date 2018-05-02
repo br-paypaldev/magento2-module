@@ -116,7 +116,8 @@ final class PayPalExpressCheckoutConfigProvider implements ConfigProviderInterfa
                     'color' => $this->configExpressCheckout->getPayPalLoginButtonColor(),
                     'shape' => $this->configExpressCheckout->getPayPalLoginButtonShape(),
                     'button' => $this->configExpressCheckout->getPayPalLoginButton(),
-                    'mini_cart'=> $this->configExpressCheckout->getPayPalMiniCartActive()
+                    'mini_cart'=> $this->configExpressCheckout->getPayPalMiniCartActive(),
+                    'locale' => $this->configExpressCheckout->getLocaleStore()
                 ]
             ]
         ];

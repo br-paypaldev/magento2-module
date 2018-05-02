@@ -129,3 +129,5 @@
 "To generate the Secret ID, access https://developer.paypal.com/developer/applications/ and look for the REST API Apps section.","Para gerar o Secret ID, acesse https://developer.paypal.com/developer/applications/ e procure a seção <b>REST API Apps<b>."
 "When activated, declined transactions will generate orders","Quando ativado, será gerado pedidos mesmo com pagamentos não aprovados."
 "Checkout sequence","Posição no checkout"
+"- or -","- ou -"
+"To edit your address or payment method click the PayPal button","Para editar seu endereço ou método de pagamento clique no botão PayPal"

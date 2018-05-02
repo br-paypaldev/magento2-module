@@ -92,17 +92,17 @@ class ConfigProvider
      * Contains the PayPal Login
      */
     const XML_PATH_PAYPAL_LOGIN = 'payment/paypalbr_expresscheckout/active_login';
-    
+
     /**
-     * Contains the PayPal Login Mini 
+     * Contains the PayPal Login Mini
      */
     const XML_PATH_PAYPAL_LOGIN_MINICART = 'payment/paypalbr_expresscheckout/active_login_minicart';
-    
+
     /**
      * Contains the PayPal Login BUTTON
      */
     const XML_PATH_PAYPAL_LOGIN_BUTTON = 'payment/paypalbr_paypalplus/button_login_button';
-    
+
     /**
      * Contains the PayPal Login SHAPE
      */
@@ -113,7 +113,10 @@ class ConfigProvider
      * Contains the PayPal Login COLOR
      */
     const XML_PATH_PAYPAL_LOGIN_COLOR = 'payment/paypalbr_paypalplus/button_login_color';
-        
+
+    //const XML_PATH_GENERAL_COUNTRY_DEFAULT = 'general/country/default';
+    const XML_PATH_GENERAL_COUNTRY_DEFAULT = 'general/locale/code';
+
     /**
      * ConfigProvider constructor.
      *
@@ -161,8 +164,8 @@ class ConfigProvider
         $mode = $this->scopeConfig->getValue(self::XML_PATH_MODE, ScopeInterface::SCOPE_STORE);
         return $mode;
     }
-    
-        /**
+
+    /**
      * Returns the current mode
      *
      * @return string
@@ -177,7 +180,7 @@ class ConfigProvider
         }
         return $modeString;
     }
-    
+
 
     /**
      * Returns true if the mode is sandbox
@@ -425,7 +428,7 @@ class ConfigProvider
 
         return $active == 1;
     }
-    
+
     /**
      * Returns if minicart is active
      *
@@ -439,13 +442,13 @@ class ConfigProvider
         $active = $this->scopeConfig->getValue(self::XML_PATH_PAYPAL_LOGIN_MINICART, ScopeInterface::SCOPE_STORE);
 
         return $active;
-    }    
-    
+    }
+
     /**
      * Returns if minicart is active
      *
      * This configuration uses \Magento\Config\Model\Config\Source\Yesno as backend.
-     * 
+     *
      * ,3-
      *
      * @return string
@@ -455,8 +458,8 @@ class ConfigProvider
         $active = $this->scopeConfig->getValue(self::XML_PATH_PAYPAL_LOGIN_BUTTON, ScopeInterface::SCOPE_STORE);
 
         return $active;
-    }    
-    
+    }
+
     /**
      * Returns shape of button
      *
@@ -469,8 +472,8 @@ class ConfigProvider
         $active = $this->scopeConfig->getValue(self::XML_PATH_PAYPAL_LOGIN_SHAPE, ScopeInterface::SCOPE_STORE);
 
         return $active;
-    }  
-   
+    }
+
     /**
      * Returns color of button
      *
@@ -483,10 +486,25 @@ class ConfigProvider
         $active = $this->scopeConfig->getValue(self::XML_PATH_PAYPAL_LOGIN_COLOR, ScopeInterface::SCOPE_STORE);
 
         return $active;
-    }  
-    
-    
-    
-    
+    }
 
+    /**
+     * Returns locale of store
+     *
+     * This configuration uses \const XML_PATH_GENERAL_COUNTRY_DEFAULT = 'general/country/default';
+     *
+     * @return string
+     */
+
+    public function getLocaleStore(){
+        $locale =  $this->scopeConfig->getValue(self::XML_PATH_GENERAL_COUNTRY_DEFAULT, ScopeInterface::SCOPE_STORE);
+
+        if($locale == 'pt_BR'){
+            $locate = 'pt_BR';
+        }else{
+            $locate = 'en_US';
+        }
+        return $locate;
+    }
+    
 }

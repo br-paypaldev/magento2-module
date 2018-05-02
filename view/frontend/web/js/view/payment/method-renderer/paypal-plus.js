@@ -22,8 +22,8 @@ define([
     errorProcesor,
     fullScreenLoader,
     fullScreenLoaderPayPal,
-    checkoutData, 
-    selectPaymentMethodAction, 
+    checkoutData,
+    selectPaymentMethodAction,
     postcodeValidator,
     ko,
     urlBuilder
@@ -89,7 +89,7 @@ define([
         selectPaymentMethod: function () {
             var self = this;
             if (!self.isPaymentReady || self.shippingValue != this.defaultQuote.totals().base_shipping_amount) {
-                
+
                 fullScreenLoaderPayPal.startLoader();
                 if ($('#ppplus').length) {
 
@@ -105,7 +105,7 @@ define([
                 window.checkoutConfig.payment.paypalbr_paypalplus.is_payment_ready = true;
                 self.isPaymentReady = true;
             }
-            
+
 
             selectPaymentMethodAction(this.getData());
             checkoutData.setSelectedPaymentMethod(this.item.method);
@@ -124,7 +124,7 @@ define([
             var taxVat = '';
             var customerData = window.checkoutConfig.customerData;
             var mode = window.checkoutConfig.payment.paypalbr_paypalplus.mode === "1" ? 'sandbox' : 'live';
-            
+
             storage = $.initNamespaceStorage('paypal-data');
             storage = $.localStorage;
 
@@ -134,7 +134,7 @@ define([
                     isEmpty = false;
                 }
             }
- 
+
             if(isEmpty){
                 telephone =  quote.shippingAddress().telephone ? quote.shippingAddress().telephone  : storage.get('telephone');
             }else{
@@ -146,13 +146,13 @@ define([
             }else{
                 firstName = customerData.firstname;
             }
-            
+
             if(isEmpty){
                 lastName =  quote.shippingAddress().lastname ? quote.shippingAddress().lastname : storage.get('lastName');
             }else{
                 lastName = customerData.lastname;
             }
-            
+
             if(isEmpty){
                 email =  quote.guestEmail ? quote.guestEmail : storage.get('email');
             }else{
@@ -164,7 +164,7 @@ define([
             }else{
                 taxVat = customerData.taxvat;
             }
-                        
+
 
             storage.set(
                 'paypal-data',
@@ -244,7 +244,7 @@ define([
                      * @returns {undefined}
                      */
                     onError: function (err) {
-           
+
                         var message = JSON.stringify(err.cause);
                         var ppplusError = message.replace(/[\\"]/g, '');
                         if (typeof err.cause !== 'undefined') {
@@ -252,24 +252,24 @@ define([
                             {
 
                             case "INTERNAL_SERVICE_ERROR":
-                            case "SOCKET_HANG_UP": 
+                            case "SOCKET_HANG_UP":
                             case "socket hang up":
                             case "connect ECONNREFUSED":
-                            case "connect ETIMEDOUT": 
+                            case "connect ETIMEDOUT":
                             case "UNKNOWN_INTERNAL_ERROR":
                             case "fiWalletLifecycle_unknown_error":
-                            case "Failed to decrypt term info": 
-                            case "RESOURCE_NOT_FOUND":                 
+                            case "Failed to decrypt term info":
+                            case "RESOURCE_NOT_FOUND":
                             case "INTERNAL_SERVER_ERROR":
                                 alert($.mage.__('An unexpected error occurred, please try again.'));
                                 location.reload();
-                            case "RISK_N_DECLINE": 
-                            case "NO_VALID_FUNDING_SOURCE_OR_RISK_REFUSED": 
-                                alert($.mage.__('Please use another card if the problem persists please contact PayPal (0800-047-4482).')); 
+                            case "RISK_N_DECLINE":
+                            case "NO_VALID_FUNDING_SOURCE_OR_RISK_REFUSED":
+                                alert($.mage.__('Please use another card if the problem persists please contact PayPal (0800-047-4482).'));
                                 location.reload();
                             case "TRY_ANOTHER_CARD":
                             case "NO_VALID_FUNDING_INSTRUMENT":
-                                alert($.mage.__('Your payment was not approved. Please use another card if the problem persists please contact PayPal (0800-047-4482).')); 
+                                alert($.mage.__('Your payment was not approved. Please use another card if the problem persists please contact PayPal (0800-047-4482).'));
                                 location.reload();
                             break;
                             case "CARD_ATTEMPT_INVALID":
@@ -285,7 +285,7 @@ define([
                                 location.reload();
                             break;
                             default: //unknown error & reload payment flow
-                                alert ($.mage.__('An unexpected error occurred, please try again.')); 
+                                alert ($.mage.__('An unexpected error occurred, please try again.'));
                                 location.reload();
                             }
                         }
@@ -391,7 +391,7 @@ define([
 
             this.customerData = quote.billingAddress._latestValue;
             if(!this.customerData.city){
-              this.customerData = quote.shippingAddress._latestValue;  
+              this.customerData = quote.shippingAddress._latestValue;
             }
             if (typeof this.customerData.city === 'undefined' || this.customerData.city.length === 0) {
                 return false;
@@ -400,7 +400,7 @@ define([
             if (typeof this.customerData.countryId === 'undefined' || this.customerData.countryId.length === 0) {
                 return false;
             }
-   
+
             if (typeof this.customerData.postcode === 'undefined' || this.customerData.postcode.length === 0) {
                 return false;
             }

@@ -207,8 +207,9 @@ define([
         getPayPalLoginButton: function () {
 
             var miniCart = window.checkout.payment.paypalbr_expresscheckout.mini_cart;
-            var mode = window.checkout.payment.paypalbr_expresscheckout.mode;
-           
+            var mode     = window.checkout.payment.paypalbr_expresscheckout.mode;
+            var locale   = window.checkout.payment.paypalbr_expresscheckout.locale;
+
             if (miniCart == 1) {
 
                 self.CREATE_URL = urlBuilder.build('expresscheckout/loginpaypal/create');
@@ -218,7 +219,7 @@ define([
                 var btn = paypal.Button.render({
 
                     env:  mode, // sandbox | production
-                    locale: 'pt_BR',
+                    locale: locale,
 
                     style: {
                         label: 'pay',
