@@ -40,6 +40,7 @@
                         <depends>
                             <field id="mode">1</field>
                         </depends>
+                        <validate>required-entry</validate>
                     </field>
                     <field id="secret_id_sandbox" translate="label comment" type="password" sortOrder="0" showInDefault="1" showInWebsite="1" showInStore="0">
                         <label>Secret ID (Sandbox)</label>
@@ -48,6 +49,7 @@
                         <depends>
                             <field id="mode">1</field>
                         </depends>
+                        <validate>required-entry</validate>
                     </field>
                     <field id="client_id_production" translate="label comment" type="password" sortOrder="0" showInDefault="1" showInWebsite="1" showInStore="0">
                         <label>Client ID (Live)</label>
@@ -190,6 +192,7 @@
                         <depends>
                             <field id="mode">1</field>
                         </depends>
+                        <validate>required-entry</validate>
                     </field>
                     <field id="secret_id_sandbox" translate="label comment" type="password" sortOrder="0" showInDefault="1" showInWebsite="1" showInStore="0">
                         <label>Secret ID (Sandbox)</label>
@@ -198,6 +201,7 @@
                         <depends>
                             <field id="mode">1</field>
                         </depends>
+                        <validate>required-entry</validate>
                     </field>
                     <field id="client_id_production" translate="label comment" type="password" sortOrder="0" showInDefault="1" showInWebsite="1" showInStore="0">
                         <label>Client ID (Live)</label>
@@ -214,6 +218,7 @@
                         <depends>
                             <field id="mode">2</field>
                         </depends>
+                        <validate>required-entry</validate>
                     </field>
                     <field id="new_order_status" translate="label" type="select" sortOrder="0" showInDefault="1" showInWebsite="1" showInStore="0" canRestore="1">
                         <label>New Order Status</label>

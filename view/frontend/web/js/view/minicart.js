@@ -204,11 +204,15 @@ define([
             return parseInt(items.length, 10);
         },
 
+        moduleConfigActive: function () {
+            return window.checkout.payment.paypalbr_expresscheckout.mini_cart;
+        },
+
         getPayPalLoginButton: function () {
 
             var miniCart = window.checkout.payment.paypalbr_expresscheckout.mini_cart;
-            var mode     = window.checkout.payment.paypalbr_expresscheckout.mode;
-            var locale   = window.checkout.payment.paypalbr_expresscheckout.locale;
+            var mode = window.checkout.payment.paypalbr_expresscheckout.mode;
+            var locale = window.checkout.payment.paypalbr_expresscheckout.locale;
 
             if (miniCart == 1) {
 

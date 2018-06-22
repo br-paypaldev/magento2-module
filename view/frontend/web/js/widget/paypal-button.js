@@ -28,7 +28,6 @@ define([
             var urlBase =  window.checkoutConfig.base_url;
             self.CREATE_URL = urlBase + 'expresscheckout/loginpaypal/create';
             self.EXECUTE_URL = urlBase + 'expresscheckout/loginpaypal/authorize';
-
             var mode   =  window.checkoutConfig.mode;
             var locale =  window.checkoutConfig.locale;
 

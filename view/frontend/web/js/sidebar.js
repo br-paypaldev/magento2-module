@@ -400,8 +400,8 @@ define([
             var countItems = quote.getItems().length;
 
             var loginPayPalActive = window.checkoutConfig.payment.paypalbr_expresscheckout.login_paypal_active;
-            var mode              = window.checkoutConfig.payment.paypalbr_expresscheckout.mode;
-            var locale            = window.checkoutConfig.payment.paypalbr_expresscheckout.locale;
+            var mode = window.checkoutConfig.payment.paypalbr_expresscheckout.mode;
+            var locale = window.checkoutConfig.payment.paypalbr_expresscheckout.locale;
 
             if (countItems > 0 && loginPayPalActive) {
 
@@ -458,6 +458,8 @@ define([
                     }
 
                 }, '#paypal-button-container');
+            }else{
+                $('.orPayment').hide();
             }
         },
 

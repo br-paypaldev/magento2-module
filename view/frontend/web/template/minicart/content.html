@@ -52,11 +52,12 @@
                         "
                         translate="'Proceed to Checkout'"
                 />
-                
-               
+
+                <!-- ko if: moduleConfigActive() -->
                 <!-- ko text: getPayPalLoginButton() --><!-- /ko -->
                 <p class="orPayment" translate="'- or -'"></p>
                 <div id="paypal-button-container"></div>
+                <!-- /ko -->
                
                 <div data-bind="html: getCartParam('extra_actions')"></div>
             </div>
