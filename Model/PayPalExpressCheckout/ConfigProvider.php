@@ -424,13 +424,9 @@ class ConfigProvider
      */
     public function isLoginPayPalActive()
     {
-        $active_form_login = $this->scopeConfig->getValue(self::XML_PATH_PAYPAL_LOGIN, ScopeInterface::SCOPE_STORE);
-        $active_module = $this->scopeConfig->getValue(self::XML_PATH_ACTIVE, ScopeInterface::SCOPE_STORE);
+        $active = $this->scopeConfig->getValue(self::XML_PATH_PAYPAL_LOGIN, ScopeInterface::SCOPE_STORE);
 
-        if($active_module == '0' || $active_form_login == '0')
-            return false;
-
-        return true;
+        return $active == 1;
     }
 
     /**
@@ -444,9 +440,8 @@ class ConfigProvider
     public function getPayPalMiniCartActive()
     {
         $active = $this->scopeConfig->getValue(self::XML_PATH_PAYPAL_LOGIN_MINICART, ScopeInterface::SCOPE_STORE);
-        $active_2 = $this->scopeConfig->getValue(self::XML_PATH_ACTIVE, ScopeInterface::SCOPE_STORE);
 
-        return $active && $active_2;
+        return $active;
     }
 
     /**
@@ -461,11 +456,8 @@ class ConfigProvider
     public function getPayPalLoginButton()
     {
         $active = $this->scopeConfig->getValue(self::XML_PATH_PAYPAL_LOGIN_BUTTON, ScopeInterface::SCOPE_STORE);
-        $active_module = $this->scopeConfig->getValue(self::XML_PATH_ACTIVE, ScopeInterface::SCOPE_STORE);
-        if($active == 'checkout' && $active_module == '1') {
-            return $active;
-        }
-        return false;
+
+        return $active;
     }
 
     /**
