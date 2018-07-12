@@ -92,7 +92,7 @@ class PaypalPlusApi
         \Magento\Checkout\Model\Cart $cart,
         \Magento\Customer\Model\Session $customerSession,
         \Magento\Store\Model\StoreManagerInterface $storeManager,
-        \PayPalBR\PayPal\Model\PayPalExpressCheckout\ConfigProvider $configProvider,
+        \PayPalBR\PayPal\Model\PayPalPlus\ConfigProvider $configProvider,
         \Magento\Payment\Model\Cart\SalesModel\Factory $cartSalesModelFactory,
         \Magento\Checkout\Model\Session $checkoutSession,
         \Psr\Log\LoggerInterface $logger

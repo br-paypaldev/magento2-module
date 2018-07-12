@@ -1,5 +1,6 @@
 1.0.1
-- Correção de traduções
+- Correções de bugs.
+- Chaves de API independentes para cada solução PayPal.
 
 1.0.0
 - Versão inicial.

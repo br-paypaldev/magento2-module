@@ -93,11 +93,11 @@ define([
 
             var self = this;
             // Config buttons
-            var colorButton  = window.checkoutConfig.payment.paypalbr_expresscheckout.color;
-            var shapeButton  = window.checkoutConfig.payment.paypalbr_expresscheckout.shape;
+            var colorButton = window.checkoutConfig.payment.paypalbr_expresscheckout.color;
+            var shapeButton = window.checkoutConfig.payment.paypalbr_expresscheckout.shape;
             var buttonButton = window.checkoutConfig.payment.paypalbr_expresscheckout.button;
-            var mode         = window.checkoutConfig.payment.paypalbr_expresscheckout.mode;
-            var locale       = window.checkoutConfig.payment.paypalbr_expresscheckout.locale;
+            var mode = window.checkoutConfig.payment.paypalbr_expresscheckout.mode;
+            var locale = window.checkoutConfig.payment.paypalbr_expresscheckout.locale;
 
             // fullScreenLoaderPayPal.startLoader();
 
