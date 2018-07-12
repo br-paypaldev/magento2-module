@@ -1,7 +1,6 @@
 {
     "name": "br-paypaldev/magento2-module",
     "license": "GPL-3.0-only",
-    "version": "1.0.2",
     "type": "magento2-module",
     "description": "Módulo PayPal para Magento2",
     "repositories": [
