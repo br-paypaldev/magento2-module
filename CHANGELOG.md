@@ -1,5 +1,6 @@
 1.0.3
 - Otimização do PayPal Plus para suportar AMD via require.js
+- Atualização do README.ME
 
 1.0.2
 - Correções de layout
