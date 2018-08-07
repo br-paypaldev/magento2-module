@@ -12,7 +12,8 @@ define([
     'Magento_Checkout/js/model/postcode-validator',
     'ko',
     'mage/url',
-    'mage/translate'
+    'mage/translate',
+    'ppplus'
 ], function (
     Component,
     iframe,
@@ -26,7 +27,9 @@ define([
     selectPaymentMethodAction,
     postcodeValidator,
     ko,
-    urlBuilder
+    urlBuilder,
+    $t,
+    ppplus
     ) {
     'use strict';
 
