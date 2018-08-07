@@ -10,14 +10,12 @@ var config = {
         }
     },
     paths: {
-        "ppplus": "https://www.paypalobjects.com/webstatic/ppplusdcc/ppplusdcc.min.js",
-        "legalize": "http://paypal.github.io/legalize.js/dist/legalize.min.js",
+        "ppplus": "https://www.paypalobjects.com/webstatic/ppplusdcc/ppplusdcc.min",
         "pplec": "https://www.paypalobjects.com/api/checkout"
     },
     shim: {
         'ppplus': {
             'deps': [
-                'legalize',
                 'jquery/jquery.cookie'
             ]
         },
