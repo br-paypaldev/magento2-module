@@ -320,7 +320,7 @@ class AttributeMerger extends \Magento\Checkout\Block\Checkout\AttributeMerger
      * @param string $attributeCode
      * @return null|string
      */
-    protected function getDefaultValue($attributeCode)
+    protected function getDefaultValue($attributeCode): ?string 
     {
         if ($attributeCode === 'country_id') {
             return $this->directoryHelper->getDefaultCountry();
@@ -356,7 +356,7 @@ class AttributeMerger extends \Magento\Checkout\Block\Checkout\AttributeMerger
     /**
      * @return \Magento\Customer\Api\Data\CustomerInterface|null
      */
-    protected function getCustomer()
+    protected function getCustomer(): ?CustomerInterface
     {
         if (!$this->customer) {
             if ($this->customerSession->isLoggedIn()) {
