@@ -39,6 +39,7 @@
                         <comment>To generate the Client ID, access https://developer.paypal.com/developer/applications/ and look for the REST API Apps section.</comment>
                         <depends>
                             <field id="mode">1</field>
+                            <field id="active">1</field>
                         </depends>
                         <validate>required-entry</validate>
                     </field>
@@ -48,6 +49,7 @@
                         <comment>To generate the Secret ID, access https://developer.paypal.com/developer/applications/ and look for the REST API Apps section.</comment>
                         <depends>
                             <field id="mode">1</field>
+                            <field id="active">1</field>
                         </depends>
                         <validate>required-entry</validate>
                     </field>
@@ -57,6 +59,7 @@
                         <config_path>payment/paypalbr_paypalplus/client_id_production</config_path>
                         <depends>
                             <field id="mode">2</field>
+                            <field id="active">1</field>
                         </depends>
                     </field>
                     <field id="secret_id_production" translate="label comment" type="password" sortOrder="0" showInDefault="1" showInWebsite="1" showInStore="0">
@@ -65,6 +68,7 @@
                         <comment>To generate the Secret ID, access https://developer.paypal.com/developer/applications/ and look for the REST API Apps section.</comment>
                         <depends>
                             <field id="mode">2</field>
+                            <field id="active">1</field>
                         </depends>
                     </field>
                     <field id="new_order_status" translate="label" type="select" sortOrder="0" showInDefault="1" showInWebsite="1" showInStore="0" canRestore="1">
@@ -191,6 +195,7 @@
                         <comment>To generate the Client ID, access https://developer.paypal.com/developer/applications/ and look for the REST API Apps section.</comment>
                         <depends>
                             <field id="mode">1</field>
+                            <field id="active">1</field>
                         </depends>
                         <validate>required-entry</validate>
                     </field>
@@ -200,6 +205,7 @@
                         <comment>To generate the Secret ID, access https://developer.paypal.com/developer/applications/ and look for the REST API Apps section.</comment>
                         <depends>
                             <field id="mode">1</field>
+                            <field id="active">1</field>
                         </depends>
                         <validate>required-entry</validate>
                     </field>
@@ -209,6 +215,7 @@
                         <config_path>payment/paypalbr_expresscheckout/client_id_production</config_path>
                         <depends>
                             <field id="mode">2</field>
+                            <field id="active">1</field>
                         </depends>
                     </field>
                     <field id="secret_id_production" translate="label comment" type="password" sortOrder="0" showInDefault="1" showInWebsite="1" showInStore="0">
@@ -217,6 +224,7 @@
                         <comment>To generate the Secret ID, access https://developer.paypal.com/developer/applications/ and look for the REST API Apps section.</comment>
                         <depends>
                             <field id="mode">2</field>
+                            <field id="active">1</field>
                         </depends>
                         <validate>required-entry</validate>
                     </field>
