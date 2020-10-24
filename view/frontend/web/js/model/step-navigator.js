@@ -16,7 +16,7 @@ define([
     'mage/storage',
     'mage/translate'
 ], function (
-    $, 
+    $,
     ko,
     quote,
     fullScreenLoader,
@@ -186,6 +186,15 @@ define([
         },
 
         /**
+         * Sets window location hash.
+         *
+         * @param {String} hash
+         */
+        setHash: function (hash) {
+            window.location.hash = hash;
+        },
+
+        /**
          * Next step.
          */
         next: function () {
@@ -206,6 +215,7 @@ define([
                     this.initializeIframe();
                     console.log(code);
                 }
+                this.setHash(code);
                 window.location = window.checkoutConfig.checkoutUrl + '#' + code;
                 document.body.scrollTop = document.documentElement.scrollTop = 0;
             }
@@ -222,7 +232,7 @@ define([
             var taxVat = '';
             var customerData = window.checkoutConfig.customerData;
             var mode = window.checkoutConfig.payment.paypalbr_paypalplus.mode === "1" ? 'sandbox' : 'live';
-            
+
             storage = $.initNamespaceStorage('paypal-data');
             storage = $.localStorage;
 
@@ -232,7 +242,7 @@ define([
                     isEmpty = false;
                 }
             }
- 
+
             if(isEmpty){
                 telephone =  quote.shippingAddress().telephone ? quote.shippingAddress().telephone  : storage.get('telephone');
             }else{
@@ -244,13 +254,13 @@ define([
             }else{
                 firstName = customerData.firstname;
             }
-            
+
             if(isEmpty){
                 lastName =  quote.shippingAddress().lastname ? quote.shippingAddress().lastname : storage.get('lastName');
             }else{
                 lastName = customerData.lastname;
             }
-            
+
             if(isEmpty){
                 email =  quote.guestEmail ? quote.guestEmail : storage.get('email');
             }else{
@@ -262,7 +272,7 @@ define([
             }else{
                 taxVat = customerData.taxvat;
             }
-                        
+
 
             storage.set(
                 'paypal-data',
@@ -342,7 +352,7 @@ define([
                      * @returns {undefined}
                      */
                     onError: function (err) {
-           
+
                         var message = JSON.stringify(err.cause);
                         var ppplusError = message.replace(/[\\"]/g, '');
                         if (typeof err.cause !== 'undefined') {
@@ -350,24 +360,24 @@ define([
                             {
 
                             case "INTERNAL_SERVICE_ERROR":
-                            case "SOCKET_HANG_UP": 
+                            case "SOCKET_HANG_UP":
                             case "socket hang up":
                             case "connect ECONNREFUSED":
-                            case "connect ETIMEDOUT": 
+                            case "connect ETIMEDOUT":
                             case "UNKNOWN_INTERNAL_ERROR":
                             case "fiWalletLifecycle_unknown_error":
-                            case "Failed to decrypt term info": 
-                            case "RESOURCE_NOT_FOUND":                 
+                            case "Failed to decrypt term info":
+                            case "RESOURCE_NOT_FOUND":
                             case "INTERNAL_SERVER_ERROR":
                                 alert($.mage.__('An unexpected error occurred, please try again.'));
                                 location.reload();
-                            case "RISK_N_DECLINE": 
-                            case "NO_VALID_FUNDING_SOURCE_OR_RISK_REFUSED": 
-                                alert($.mage.__('Please use another card if the problem persists please contact PayPal (0800-047-4482).')); 
+                            case "RISK_N_DECLINE":
+                            case "NO_VALID_FUNDING_SOURCE_OR_RISK_REFUSED":
+                                alert($.mage.__('Please use another card if the problem persists please contact PayPal (0800-047-4482).'));
                                 location.reload();
                             case "TRY_ANOTHER_CARD":
                             case "NO_VALID_FUNDING_INSTRUMENT":
-                                alert($.mage.__('Your payment was not approved. Please use another card if the problem persists please contact PayPal (0800-047-4482).')); 
+                                alert($.mage.__('Your payment was not approved. Please use another card if the problem persists please contact PayPal (0800-047-4482).'));
                                 location.reload();
                             break;
                             case "CARD_ATTEMPT_INVALID":
@@ -383,7 +393,7 @@ define([
                                 location.reload();
                             break;
                             default: //unknown error & reload payment flow
-                                alert ($.mage.__('An unexpected error occurred, please try again.')); 
+                                alert ($.mage.__('An unexpected error occurred, please try again.'));
                                 location.reload();
                             }
                         }
@@ -400,7 +410,7 @@ define([
             var self = this;
             var serviceUrl = urlBuilder.build('paypalplus/payment/index');
             var approvalUrl = '';
-            
+
             storage.post(serviceUrl, '')
             .done(function (response) {
                 // console.log(response);
