@@ -2,12 +2,13 @@
 
 namespace PayPalBR\PayPal\Block\Checkout;
 
-use Magento\Framework\View\Element\Template\Context as TemplateContext;
-use Magento\Checkout\Model\Session;
-use Magento\Sales\Model\Order\Config;
-use Magento\Framework\App\Http\Context as HttpContext;
-use Magento\Sales\Model\OrderFactory;
 use Magento\Checkout\Block\Onepage\Success as OnepageSuccess;
+use Magento\Checkout\Model\Session;
+use Magento\Framework\App\Http\Context as HttpContext;
+use Magento\Framework\View\Element\Template\Context as TemplateContext;
+use Magento\Sales\Model\Order\Config;
+use Magento\Sales\Model\OrderFactory;
+use Magento\Store\Model\StoreManagerInterface;
 
 class Success extends OnepageSuccess
 {
@@ -32,6 +33,8 @@ class Success extends OnepageSuccess
      */
     private $_order = false;
 
+    private $storeManager;
+
     /**
      * Constructor method
      *
@@ -46,12 +49,13 @@ class Success extends OnepageSuccess
         Config $orderConfig,
         HttpContext $httpContext,
         OrderFactory $orderFactory,
+        StoreManagerInterface $storeManager,
         array $data = []
-    )
-    {
+    ) {
         parent::__construct($context, $checkoutSession, $orderConfig, $httpContext, $data);
         $this->_scopeconfig = $context->getScopeConfig();
         $this->_orderFactory = $orderFactory;
+        $this->storeManager = $storeManager;
     }
 
     /**
@@ -77,7 +81,7 @@ class Success extends OnepageSuccess
      */
     public function getIsMethodActive()
     {
-        if($this->isPaymentPaypal()) {
+        if ($this->isPaymentPaypal()) {
             return $this->getConfigValue(self::XML_PATH_IS_METHOD_ACTIVE);
         }
 
@@ -89,7 +93,7 @@ class Success extends OnepageSuccess
      *
      * @return \Magento\Sales\Model\Order
      */
-    public function  _initOrder()
+    public function _initOrder()
     {
         /** @var \Magento\Sales\Model\Order $order */
         $this->_order = $this->_orderFactory->create()->loadByIncrementId($this->getOrderId());
@@ -102,18 +106,18 @@ class Success extends OnepageSuccess
      */
     public function isPaymentPending()
     {
-        if($this->_order->getStatus() == self::PENDING_PAYMENT_STATUS_CODE){
+        if ($this->_order->getStatus() == self::PENDING_PAYMENT_STATUS_CODE) {
             return true;
         }
 
         return false;
     }
 
-   /**
-     * Get payment store config
-     *
-     * @return string
-     */
+    /**
+      * Get payment store config
+      *
+      * @return string
+      */
     public function getConfigValue($configPath)
     {
         $value =  $this->_scopeConfig->getValue(
@@ -122,5 +126,10 @@ class Success extends OnepageSuccess
         );
 
         return $value;
+    }
+
+    public function getCleanUrl()
+    {
+        return $this->storeManager->getStore()->getBaseUrl() . 'paypalplus/clean/index/';
     }
 }

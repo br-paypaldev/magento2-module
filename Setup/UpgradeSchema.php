@@ -53,49 +53,12 @@ class UpgradeData implements UpgradeDataInterface
     ){
         $dbVersion = $context->getVersion();
 
-        $this->createDir();
-
         if (version_compare($context->getVersion(), "0.2.10", "<")) {
             $setup = $this->updateVersionZeroTwoTen($setup);
         }
 
         if (version_compare($dbVersion, '0.3.4', '<')) {
             $setup = $this->updateVersionZeroTreeFour($setup);
-        }
-    }
-
-    protected function createDir()
-    {
-        $varDir = $this->fileSystem->getDirectoryRead(\Magento\Framework\App\Filesystem\DirectoryList::LOG);
-        $varRootDir = $varDir->getAbsolutePath();
-        $paypalDir = $varRootDir . 'paypalbr/';
-
-        if (!$this->file->isDirectory($paypalDir)) {
-            $this->file->createDirectory($paypalDir, $permissions = 0755);
-        }
-
-        $paypalPlusDir = $varRootDir . 'paypalbr/paypal_plus/';
-
-        if (!$this->file->isDirectory($paypalPlusDir)) {
-            $this->file->createDirectory($paypalPlusDir, $permissions = 0755);
-        }
-
-        $paypalExpressCheckoutDir = $varRootDir . 'paypalbr/paypal_expresscheckout/';
-
-        if (!$this->file->isDirectory($paypalExpressCheckoutDir)) {
-            $this->file->createDirectory($paypalExpressCheckoutDir, $permissions = 0755);
-        }
-
-        $paypalLoginDir = $varRootDir . 'paypalbr/paypal_login/';
-
-        if (!$this->file->isDirectory($paypalLoginDir)) {
-            $this->file->createDirectory($paypalLoginDir, $permissions = 0755);
-        }
-
-        $paypalWebhookDir = $varRootDir . 'paypalbr/webhook/';
-
-        if (!$this->file->isDirectory($paypalWebhookDir)) {
-            $this->file->createDirectory($paypalWebhookDir, $permissions = 0755);
         }
     }
 

@@ -6,18 +6,22 @@ use PayPalBR\PayPal\Api\EventsInterface;
 use PayPalBR\PayPal\Api\WebHookManagementInterface;
 use PayPalBR\PayPal\Model\PayPalPlus\ConfigProvider;
 use PayPal\Api\VerifyWebhookSignature;
+use Magento\Framework\Filesystem\DirectoryList;
 
 class WebHookManagement implements WebHookManagementInterface
 {
     protected $eventWebhook;
     protected $configProvider;
+    protected $dir;
 
     public function __construct(
         EventsInterface $eventWebhook,
-        ConfigProvider $configProvider
+        ConfigProvider $configProvider,
+        DirectoryList $dir
     ) {
         $this->setEventWebhook($eventWebhook);
         $this->setConfigProvider($configProvider);
+        $this->dir = $dir;
     }
 
     /**
@@ -48,7 +52,8 @@ class WebHookManagement implements WebHookManagementInterface
                 //'http.headers.PayPal-Partner-Attribution-Id' => 'MagentoBrazil_Ecom_PPPlus2',
                 'mode' => $this->configProvider->isModeSandbox() ? 'sandbox' : 'live',
                 'log.LogEnabled' => $debug,
-                'log.FileName' => BP . '/var/log/paypalbr/webhook/paypal-webhook-' . date('Y-m-d') . '.log',
+                'log.FileName' => $this->dir->getPath('log') . '/paypal-webhook-' . date('Y-m-d') . '.log',
+                'cache.FileName' => $this->dir->getPath('log') . '/auth.cache',
                 'log.LogLevel' => 'DEBUG',
                 'cache.enabled' => true,
                 'http.CURLOPT_SSLVERSION' => 'CURL_SSLVERSION_TLSv1_2'
@@ -58,8 +63,8 @@ class WebHookManagement implements WebHookManagementInterface
     }
 
     /**
-    * {@inheritdoc}
-    */
+     * {@inheritdoc}
+     */
     public function postWebHook($id, $create_time, $resource_type, $event_type, $summary, $resource, $links, $event_version)
     {
         $array = [
@@ -74,14 +79,21 @@ class WebHookManagement implements WebHookManagementInterface
         ];
 
         try {
-            $httpRequestObject = new \Zend_Controller_Request_Http();
-            $paypalAuthAlgo = $httpRequestObject->getHeader('Paypal-Auth-Algo');
-            $paypalTransmissionId = $httpRequestObject->getHeader('Paypal-Transmission-Id');
-            $paypalCertUrl = $httpRequestObject->getHeader('Paypal-Cert-Url');
-            $paypalTransmissionSig = $httpRequestObject->getHeader('Paypal-Transmission-Sig');
-            $paypalTransmissionTime = $httpRequestObject->getHeader('Paypal-Transmission-Time');
-            $requestBody = $httpRequestObject->getRawBody();
-            
+            $paypalAuthAlgo = $this->getHeader1('Paypal-Auth-Algo');
+            $paypalTransmissionId = $this->getHeader1('Paypal-Transmission-Id');
+            $paypalCertUrl = $this->getHeader1('Paypal-Cert-Url');
+            $paypalTransmissionSig = $this->getHeader1('Paypal-Transmission-Sig');
+            $paypalTransmissionTime = $this->getHeader1('Paypal-Transmission-Time');
+
+            $requestBody = false;
+            $body = file_get_contents('php://input');
+
+            if (strlen(trim($body)) > 0) {
+                $requestBody = $body;
+            } else {
+                $requestBody = false;
+            }
+
             $signatureVerification = new VerifyWebhookSignature();
             $signatureVerification->setAuthAlgo($paypalAuthAlgo);
             $signatureVerification->setTransmissionId($paypalTransmissionId);
@@ -113,7 +125,7 @@ class WebHookManagement implements WebHookManagementInterface
 
                 return $return;
             }
-        } catch (\Exception $e) {   
+        } catch (\Exception $e) {
             $this->logger('initial debug');
             $this->logger($e);
             $this->logger('final debug');
@@ -143,7 +155,7 @@ class WebHookManagement implements WebHookManagementInterface
             ->setResource($resource)
             ->setLinks($links);
         try {
-            
+
             if ($this->getConfigProvider()->isDebugEnabled()) {
                 $this->logger($array);
             }
@@ -170,9 +182,50 @@ class WebHookManagement implements WebHookManagementInterface
         return $return;
     }
 
+    protected function getHeader1($header)
+    {
+        if (empty($header)) {
+            #require_once 'Zend/Controller/Request/Exception.php';
+            throw new Zend_Controller_Request_Exception('An HTTP header name is required');
+        }
+
+        // Try to get it from the $_SERVER array first
+        $temp = strtoupper(str_replace('-', '_', $header));
+        if (isset($_SERVER['HTTP_' . $temp])) {
+            return $_SERVER['HTTP_' . $temp];
+        }
+
+        /*
+         * Try to get it from the $_SERVER array on POST request or CGI environment
+         * @see https://www.ietf.org/rfc/rfc3875 (4.1.2. and 4.1.3.)
+         */
+        if (isset($_SERVER[$temp])
+            && in_array($temp, array('CONTENT_TYPE', 'CONTENT_LENGTH'))
+        ) {
+            return $_SERVER[$temp];
+        }
+
+        // This seems to be the only way to get the Authorization header on
+        // Apache
+        if (function_exists('apache_request_headers')) {
+            $headers = apache_request_headers();
+            if (isset($headers[$header])) {
+                return $headers[$header];
+            }
+            $header = strtolower($header);
+            foreach ($headers as $key => $value) {
+                if (strtolower($key) == $header) {
+                    return $value;
+                }
+            }
+        }
+
+        return false;
+    }
+
     protected function logger($array)
     {
-        $writer = new \Zend\Log\Writer\Stream(BP . '/var/log/paypalbr/webhook/paypal-webhook-' . date('Y-m-d') . '.log');
+        $writer = new \Zend\Log\Writer\Stream($this->dir->getPath('log') . '/paypal-webhook-' . date('Y-m-d') . '.log');
         $logger = new \Zend\Log\Logger();
         $logger->addWriter($writer);
         $logger->info($array);

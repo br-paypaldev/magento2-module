@@ -125,7 +125,18 @@ define([
                     // Make a call to your server to set up the payment
                     return paypal.request.post(self.CREATE_URL)
                             .then(function (res) {
-                                return res.id;
+                                var response;
+                                jQuery.ajax({
+                                    url: self.CREATE_URL,
+                                    type: "POST",
+                                    dataType: 'json',
+                                    async: false,
+                                }).done(function (data) {
+                                    // console.log(data);
+                                    // console.log(data.id)
+                                    response = data.id;
+                                });
+                                return response;
                             });
                 },
                 // onAuthorize() is called when the buyer approves the payment
@@ -150,7 +161,21 @@ define([
 
                 },
                 onError: function (err) {
-                    alert($.mage.__('An unexpected error occurred, please try again.'));
+                    var pos = err.message.indexOf("}");
+                    var res = err.message.substring(0, pos).trim();
+                    pos = res.indexOf("{");
+                    res = res.substr(pos).trim();
+                    res = res.replace("{", "").trim();
+                    res = "{" + res + "}";
+                    err = JSON.parse(res);
+
+                    var message;
+                    if(err.message) {
+                        message = err.message;
+                    } else {
+                        message = $.mage.__('An unexpected error occurred, please try again.');
+                    }
+                    alert(message);
                     location.reload();
                 }
 

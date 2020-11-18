@@ -10,6 +10,12 @@
 #ppplus{
     min-height: 500px;
 }
+
+#ppplus iframe{
+    height: 100% !important;
+    width: 100% !important;
+}
+
 .why-buy-with-paypal {
 	width: 100%;
     max-width: 750px;
@@ -132,4 +138,8 @@
 .orPayment{
     text-align: center;
     margin-top: 10px;
+}
+
+.firecheckout-index-index #payment{
+    display: block !important;
 }

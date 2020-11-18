@@ -431,7 +431,19 @@ define([
                         return paypal.request.post(self.CREATE_URL)
                                 .then(function (res) {
                                     // console.log(res.paymentID);
-                                    return res.paymentID;
+                                    // return res.paymentID;
+                                    var response;
+                                    jQuery.ajax({
+                                        url: self.CREATE_URL,
+                                        type: "POST",
+                                        dataType: 'json',
+                                        async: false,
+                                    }).done(function (data) {
+                                        // console.log(data);
+                                        // console.log(data.paymentID)
+                                        response = data.paymentID;
+                                    });
+                                    return response;
                                 });
                     },
 
@@ -449,7 +461,18 @@ define([
                         // Make a call to your server to execute the payment
                         return paypal.request.post(self.EXECUTE_URL, data)
                                 .then(function (res) {
-                                    window.location.href = res.redirect;
+                                    // window.location.href = res.redirect;
+                                    jQuery.ajax({
+                                        url: self.EXECUTE_URL,
+                                        type: "POST",
+                                        data: data,
+                                        dataType: 'json',
+                                        async: false,
+                                    }).done(function (data) {
+                                        // console.log(data);
+                                        // console.log(data.paymentID)
+                                        window.location.href = data.redirect;
+                                    });
                                 });
                     },
                     onError: function (err) {

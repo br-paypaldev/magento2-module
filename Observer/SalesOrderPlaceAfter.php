@@ -13,6 +13,7 @@ use Magento\Customer\Api\CustomerRepositoryInterface;
 use Magento\Sales\Model\Service\InvoiceService;
 use Magento\Sales\Model\Order\Email\Sender\InvoiceSender;
 use Magento\Framework\DB\Transaction;
+use Magento\Framework\Filesystem\DirectoryList;
 
 class SalesOrderPlaceAfter implements ObserverInterface
 {
@@ -60,6 +61,11 @@ class SalesOrderPlaceAfter implements ObserverInterface
     protected $invoiceSender;
 
     /**
+     * @var
+     */
+    protected $dir;
+
+    /**
      * @param \Magento\Checkout\Model\Session $checkoutSession
      * @param \Psr\Log\LoggerInterface $logger
      * @param Api $api
@@ -73,7 +79,8 @@ class SalesOrderPlaceAfter implements ObserverInterface
         CustomerRepositoryInterface $customerRepository,
         InvoiceService $invoiceService,
         Transaction $transaction,
-        InvoiceSender $invoiceSender
+        InvoiceSender $invoiceSender,
+        DirectoryList $dir
     ) {
         $this->setCheckoutSession($checkoutSession);
         $this->setLogger($logger);
@@ -84,6 +91,7 @@ class SalesOrderPlaceAfter implements ObserverInterface
         $this->customerFactory = $customerFactory;
         $this->sessionFactory = $sessionFactory;
         $this->customerRepository = $customerRepository;
+        $this->dir = $dir;
     }
 
     /**
@@ -175,7 +183,7 @@ class SalesOrderPlaceAfter implements ObserverInterface
      */
     protected function logger($data){
 
-        $writer = new \Zend\Log\Writer\Stream(BP . '/var/log/paypalbr/paypal-SalesOrderPlaceAfter-' . date('Y-m-d') . '.log');
+        $writer = new \Zend\Log\Writer\Stream($this->dir->getPath('log') . '/paypal-SalesOrderPlaceAfter-' . date('Y-m-d') . '.log');
         $logger = new \Zend\Log\Logger();
         $logger->addWriter($writer);
         $logger->info('Debug Initial SalesOrderPlaceAfter');

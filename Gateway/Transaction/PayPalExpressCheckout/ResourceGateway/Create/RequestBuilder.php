@@ -15,6 +15,7 @@ use PayPalBR\PayPal\Api\PayPalPlusRequestDataProviderInterfaceFactory;
 use PayPalBR\PayPal\Api\CartItemRequestDataProviderInterfaceFactory;
 use PayPalBR\PayPal\Model\PayPalExpressCheckout\ConfigProvider;
 use Magento\Payment\Model\Cart\SalesModel\Factory;
+use Magento\Framework\Filesystem\DirectoryList;
 
 
 class RequestBuilder implements BuilderInterface
@@ -30,6 +31,7 @@ class RequestBuilder implements BuilderInterface
     protected $configProvider;
     protected $_checkoutSession;
     protected $cartSalesModelQuote;
+    protected $dir;
 
     /**
      * RequestBuilder constructor.
@@ -45,10 +47,11 @@ class RequestBuilder implements BuilderInterface
         Cart $cart,
         ConfigInterface $config,
         Session $checkoutSession,
-        ConfigProvider $configProvider
+        ConfigProvider $configProvider,
+        DirectoryList $dir
     ) {
         $this->setRequestDataProviderFactory($requestDataProviderFactory);
-                $quote = $cart->getQuote();
+        $quote = $cart->getQuote();
         $this->cartSalesModelQuote = $cartSalesModelFactory->create($quote);
         $this->setCartItemRequestProviderFactory($cartItemRequestDataProviderFactory);
         $this->setCart($cart);
@@ -56,6 +59,7 @@ class RequestBuilder implements BuilderInterface
         $this->setCheckoutSession($checkoutSession);
         $this->setConfigProvider($configProvider);
         $this->_checkoutSession = $checkoutSession;
+        $this->dir = $dir;
 
     }
 
@@ -300,7 +304,8 @@ class RequestBuilder implements BuilderInterface
                 'http.headers.PayPal-Partner-Attribution-Id' => 'MagentoBrazil_Ecom_EC2',
                 'mode' => $this->configProvider->isModeSandbox() ? 'sandbox' : 'live',
                 'log.LogEnabled' => $debug,
-                'log.FileName' => BP . '/var/log/paypalbr/paypal_expresscheckout/paypal-expresscheckout-' . date('Y-m-d') . '.log',
+                'log.FileName' => $this->dir->getPath('log') . '/paypal-expresscheckout-' . date('Y-m-d') . '.log',
+                'cache.FileName' => $this->dir->getPath('log') . '/auth.cache',
                 'log.LogLevel' => 'DEBUG',
                 'cache.enabled' => true,
                 'http.CURLOPT_SSLVERSION' => 'CURL_SSLVERSION_TLSv1_2'
@@ -318,7 +323,7 @@ class RequestBuilder implements BuilderInterface
     {
         $paypalPaymentId = $requestDataProvider->getPayId();
         $paypalPayment = \PayPal\Api\Payment::get($paypalPaymentId, $apiContext);
-        
+
         return $paypalPayment;
     }
 
@@ -353,13 +358,21 @@ class RequestBuilder implements BuilderInterface
         $patchRequest->addPatch($description);
 
         $quote = $this->getCart()->getQuote();
-        
+//        $customerBalance = $quote->getData('customer_balance_amount_used');
+//        if((float)$customerBalance > 0.0000) {
+//            $customerBalance = $customerBalance * (-1);
+//        }
+
+        $baseGrandTotal = $quote->getBaseGrandTotal();
+        $shipping = $quote->getShippingAddress()->getBaseShippingAmount();
+        $subtotal = $baseGrandTotal - $shipping;
+
         $valueReplaceAmount = [
-          'currency' => 'BRL',
-          'total'   => $quote->getBaseGrandTotal(),
+            'currency' => 'BRL',
+            'total'   => $quote->getBaseGrandTotal(),
             'details' => [
                 'shipping' => $quote->getShippingAddress()->getShippingAmount(),
-                'subtotal' => $quote->getSubtotal() + $this->cartSalesModelQuote->getBaseDiscountAmount()
+                'subtotal' => $subtotal
             ]
         ];
 
@@ -391,15 +404,17 @@ class RequestBuilder implements BuilderInterface
     protected function getItemList()
     {
         /** @var \Magento\Quote\Model\Quote $quote */
-        $quote = $this->getCart()->getQuote();
-        $baseSubtotal = $quote->getBaseSubtotal();
+        $quote = $this->cart->getQuote();
+        $baseSubtotal = $this->cartSalesModelQuote->getBaseSubtotal();
+        $customerBalance = $quote->getData('customer_balance_amount_used');
+        $rewardPoints = $quote->getData('base_reward_currency_amount');
+        $giftCard = $quote->getData('base_gift_cards_amount_used');
 
         /** @var string $storeCurrency */
         $storeCurrency = $quote->getBaseCurrencyCode();
 
         $itemList = new \PayPal\Api\ItemList();
         $cartItems = $quote->getItems();
-        
         foreach ($cartItems as $cartItem) {
             $item = new \PayPal\Api\Item();
             $item->setName($cartItem->getName())
@@ -409,18 +424,59 @@ class RequestBuilder implements BuilderInterface
                 ->setSku($cartItem->getSku())
                 ->setCurrency($storeCurrency);
             $itemList->addItem($item);
-        }      
-           
-         if($this->cartSalesModelQuote->getBaseDiscountAmount() !== '0.0000'){          
-             
+        }
+
+        if($this->cartSalesModelQuote->getBaseDiscountAmount() !== '0.0000'){
             $item = new \PayPal\Api\Item();
             $item->setName('Discount')
-                 ->setDescription('Discount')
-                 ->setQuantity('1')
-                 ->setPrice($this->cartSalesModelQuote->getBaseDiscountAmount())
-                 ->setSku('discountloja')
-                 ->setCurrency($storeCurrency);
-             $itemList->addItem($item);
+                ->setDescription('Discount')
+                ->setQuantity('1')
+                ->setPrice($this->cartSalesModelQuote->getBaseDiscountAmount())
+                ->setSku('discountloja')
+                ->setCurrency($storeCurrency);
+            $itemList->addItem($item);
+        }
+
+        if($customerBalance && $customerBalance !== '0.0000'){
+            if((float)$customerBalance > 0.0000) {
+                $customerBalance = $customerBalance * (-1);
+            }
+            $item = new \PayPal\Api\Item();
+            $item->setName('Store Credit Discount')
+                ->setDescription('Store Credit Discount')
+                ->setQuantity('1')
+                ->setPrice($customerBalance)
+                ->setSku('discountloja')
+                ->setCurrency($storeCurrency);
+            $itemList->addItem($item);
+        }
+
+        if($rewardPoints && $rewardPoints !== '0.0000'){
+            if((float)$rewardPoints > 0.0000) {
+                $rewardPoints = $rewardPoints * (-1);
+            }
+            $item = new \PayPal\Api\Item();
+            $item->setName('Rewards Discount')
+                ->setDescription('Rewards Discount')
+                ->setQuantity('1')
+                ->setPrice($rewardPoints)
+                ->setSku('discountloja')
+                ->setCurrency($storeCurrency);
+            $itemList->addItem($item);
+        }
+
+        if($giftCard && $giftCard !== '0.0000'){
+            if((float)$giftCard > 0.0000) {
+                $giftCard = $giftCard * (-1);
+            }
+            $item = new \PayPal\Api\Item();
+            $item->setName('Gift Card Discount')
+                ->setDescription('Gift Card Discount')
+                ->setQuantity('1')
+                ->setPrice($giftCard)
+                ->setSku('discountloja')
+                ->setCurrency($storeCurrency);
+            $itemList->addItem($item);
         }
 
 //        $shippingAddress = $this->getShippingAddress();
@@ -441,7 +497,18 @@ class RequestBuilder implements BuilderInterface
         } catch (\Exception $e) {
             $error_msg = json_decode($e->getData());
             switch ($error_msg->name) {
+                case 'INTERNAL_SERVICE_ERROR':
+                    try{
+                        $paypalPayment->execute($paymentExecution, $apiContext);
+                    } catch(\Exception $e){
+                        $message = 'Ocorreu um erro na captura do pagamento, por favor tente novamente e caso o problema persista entre em contato. #' . $error_msg->debug_id;
+                        throw new \Magento\Framework\Exception\NotFoundException(__($message));
+                    }
+                    break;
                 case 'INSTRUMENT_DECLINED':
+                    $message = 'O seu pagamento não foi aprovado pelo banco emissor, por favor tente novamente. #' . $error_msg->debug_id;
+                    throw new \Magento\Framework\Exception\NotFoundException(__($message));
+                    break;
                 case 'CREDIT_CARD_REFUSED':
                 case 'TRANSACTION_REFUSED_BY_PAYPAL_RISK':
                 case 'PAYER_CANNOT_PAY':
@@ -449,19 +516,19 @@ class RequestBuilder implements BuilderInterface
                 case 'PAYER_ACCOUNT_LOCKED_OR_CLOSED':
                 case 'PAYEE_ACCOUNT_RESTRICTED':
                 case 'TRANSACTION_REFUSED':
-                    if (!$this->getConfig()->getToggle()) {
-                        throw new \InvalidArgumentException($error_msg->name);
-                    }
+                    $message = 'O seu pagamento não foi aprovado, por favor tente novamente. #' . $error_msg->debug_id;
+                    throw new \Magento\Framework\Exception\NotFoundException(__($message));
                     break;
-                
+
                 default:
-                    throw new \LogicException($error_msg->name);
+                    $message = 'Ocorreu um erro na captura do pagamento, por favor tente novamente e caso o problema persista entre em contato. #' . $error_msg->debug_id;
+                    throw new \Magento\Framework\Exception\NotFoundException(__($message));
                     break;
             }
 
             return $error_msg;
         }
-        
+
 
         return $paypalPayment;
     }

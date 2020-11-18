@@ -48,6 +48,11 @@
                     <div><img alt="PayPal"  data-bind="attr: { src: getUrlMagento()+'paypal.png' }" ></div>
                 </div>
             </div>
+            <div class="checkout-agreements-block">
+                <!-- ko foreach: $parent.getRegion('before-place-order') -->
+                <!-- ko template: getTemplate() --><!-- /ko -->
+                <!--/ko-->
+            </div>
             <div id="paypal-button-container"></div>
             <div style="width: 100%;" id="ppplus-information">
                 <input type="hidden"

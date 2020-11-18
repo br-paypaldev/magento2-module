@@ -31,7 +31,16 @@ class InitializeCommand implements CommandInterface
         $payment->authorize(true, $baseTotalDue);
         $payment->setAmountAuthorized($totalDue);
         $payment->setBaseAmountAuthorized($payment->getOrder()->getBaseTotalDue());
-        $stateObject->setData(OrderInterface::STATE, Order::STATE_PENDING_PAYMENT);
+        
+        if ($payment->getIsTransactionPending()) {
+            $stateObject->setData(OrderInterface::STATE, Order::STATE_PAYMENT_REVIEW);
+        }
+        else if ($payment->getIsFraudDetected()) {
+            $stateObject->setData(OrderInterface::STATE, Order::STATE_PAYMENT_REVIEW);
+        }
+        else{
+            $stateObject->setData(OrderInterface::STATE, Order::STATE_PROCESSING);
+        }
 
         $stateObject->setData(OrderInterface::STATUS, $payment->getMethodInstance()->getConfigData('order_status'));
 

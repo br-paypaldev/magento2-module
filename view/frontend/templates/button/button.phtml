@@ -40,7 +40,18 @@
                 return paypal.request.post(CREATE_URL)
                         .then(function (res) {
                             // console.log(res.paymentID);
-                            return res.paymentID;
+                            var response;
+                            jQuery.ajax({
+                                url: CREATE_URL,
+                                type: "POST",
+                                dataType: 'json',
+                                async: false,
+                            }).done(function (data) {
+                                console.log(data);
+                                console.log(data.paymentID)
+                                response = data.paymentID;
+                            });
+                            return response;
                         });
             },
 
@@ -59,7 +70,16 @@
                 // Make a call to your server to execute the payment
                 return paypal.request.post(EXECUTE_URL, data)
                         .then(function (res) {
-                            window.location.href = res.redirect;
+                            jQuery.ajax({
+                                url: EXECUTE_URL,
+                                type: "POST",
+                                data: data,
+                                dataType: 'json',
+                                async: false,
+                            }).done(function (data) {
+                                // console.log(data);
+                                window.location.href = data.redirect;
+                            });
                         });
             }
 

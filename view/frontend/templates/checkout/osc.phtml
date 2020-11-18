@@ -1,0 +1,9 @@
+<?php if( $this->getOSC() ): ?>
+    <script type="text/x-magento-init">
+        {
+            "*": {
+                "PayPalBR_PayPal/js/view/payment/method-renderer/paypal-plus-<?php echo $this->getOSC(); ?>": {}
+            }
+        }
+    </script>
+<?php endif; ?>

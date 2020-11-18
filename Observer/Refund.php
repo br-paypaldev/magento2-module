@@ -8,21 +8,25 @@ use PayPalBR\PayPal\Model\PayPalPlus\ConfigProvider;
 use PayPal\Api\Amount;
 use PayPal\Api\Refund as PayPalRefund;
 use PayPal\Api\Sale;
+use Magento\Framework\Filesystem\DirectoryList;
 
 class Refund implements ObserverInterface
 {
     const MODULE_NAME = 'PayPalBR_PayPal';
 
     protected $configProvider;
+    protected $dir;
 
     /**
      * RequestBuilder constructor.
      * @param ConfigProvider $configProvider
      */
     public function __construct(
-        ConfigProvider $configProvider
+        ConfigProvider $configProvider,
+        DirectoryList $dir
     ) {
         $this->setConfigProvider($configProvider);
+        $this->dir = $dir;
     }
     /**
      * @param EventObserver $observer
@@ -40,7 +44,14 @@ class Refund implements ObserverInterface
 
         try {
             $saleId = $payment->getLastTransId();
-            $amt = $this->setAmountRequest($payment->getAmountPaid());
+            $creditMemo = $event->getCreditmemo();
+            
+            //for store credit, do not refund anything to PayPal
+            if(!empty($creditMemo->getData('customer_balance_amount'))) {
+                return $this;
+            } else {
+                $amt = $this->setAmountRequest($payment->getAmountRefunded());
+            }
             $refundRequest = $this->setRefundRequest($amt);
             $sale = $this->setSale($payment->getLastTransId());
 
@@ -49,7 +60,7 @@ class Refund implements ObserverInterface
             $refundedSale = $sale->refund($refundRequest, $apiContext);
         } catch (\Exception $e) {
             $data = json_decode($e->getData());
-            if ('TRANSACTION_REFUSED' == $data->name) {
+            if (('TRANSACTION_REFUSED' == $data->name) || ('TRANSACTION_ALREADY_REFUNDED' == $data->name)) {
                 $payment->setAdditionalInformation('refund', $data->name)->setAdditionalInformation('state_payPal', 'refunded')->save();
 
                 $order->addStatusHistoryComment(
@@ -131,7 +142,8 @@ class Refund implements ObserverInterface
                 'http.headers.PayPal-Partner-Attribution-Id' => 'MagentoBrazil_Ecom_PPPlus2',
                 'mode' => $this->getConfigProvider()->isModeSandbox() ? 'sandbox' : 'live',
                 'log.LogEnabled' => $debug,
-                'log.FileName' => BP . '/var/log/paypalbr/paypalplus-refund-' . date('Y-m-d') . '.log',
+                'log.FileName' => $this->dir->getPath('log') . '/paypalplus-refund-' . date('Y-m-d') . '.log',
+                'cache.FileName' => $this->dir->getPath('log') . '/auth.cache',
                 'log.LogLevel' => 'DEBUG', // PLEASE USE `INFO` LEVEL FOR LOGGING IN LIVE ENVIRONMENTS
                 'cache.enabled' => false,
                 'http.CURLOPT_SSLVERSION' => 'CURL_SSLVERSION_TLSv1_2'

@@ -41,7 +41,8 @@ class Index extends \Magento\Framework\App\Action\Action
     {
         $resultJson = $this->jsonFactory->create();
 
-        $response = $this->paypalPlusApi->execute();
+        $params = $this->getRequest()->getParams();
+        $response = $this->paypalPlusApi->execute($params);
         if ($response['status'] == 'success') {
             $resultJson
                 ->setHttpResponseCode(200)

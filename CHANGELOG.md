@@ -1,3 +1,10 @@
+1.0.4
+- Suporte para Magento 2.3.4
+- Correção na aprovação do pedido via Webhook
+- Correção no Refund do pedido via Webhook
+- Compatibilidade com Firecheckout OSC
+- Correção do histórico do pedido
+
 1.0.3
 - Otimização do PayPal Plus para suportar AMD via require.js
 - Atualização do README.ME

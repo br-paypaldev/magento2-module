@@ -10,6 +10,9 @@ define([
     'Magento_Checkout/js/checkout-data',
     'Magento_Checkout/js/action/select-payment-method',
     'Magento_Checkout/js/model/postcode-validator',
+    'Magento_Checkout/js/model/payment/additional-validators',
+    'PayPalBR_PayPal/js/model/shipping-address/save-processor',
+    'helperPaypal',
     'ko',
     'mage/url',
     'mage/translate',
@@ -26,11 +29,14 @@ define([
     checkoutData,
     selectPaymentMethodAction,
     postcodeValidator,
+    additionalValidators,
+    shippingAddressSaveProcessor,
+    helper,
     ko,
     urlBuilder,
     $t,
     ppplus
-    ) {
+) {
     'use strict';
 
     return Component.extend({
@@ -63,7 +69,6 @@ define([
         paypalObject: {},
 
         initialize: function () {
-
             this._super();
             // this._render();
             var self = this;
@@ -79,7 +84,7 @@ define([
                         return false;
                     }
 
-                    self.initializeIframe();
+                    helper.initializeIframe(self);
                 }
                 window.checkoutConfig.payment.paypalbr_paypalplus.is_payment_ready = true;
                 self.isPaymentReady = true;
@@ -91,253 +96,56 @@ define([
          */
         selectPaymentMethod: function () {
             var self = this;
-            if (!self.isPaymentReady || self.shippingValue != this.defaultQuote.totals().base_shipping_amount) {
 
-                fullScreenLoaderPayPal.startLoader();
-                if ($('#ppplus').length) {
+            $('#ppplus').css('display', 'none');
+            $('#continueButton').prop("disabled", true);
 
-                    if (this.breakError) {
-                        $('#iframe-warning').hide();
-                        $('#iframe-error').show();
-                        $('#continueButton').prop("disabled", true);
-                        return false;
+            if(quote.billingAddress._latestValue || quote.shippingAddress.length){ //Not initialize iframe if quote don't have address.
+                if (this.validate() && additionalValidators.validate()) {
+                    $('#iframe-error').hide();
+                    $('#ppplus').parent().find('.payment-method-billing-address').css('display', 'none');
+                    $('#ppplus').hide();
+                    fullScreenLoaderPayPal.startLoader();
+
+                    if (window.checkoutConfig.isFirecheckout) {
+                        shippingAddressSaveProcessor.saveShippingAddress();
                     }
 
-                    self.initializeIframe();
+                    setTimeout(function () {
+                        // if (!self.isPaymentReady || self.shippingValue != this.defaultQuote.totals().base_shipping_amount) {
+                        if (!self.isPaymentReady || self.shippingValue != self.defaultQuote.totals().base_shipping_amount) {
+
+                            // fullScreenLoaderPayPal.startLoader();
+                            if ($('#ppplus').length) {
+
+                                // if (this.breakError) {
+                                if (self.breakError) {
+                                    $('#iframe-warning').hide();
+                                    $('#iframe-error').show();
+                                    $('#continueButton').prop("disabled", true);
+                                    return false;
+                                }
+                                helper.initializeIframe(self);
+                            }
+                            window.checkoutConfig.payment.paypalbr_paypalplus.is_payment_ready = true;
+                            self.isPaymentReady = true;
+                        } else {
+                            helper.initializeIframe();
+                        }
+                    }, 1000);
+                } else {
+                    $('#paypalbr_paypalplus').prop("checked", false);
+                    selectPaymentMethodAction(null);
+                    return false;
                 }
-                window.checkoutConfig.payment.paypalbr_paypalplus.is_payment_ready = true;
-                self.isPaymentReady = true;
             }
 
-
             selectPaymentMethodAction(this.getData());
-            checkoutData.setSelectedPaymentMethod(this.item.method);
+            // checkoutData.setSelectedPaymentMethod(this.item.method);
+            checkoutData.setSelectedPaymentMethod('paypalbr_paypalplus');
 
             return true;
         },
-
-        runPayPal: function(approvalUrl) {
-            // fullScreenLoaderPayPal.startLoader();
-            var storage;
-            var self = this;
-            var telephone = '';
-            var firstName = '';
-            var lastName = '';
-            var email = '';
-            var taxVat = '';
-            var customerData = window.checkoutConfig.customerData;
-            var mode = window.checkoutConfig.payment.paypalbr_paypalplus.mode === "1" ? 'sandbox' : 'live';
-
-            storage = $.initNamespaceStorage('paypal-data');
-            storage = $.localStorage;
-
-            var isEmpty = true;
-            for (var i in customerData) {
-                if(customerData.hasOwnProperty(i)) {
-                    isEmpty = false;
-                }
-            }
-
-            if(isEmpty){
-                telephone =  quote.shippingAddress().telephone ? quote.shippingAddress().telephone  : storage.get('telephone');
-            }else{
-                telephone = quote.shippingAddress().telephone;
-            }
-
-            if(isEmpty){
-                firstName =  quote.shippingAddress().firstname ? quote.shippingAddress().firstname : storage.get('firstName');
-            }else{
-                firstName = customerData.firstname;
-            }
-
-            if(isEmpty){
-                lastName =  quote.shippingAddress().lastname ? quote.shippingAddress().lastname : storage.get('lastName');
-            }else{
-                lastName = customerData.lastname;
-            }
-
-            if(isEmpty){
-                email =  quote.guestEmail ? quote.guestEmail : storage.get('email');
-            }else{
-                email = customerData.email;
-            }
-
-            if(isEmpty){
-                taxVat =  quote.shippingAddress().vatId ? quote.shippingAddress().vatId : storage.get('taxVat');
-            }else{
-                taxVat = customerData.taxvat;
-            }
-
-
-            storage.set(
-                'paypal-data',
-                {
-                    'firstName': firstName,
-                    'lastName': lastName,
-                    'email': email,
-                    'taxVat':taxVat,
-                    'telephone': telephone
-                }
-            );
-
-            if (window.checkoutConfig.payment.paypalbr_paypalplus.iframe_height_active === '1') {
-                var height = window.checkoutConfig.payment.paypalbr_paypalplus.iframe_height;
-            }else{
-                var height = '';
-            }
-
-
-            this.paypalObject = PAYPAL.apps.PPP(
-                {
-                    "approvalUrl": approvalUrl,
-                    "placeholder": "ppplus",
-                    "mode": mode,
-                    "payerFirstName": firstName,
-                    "payerLastName": lastName,
-                    "payerPhone": "055"+telephone,
-                    "payerEmail": email,
-                    "payerTaxId": taxVat,
-                    "payerTaxIdType": "BR_CPF",
-                    "language": "pt_BR",
-                    "country": "BR",
-                    "enableContinue": "continueButton",
-                    "disableContinue": "continueButton",
-                    "rememberedCards": window.checkoutConfig.payment.paypalbr_paypalplus.rememberedCard,
-                    "iframeHeight": height,
-
-                    onLoad: function () {
-                        fullScreenLoaderPayPal.stopLoader();
-                        console.log("Iframe successfully lo aded !");
-                        var height = $('#ppplus iframe').css('height');
-
-                        $('#ppplus').css('max-height', height);
-                    },
-                    onContinue: function (rememberedCardsToken, payerId, token, term) {
-                        $('#continueButton').hide();
-                        $('#payNowButton').show();
-
-                        self.payerId = payerId;
-
-                        var message = {
-                            message: $.mage.__('Payment is being processed.')
-                        };
-                        self.messageContainer.addSuccessMessage(message);
-
-                        if (typeof term !== 'undefined') {
-                            term = term.term;
-                            self.term = term.term;
-                        }else{
-                            term = '1';
-                            self.term = term;
-                        }
-
-                        $('#paypalbr_paypalplus_rememberedCardsToken').val(rememberedCardsToken);
-                        $('#paypalbr_paypalplus_payerId').val(payerId);
-                        $('#paypalbr_paypalplus_token').val(token);
-                        $('#paypalbr_paypalplus_term').val(term);
-
-                        $('#ppplus').hide();
-                        self.placePendingOrder();
-                    },
-
-                    /**
-                     * Handle iframe error
-                     *
-                     * @param {type} err
-                     * @returns {undefined}
-                     */
-                    onError: function (err) {
-
-                        var message = JSON.stringify(err.cause);
-                        var ppplusError = message.replace(/[\\"]/g, '');
-                        if (typeof err.cause !== 'undefined') {
-                            switch (ppplusError)
-                            {
-
-                            case "INTERNAL_SERVICE_ERROR":
-                            case "SOCKET_HANG_UP":
-                            case "socket hang up":
-                            case "connect ECONNREFUSED":
-                            case "connect ETIMEDOUT":
-                            case "UNKNOWN_INTERNAL_ERROR":
-                            case "fiWalletLifecycle_unknown_error":
-                            case "Failed to decrypt term info":
-                            case "RESOURCE_NOT_FOUND":
-                            case "INTERNAL_SERVER_ERROR":
-                                alert($.mage.__('An unexpected error occurred, please try again.'));
-                                location.reload();
-                            case "RISK_N_DECLINE":
-                            case "NO_VALID_FUNDING_SOURCE_OR_RISK_REFUSED":
-                                alert($.mage.__('Please use another card if the problem persists please contact PayPal (0800-047-4482).'));
-                                location.reload();
-                            case "TRY_ANOTHER_CARD":
-                            case "NO_VALID_FUNDING_INSTRUMENT":
-                                alert($.mage.__('Your payment was not approved. Please use another card if the problem persists please contact PayPal (0800-047-4482).'));
-                                location.reload();
-                            break;
-                            case "CARD_ATTEMPT_INVALID":
-                                alert ($.mage.__('An unexpected error occurred, please try again.'));
-                                location.reload();
-                            break;
-                            case "INVALID_OR_EXPIRED_TOKEN":
-                                alert ($.mage.__('Your session has expired, please try again.'));
-                                location.reload();
-                            break;
-                            case "CHECK_ENTRY":
-                                alert ($.mage.__('Please review the credit card data entered.'));
-                                location.reload();
-                            break;
-                            default: //unknown error & reload payment flow
-                                alert ($.mage.__('An unexpected error occurred, please try again.'));
-                                location.reload();
-                            }
-                        }
-
-
-                    }
-                }
-            );
-
-            if (self.shippingValue != this.defaultQuote.totals().base_shipping_amount) {
-                self.shippingValue = this.defaultQuote.totals().base_shipping_amount;
-                fullScreenLoaderPayPal.stopLoader();
-            }
-        },
-
-        initializeIframe: function () {
-            var self = this;
-            var serviceUrl = urlBuilder.build('paypalplus/payment/index');
-            var approvalUrl = '';
-            // fullScreenLoader.startLoader();
-            storage.post(serviceUrl, '')
-            .done(function (response) {
-                // console.log(response);
-                $('#paypalbr_paypalplus_payId').val(response.id);
-                for (var i = 0; i < response.links.length; i++) {
-                    if (response.links[i].rel == 'approval_url') {
-                        approvalUrl = response.links[i].href;
-                    }
-                }
-                self.runPayPal(approvalUrl);
-            })
-            .fail(function (response) {
-                console.log("ERROR");
-                console.log(response);
-                var iframeErrorElem = '#iframe-error';
-
-                $(iframeErrorElem).html('');
-                $(iframeErrorElem).append($.mage.__('<div><span>Error loading the payment method. Please try again, if problem persists contact us.</span></div>'));
-
-                $(iframeErrorElem).show();
-                $('#iframe-warning').hide();
-                $('#continueButton').prop("disabled", true);
-                fullScreenLoaderPayPal.stopLoader();
-            })
-            .always(function () {
-                // fullScreenLoader.stopLoader();
-            });
-        },
-
 
         placePendingOrder: function () {
             var self = this;
@@ -349,7 +157,7 @@ define([
         doContinue: function () {
             var self = this;
             if (this.validateAddress() !== false) {
-                self.paypalObject.doContinue();
+                window.checkoutConfig.payment.paypalbr_paypalplus.paypalObject.doContinue();
             } else {
                 var message = {
                     message: $.mage.__('Please verify shipping address.')
@@ -360,7 +168,8 @@ define([
 
         getData: function () {
             return {
-                'method': this.item.method,
+                // 'method': this.item.method,
+                'method': 'paypalbr_paypalplus',
                 'additional_data': {
                     'payId': $('#paypalbr_paypalplus_payId').val(),
                     'rememberedCardsToken': $('#paypalbr_paypalplus_rememberedCardsToken').val(),
@@ -372,17 +181,17 @@ define([
         },
 
         initObservable: function () {
-                this._super()
-                    .observe([
-                        'payId',
-                        'rememberedCardsToken',
-                        'payerId',
-                        'token',
-                        'term',
-                    ]);
+            this._super()
+                .observe([
+                    'payId',
+                    'rememberedCardsToken',
+                    'payerId',
+                    'token',
+                    'term',
+                ]);
 
-                return this;
-            },
+            return this;
+        },
 
         /**
          * Validate shipping address.
@@ -394,7 +203,7 @@ define([
 
             this.customerData = quote.billingAddress._latestValue;
             if(!this.customerData.city){
-              this.customerData = quote.shippingAddress._latestValue;
+                this.customerData = quote.shippingAddress._latestValue;
             }
             if (typeof this.customerData.city === 'undefined' || this.customerData.city.length === 0) {
                 return false;
@@ -414,8 +223,38 @@ define([
             if (typeof this.customerData.region === 'undefined' || this.customerData.region.length === 0) {
                 return false;
             }
+            if (typeof quote.shippingAddress().email === undefined) {
+                return false;
+            }
+
+            console.log("taxvat");
+            console.log(window.checkoutConfig.customerData.taxvat);
+            console.log("vatId");
+            console.log(this.customerData.vatId);
+            if ( window.checkoutConfig.customerData.taxvat === null || typeof window.checkoutConfig.customerData.taxvat === 'undefined') {
+                if ( this.customerData.vatId === null || typeof this.customerData.vatId === 'undefined' || this.customerData.vatId.length === 0) {
+                    return false;
+                }
+            }
+
+            if (typeof this.customerData.telephone === 'undefined' || this.customerData.telephone.length === 0) {
+                return false;
+            }
+            if (typeof this.customerData.firstname === 'undefined' || this.customerData.firstname.length === 0) {
+                return false;
+            }
+            if (typeof this.customerData.lastname === 'undefined' || this.customerData.lastname.length === 0) {
+                return false;
+            }
             return true;
-        }
+        },
+
+        /**
+         * Get payment method code.
+         */
+        getCode: function () {
+            // return this.item.method;
+            return 'paypalbr_paypalplus';
+        },
     });
 });
-

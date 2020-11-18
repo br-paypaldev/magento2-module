@@ -3,6 +3,7 @@ namespace PayPalBR\PayPal\Observer;
 use Magento\Framework\Event\ObserverInterface;
 use Magento\Framework\App\Request\DataPersistorInterface;
 use Magento\Framework\App\ObjectManager;
+use PayPal\Rest\ApiContext;
 use PayPalBR\PayPal\Model\PayPalPlus\ConfigProvider as PayPalPlusConfigProvider;
 use PayPalBR\PayPal\Model\PayPalExpressCheckout\ConfigProvider as PayPalExpressCheckoutConfigProvider;
 use Magento\Framework\Message\ManagerInterface;
@@ -11,6 +12,7 @@ use Magento\Framework\UrlInterface;
 use Magento\Framework\App\ResponseFactory;
 use Magento\Framework\App\Cache\TypeListInterface;
 use Magento\Framework\App\Cache\Frontend\Pool;
+use Magento\Framework\Filesystem\DirectoryList;
 
 class DataAssign implements ObserverInterface
 {
@@ -19,14 +21,14 @@ class DataAssign implements ObserverInterface
     /**
      * Contains the config provider for Paypal Plus
      *
-     * @var \PayPalBR\PayPal\Model\PayPalPlus\ConfigProvider 
+     * @var \PayPalBR\PayPal\Model\PayPalPlus\ConfigProvider
      */
     protected $configProviderPayPalPlus;
 
     /**
      * Contains the config provider for Paypal Plus
      *
-     * @var \PayPalBR\PayPal\Model\PayPalExpressCheckout\ConfigProvider 
+     * @var \PayPalBR\PayPal\Model\PayPalExpressCheckout\ConfigProvider
      */
     protected $configProviderPayPalExpressCheckout;
 
@@ -61,6 +63,11 @@ class DataAssign implements ObserverInterface
      */
     protected $cacheFrontendPool;
 
+    /**
+     * @var
+     */
+    protected $dir;
+
     public function __construct(
         PayPalPlusConfigProvider $configProviderPayPalPlus,
         PayPalExpressCheckoutConfigProvider $configProviderPayPalExpressCheckout,
@@ -69,7 +76,8 @@ class DataAssign implements ObserverInterface
         UrlInterface $urlBuilder,
         ResponseFactory $responseFactory,
         TypeListInterface $cacheTypeList,
-        Pool $cacheFrontendPool
+        Pool $cacheFrontendPool,
+        DirectoryList $dir
     )
     {
         $this->storeManager = $storeManager;
@@ -80,6 +88,7 @@ class DataAssign implements ObserverInterface
         $this->cacheTypeList = $cacheTypeList;
         $this->cacheFrontendPool = $cacheFrontendPool;
         $this->configProviderPayPalExpressCheckout = $configProviderPayPalExpressCheckout;
+        $this->dir = $dir;
     }
 
     /**
@@ -91,10 +100,10 @@ class DataAssign implements ObserverInterface
         $this->validateConfigMagento();
         $resultPayPalPlus = $this->validatePayPalPlus();
         $resultPayPalExpressCheckout = $this->validatePayPalExpressCheckout();
-        
+
         if ($resultPayPalPlus || $resultPayPalExpressCheckout) {
             $url = $this->urlBuilder->getUrl('adminhtml/system_config/edit/section/payment');
-            $disableMessage= []; 
+            $disableMessage= [];
             if (is_array($resultPayPalPlus) && $resultPayPalPlus['status']) {
                 $this->configProviderPayPalPlus->desactivateModule();
                 $this->configProviderPayPalPlus->desactivateClientId();
@@ -103,7 +112,7 @@ class DataAssign implements ObserverInterface
                     $disableMessage[] = $message;
                 }
             }
-            
+
             if (is_array($resultPayPalExpressCheckout) && $resultPayPalExpressCheckout['status']) {
                 $this->configProviderPayPalExpressCheckout->desactivateModule();
                 $this->configProviderPayPalExpressCheckout->desactivateClientId();
@@ -115,7 +124,7 @@ class DataAssign implements ObserverInterface
 
             $this->disableModule($disableMessage, $url);
         }
-        
+
         return $this;
     }
 
@@ -128,19 +137,19 @@ class DataAssign implements ObserverInterface
             return false;
         }
         $disableModule = false;
-        
+
         $paypalConfig = $this->getPayPalConfigApi();
         $apiContext = $this->getNewApiContext($clientId, $secretId);
 
         try {
-            
+
             $apiContext->setConfig($paypalConfig);
 
             $oauth = new \PayPal\Auth\OAuthTokenCredential($clientId, $secretId);
             $oauth->getAccessToken($paypalConfig);
         } catch (\Exception $e) {
             $disableModule = true;
-            $disableMessage[] = __('Incorrect API credentials in PayPal Express Checkout, please review it.');
+            $disableMessage[] = __('Incorrect API credentials in PayPal Express Checkout, please review it. Also, check var/log/paypalbr folder permissions.');
         }
 
         if ($disableModule) {
@@ -165,19 +174,19 @@ class DataAssign implements ObserverInterface
         }
 
         $disableModule = false;
-        
+
         $paypalConfig = $this->getPayPalConfigApi();
         $apiContext = $this->getNewApiContext($clientId, $secretId);
 
         try {
-            
+
             $apiContext->setConfig($paypalConfig);
 
             $oauth = new \PayPal\Auth\OAuthTokenCredential($clientId, $secretId);
             $oauth->getAccessToken($paypalConfig);
         } catch (\Exception $e) {
             $disableModule = true;
-            $disableMessage[] = __('Incorrect API credentials in PayPal Plus, please review it.');
+            $disableMessage[] = __('Incorrect API credentials in PayPal Plus, please review it. Also, check var/log/paypalbr folder permissions.');
         }
 
         if ($disableModule) {
@@ -204,7 +213,7 @@ class DataAssign implements ObserverInterface
         $newWebhook = true;
         $baseUrl = $this->storeManager->getStore()->getBaseUrl('link', true) .'rest/default/V1/notifications/webhooks';
         foreach ($output->webhooks as $webhook) {
-            
+
             if ($webhook->url == $baseUrl) {
                 $newWebhook = false;
                 $this->configProviderPayPalPlus->saveWebhookId($webhook->id);
@@ -249,7 +258,7 @@ class DataAssign implements ObserverInterface
 
     protected function getNewApiContext($clientId, $secretId)
     {
-        return new \PayPal\Rest\ApiContext(
+        return new ApiContext(
             new \PayPal\Auth\OAuthTokenCredential(
                 $clientId,
                 $secretId
@@ -265,20 +274,13 @@ class DataAssign implements ObserverInterface
 
         if(! $this->configProviderPayPalPlus->isStoreFrontActive() && $this->configProviderPayPalPlus->isActive()){
             $disableModule = true;
-            $disableMessage[] = __("We have identified that your store does not have the active TAX / VAT feature. To add it's support, go to <a href='%1'> Here </a> or go to Customers-> Customer Settings-> Create New Customer Account-> Display VAT number in frontend." , 
+            $disableMessage[] = __("We have identified that your store does not have the active TAX / VAT feature. To add it's support, go to <a href='%1'> Here </a> or go to Customers-> Customer Settings-> Create New Customer Account-> Display VAT number in frontend. Also, go to Name and address options-> Show TAX / VAT number." ,
                 $url
             );
         }
         if(! $this->configProviderPayPalPlus->isTelephoneSet() && $this->configProviderPayPalPlus->isActive()){
             $disableModule = true;
             $disableMessage[] = __('We have identified that your store does not have an active phone, please enable to activate the module');
-        }
-
-        if( ! $this->configProviderPayPalPlus->isCustomerTaxRequired() && $this->configProviderPayPalPlus->isActive()){
-            $disableModule = true;
-            $disableMessage[] = __('We have identified that your store does not have support for CPF / CNPJ (TAXVAT). To add support, go to <a href="%1"> Here </a> and go to Shop-> Settings-> Clients-> Name and address options-> Show TAX / VAT number.', 
-                $url
-            );
         }
 
         if (! $this->configProviderPayPalPlus->isCurrencyBaseBRL() && $this->configProviderPayPalPlus->isActive()) {
@@ -314,7 +316,7 @@ class DataAssign implements ObserverInterface
     {
         $types = array('config','layout','block_html','collections','reflection','db_ddl','eav','config_integration','config_integration_api','full_page','translate','config_webservice');
 
-        foreach ($types as $type) {  
+        foreach ($types as $type) {
             $this->cacheTypeList->cleanType($type);
         }
 
@@ -331,7 +333,8 @@ class DataAssign implements ObserverInterface
             'http.headers.PayPal-Partner-Attribution-Id' => 'MagentoBrazil_Ecom_PPPlus2',
             'mode' => $this->configProviderPayPalPlus->isModeSandbox()? 'sandbox' : 'live',
             'log.LogEnabled' => true,
-            'log.FileName' => BP . '/var/log/paypalbr/paypalconfig-' . date('Y-m-d') . '.log',
+            'log.FileName' => $this->dir->getPath('log') . '/paypalconfig-' . date('Y-m-d') . '.log',
+            'cache.FileName' => $this->dir->getPath('log') . '/auth.cache',
             'log.LogLevel' => 'DEBUG', // PLEASE USE `INFO` LEVEL FOR LOGGING IN LIVE ENVIRONMENTS
             'http.CURLOPT_SSLVERSION' => 'CURL_SSLVERSION_TLSv1_2'
         ];

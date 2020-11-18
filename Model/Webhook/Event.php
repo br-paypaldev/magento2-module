@@ -11,6 +11,7 @@ namespace PayPalBR\PayPal\Model\Webhook;
 use PayPalBR\PayPal\Api\EventsInterface;
 use Magento\Sales\Model\Order\CreditmemoFactory;
 use Magento\Sales\Model\Service\CreditmemoService;
+use Magento\Framework\Filesystem\DirectoryList;
 
 class Event implements EventsInterface
 {
@@ -71,16 +72,23 @@ class Event implements EventsInterface
      */
     protected $creditmemoService;
 
+    /**
+     * @var
+     */
+    protected $dir;
+
     public function __construct(
         \Magento\Sales\Model\Order\Payment\TransactionFactory $salesOrderPaymentTransactionFactory,
         \Magento\Sales\Model\OrderFactory $salesOrderFactory,
         CreditmemoFactory $creditmemoFactory,
-        CreditmemoService $creditmemoService
+        CreditmemoService $creditmemoService,
+        DirectoryList $dir
     ) {
         $this->salesOrderPaymentTransactionFactory = $salesOrderPaymentTransactionFactory;
         $this->salesOrderFactory = $salesOrderFactory;
         $this->creditmemoFactory = $creditmemoFactory;
         $this->creditmemoService = $creditmemoService;
+        $this->dir = $dir;
     }
     /**
      * Process the given $webhookEvent
@@ -154,18 +162,28 @@ class Event implements EventsInterface
                 $paymentResource['amount']['total'],
                 true
             );
+        $this->_order->setState('processing');
+        $this->_order->setStatus('processing');
         $this->_order->save();
         // notify customer
         $invoice = $payment->getCreatedInvoice();
         if ($invoice && !$this->_order->getEmailSent()) {
             $this->_order->addStatusHistoryComment(
-                    __(
-                        'Notified customer about invoice #%1.',
-                        $invoice->getIncrementId()
-                    )
-                )->setIsCustomerNotified(true)
+                __(
+                    'Notified customer about invoice #%1.',
+                    $invoice->getIncrementId()
+                )
+            )->setIsCustomerNotified(true)
                 ->save();
         }
+    }
+
+    protected function logger($array)
+    {
+        $writer = new \Zend\Log\Writer\Stream($this->dir->getPath('log') . '/paypal-webhook-' . date('Y-m-d') . '.log');
+        $logger = new \Zend\Log\Logger();
+        $logger->addWriter($writer);
+        $logger->info($array);
     }
 
     /**
@@ -176,15 +194,8 @@ class Event implements EventsInterface
      */
     protected function paymentSaleRefunded(\PayPal\Api\WebhookEvent $webhookEvent)
     {
-        $paymentResource = $webhookEvent->getResource();
-        $parentTransactionId = $paymentResource['parent_payment'];
-        /** @var \Magento\Sales\Model\Order\Payment $payment */
         $this->_order->getPayment()->setAdditionalInformation('state_payPal', 'refunded')->save();
-        $amount = $paymentResource['amount']['total'];
-        $transactionId = $paymentResource['id'];
-
         $creditmemo = $this->creditmemoFactory->createByOrder($this->_order);
-
         $creditmemoServiceRefund = $this->creditmemoService->refund($creditmemo, true);
     }
 
@@ -254,7 +265,7 @@ class Event implements EventsInterface
             )->setIsCustomerNotified(false)
             ->save();
     }
-    
+
     /**
      * Load and validate order, instantiate proper configuration
      *
@@ -263,26 +274,26 @@ class Event implements EventsInterface
      */
     protected function getOrder(\PayPal\Api\WebhookEvent $webhookEvent)
     {
-        if (empty($this->_order)) {
-            // get proper order
-            $resource = $webhookEvent->getResource();
-            if (!$resource) {
-                throw new \Exception('Event resource not found.');
-            }
-            $type = $webhookEvent->getEventType();
-            if ($type == 'CUSTOMER.DISPUTE.CREATED') {
-                $transactionId = $resource['disputed_transactions'][0]['seller_transaction_id'];
-            }elseif ($type == 'RISK.DISPUTE.CREATED') {
-                $transactionId = $resource['seller_payment_id'];
-            }else{
-                $transactionId = $resource['id'];
-            }
-            
-            $transaction = $this->salesOrderPaymentTransactionFactory->create()->load($transactionId, 'txn_id');
-            $this->_order = $this->salesOrderFactory->create()->load($transaction->getOrderId());
-            if (!$this->_order->getId()) {
-                throw new \Magento\Framework\Exception\LocalizedException(__('Order not found.'));
-            }
+        // get proper order
+        $resource = $webhookEvent->getResource();
+        if (!$resource) {
+            throw new \Exception('Event resource not found.');
+        }
+        $type = $webhookEvent->getEventType();
+        if ($type == 'CUSTOMER.DISPUTE.CREATED') {
+            $transactionId = $resource['disputed_transactions'][0]['seller_transaction_id'];
+        }elseif ($type == 'RISK.DISPUTE.CREATED') {
+            $transactionId = $resource['seller_payment_id'];
+        }elseif ($type == 'PAYMENT.SALE.REFUNDED'){
+            $transactionId = $resource['sale_id'];
+        }else{
+            $transactionId = $resource['id'];
+        }
+
+        $transaction = $this->salesOrderPaymentTransactionFactory->create()->load($transactionId, 'txn_id');
+        $this->_order = $this->salesOrderFactory->create()->load($transaction->getOrderId());
+        if (!$this->_order->getId()) {
+            throw new \Magento\Framework\Exception\LocalizedException(__('Order not found.'));
         }
 
         return $this->_order;

@@ -10,10 +10,13 @@ use Magento\Payment\Model\InfoInterface;
 use Magento\Sales\Model\Order\Item;
 use Magento\Checkout\Model\Cart;
 use Magento\Checkout\Model\Session;
+use Magento\Framework\App\ProductMetadataInterface;
 use PayPalBR\PayPal\Gateway\Transaction\Base\Config\ConfigInterface;
 use PayPalBR\PayPal\Api\PayPalPlusRequestDataProviderInterfaceFactory;
 use PayPalBR\PayPal\Api\CartItemRequestDataProviderInterfaceFactory;
 use PayPalBR\PayPal\Model\PayPalPlus\ConfigProvider;
+use PayPalBR\PayPal\Model\PaypalPlusApi;
+use Magento\Framework\Filesystem\DirectoryList;
 
 
 class RequestBuilder implements BuilderInterface
@@ -28,6 +31,9 @@ class RequestBuilder implements BuilderInterface
     protected $checkoutSession;
     protected $configProvider;
     protected $_checkoutSession;
+    protected $_productMetadata;
+    protected $paypalPlusApi;
+    protected $dir;
 
     /**
      * RequestBuilder constructor.
@@ -42,7 +48,10 @@ class RequestBuilder implements BuilderInterface
         Cart $cart,
         ConfigInterface $config,
         Session $checkoutSession,
-        ConfigProvider $configProvider
+        ProductMetadataInterface $productMetadata,
+        ConfigProvider $configProvider,
+        PaypalPlusApi $paypalPlusApi,
+        DirectoryList $dir
     ) {
         $this->setRequestDataProviderFactory($requestDataProviderFactory);
         $this->setCartItemRequestProviderFactory($cartItemRequestDataProviderFactory);
@@ -51,6 +60,9 @@ class RequestBuilder implements BuilderInterface
         $this->setCheckoutSession($checkoutSession);
         $this->setConfigProvider($configProvider);
         $this->_checkoutSession = $checkoutSession;
+        $this->_productMetadata = $productMetadata;
+        $this->paypalPlusApi = $paypalPlusApi;
+        $this->dir = $dir;
 
     }
 
@@ -278,6 +290,7 @@ class RequestBuilder implements BuilderInterface
         $debug = $this->getConfigProvider()->isDebugEnabled();
         $this->configId = $this->getConfigProvider()->getClientId();
         $this->secretId = $this->getConfigProvider()->getSecretId();
+        $edition = $this->_productMetadata->getEdition();
 
         if($debug == 1){
             $debug = true;
@@ -290,12 +303,14 @@ class RequestBuilder implements BuilderInterface
                 $this->secretId
             )
         );
+
         $apiContext->setConfig(
             [
                 'http.headers.PayPal-Partner-Attribution-Id' => 'MagentoBrazil_Ecom_PPPlus2',
                 'mode' => $this->configProvider->isModeSandbox() ? 'sandbox' : 'live',
                 'log.LogEnabled' => $debug,
-                'log.FileName' => BP . '/var/log/paypalbr/paypal_plus/paypal-plus-' . date('Y-m-d') . '.log',
+                'log.FileName' => $this->dir->getPath('log') . '/paypal-auth.cache',
+                'cache.FileName' => $this->dir->getPath('log') . '/auth.cache',
                 'log.LogLevel' => 'DEBUG',
                 'cache.enabled' => true,
                 'http.CURLOPT_SSLVERSION' => 'CURL_SSLVERSION_TLSv1_2'
@@ -312,6 +327,9 @@ class RequestBuilder implements BuilderInterface
     protected function restoreAndGetPayment($apiContext)
     {
         $paypalPaymentId = $this->getCheckoutSession()->getPaypalPaymentId();
+        if(empty($paypalPaymentId)) {
+            $paypalPaymentId = $this->paypalPlusApi->get();
+        }
         $paypalPayment = \PayPal\Api\Payment::get($paypalPaymentId, $apiContext);
         
         return $paypalPayment;
@@ -364,7 +382,18 @@ class RequestBuilder implements BuilderInterface
         } catch (\Exception $e) {
             $error_msg = json_decode($e->getData());
             switch ($error_msg->name) {
+                case 'INTERNAL_SERVICE_ERROR':
+                    try{
+                        $paypalPayment->execute($paymentExecution, $apiContext);
+                    } catch(\Exception $e){
+                        $message = 'Ocorreu um erro na captura do pagamento, por favor tente novamente e caso o problema persista entre em contato. #' . $error_msg->debug_id;
+                        throw new \Magento\Framework\Exception\NotFoundException(__($message));
+                    }
+                    break;
                 case 'INSTRUMENT_DECLINED':
+                    $message = 'O seu pagamento não foi aprovado pelo banco emissor, por favor tente novamente. #' . $error_msg->debug_id;
+                    throw new \Magento\Framework\Exception\NotFoundException(__($message));
+                    break;
                 case 'CREDIT_CARD_REFUSED':
                 case 'TRANSACTION_REFUSED_BY_PAYPAL_RISK':
                 case 'PAYER_CANNOT_PAY':
@@ -372,13 +401,13 @@ class RequestBuilder implements BuilderInterface
                 case 'PAYER_ACCOUNT_LOCKED_OR_CLOSED':
                 case 'PAYEE_ACCOUNT_RESTRICTED':
                 case 'TRANSACTION_REFUSED':
-                    if (!$this->getConfig()->getToggle()) {
-                        throw new \InvalidArgumentException($error_msg->name);
-                    }
+                    $message = 'O seu pagamento não foi aprovado, por favor tente novamente. #' . $error_msg->debug_id;
+                    throw new \Magento\Framework\Exception\NotFoundException(__($message));
                     break;
-                
+
                 default:
-                    throw new \LogicException($error_msg->name);
+                    $message = 'Ocorreu um erro na captura do pagamento, por favor tente novamente e caso o problema persista entre em contato. #' . $error_msg->debug_id;
+                    throw new \Magento\Framework\Exception\NotFoundException(__($message));
                     break;
             }
 
@@ -395,6 +424,14 @@ class RequestBuilder implements BuilderInterface
      */
     protected function createNewRequest($requestDataProvider)
     {
+        //PAYP-95: Check amount send on the payment request(/payment) with the current grand total.
+        $paymentAmount =  $this->checkoutSession->getAmountTotal();
+        $grandTotal =  $this->checkoutSession->getQuote()->getBaseGrandTotal();
+
+        if(strval($paymentAmount) != strval($grandTotal)) {
+            throw new \Magento\Framework\Exception\NotFoundException(__('Prezado cliente, identificamos uma divergência nos valores do seu carrinho, por favor recarregue a página ou refaça o processo de compra'));
+        }
+
         $apiContext = $this->getApiContext();
         $paypalPayment = $this->createPatch($apiContext, $requestDataProvider);
         $paypalPaymentExecution = $this->createPaymentExecution($paypalPayment, $apiContext, $requestDataProvider->getPayerId());

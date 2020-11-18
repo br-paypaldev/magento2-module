@@ -3,6 +3,7 @@ namespace PayPalBR\PayPal\Model;
 
 use Braintree\Exception;
 use PayPalBR\PayPal\Api\LoginPayPalCreateManagementInterface;
+use Magento\Framework\Filesystem\DirectoryList;
 
 
 class LoginPayPalManagementApi implements LoginPayPalCreateManagementInterface
@@ -135,6 +136,11 @@ class LoginPayPalManagementApi implements LoginPayPalCreateManagementInterface
     protected $shippingPreference;
 
     /**
+     * @var
+     */
+    protected $dir;
+
+    /**
      * LoginPayPalManagementApi constructor.
      * @param \Magento\Framework\App\Config\ScopeConfigInterface $scopeConfig
      * @param \Magento\Checkout\Model\Cart $cart
@@ -175,7 +181,8 @@ class LoginPayPalManagementApi implements LoginPayPalCreateManagementInterface
         \Magento\Customer\Api\CustomerRepositoryInterface $customerRepository,
         \Magento\Framework\Message\ManagerInterface $messageManager,
         \Magento\Framework\Stdlib\DateTime\DateTime $date,
-        \Magento\Framework\Math\Random $mathRandom
+        \Magento\Framework\Math\Random $mathRandom,
+        DirectoryList $dir
 
     ) {
         $this->scopeConfig = $scopeConfig;
@@ -200,6 +207,7 @@ class LoginPayPalManagementApi implements LoginPayPalCreateManagementInterface
         $this->messageManager = $messageManager;
         $this->date = $date;
         $this->mathRandom = $mathRandom;
+        $this->dir = $dir;
     }
 
     /**
@@ -223,7 +231,8 @@ class LoginPayPalManagementApi implements LoginPayPalCreateManagementInterface
             'http.headers.PayPal-Partner-Attribution-Id' => 'MagentoBrazil_Ecom_Login2',
             'mode' => $this->configProvider->isModeSandbox() ? 'sandbox' : 'live',
             'log.LogEnabled' => $debug,
-            'log.FileName' => BP . '/var/log/paypalbr/paypal_login/paypal-login-' . date('Y-m-d') . '.log',
+            'log.FileName' => $this->dir->getPath('log') . '/paypal-login-' . date('Y-m-d') . '.log',
+            'cache.FileName' => $this->dir->getPath('log') . '/auth.cache',
             'log.LogLevel' => 'DEBUG',
             'cache.enabled' => true,
             'http.CURLOPT_SSLVERSION' => 'CURL_SSLVERSION_TLSv1_2'
@@ -736,7 +745,7 @@ class LoginPayPalManagementApi implements LoginPayPalCreateManagementInterface
 
     protected function logger($array)
     {
-        $writer = new \Zend\Log\Writer\Stream(BP . '/var/log/paypalbr/paypal_login/paypal_login-' . date('Y-m-d') . '.log');
+        $writer = new \Zend\Log\Writer\Stream($this->dir->getPath('log') . '/paypal_login-' . date('Y-m-d') . '.log');
         $logger = new \Zend\Log\Logger();
         $logger->addWriter($writer);
         $logger->info($array);

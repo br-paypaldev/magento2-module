@@ -21,4 +21,7 @@
     <event name="sales_order_payment_refund">
        <observer name="paypalbr_payment_method_paypalbr_paypalplus_payment_refund" instance="PayPalBR\PayPal\Observer\Refund" />
     </event>
+    <event name="sales_order_creditmemo_save_after">
+        <observer name="paypalbr_payment_method_paypalbr_paypalplus_payment_refund_status" instance="PayPalBR\PayPal\Observer\RefundStatus" />
+    </event>
 </config>

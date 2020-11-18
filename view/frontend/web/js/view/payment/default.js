@@ -138,9 +138,11 @@ define([
 
                 this.getPlaceOrderDeferredObject()
                     .fail(
-                        function () {
+                        function (response) {
                             self.isPlaceOrderActionAllowed(true);
-                            alert($.mage.__('An unexpected error occurred, please try again.'));
+                            if(response.responseJSON.message){
+                                alert($.mage.__(response.responseJSON.message));
+                            }
                             location.reload();
                         }
                     ).done(

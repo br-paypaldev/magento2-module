@@ -10,3 +10,22 @@
     <?php endif; ?>
 <?php endif; ?>
 
+<script>
+    require([
+        'Magento_Customer/js/customer-data'
+    ], function (customerData) {
+        var sections = ['cart'];
+        customerData.invalidate(sections);
+    });
+</script>
+<script>
+    window.onload = function(){
+        jQuery.ajax({
+            url: "<?php echo $block->getCleanUrl(); ?>",
+            type: 'get',
+            success: function(results) {
+                console.log('success');
+            }
+        });
+    }
+</script>

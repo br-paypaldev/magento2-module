@@ -7,6 +7,8 @@
     <preference for="PayPalBR\PayPal\Api\PayPalPlusRequestDataProviderInterface" type="PayPalBR\PayPal\Gateway\Transaction\PayPalPlus\ResourceGateway\Create\RequestDataProvider"/>
     <preference for="Magento\Checkout\Block\Checkout\AttributeMerger" type="PayPalBR\PayPal\Block\Checkout\AttributeMerger"/>
     <preference for="PayPalBR\PayPal\Api\LoginPayPalCreateManagementInterface" type="PayPalBR\PayPal\Model\LoginPayPalManagementApi"/>
+    <preference for="Magento\Checkout\Model\PaymentInformationManagement" type="PayPalBR\PayPal\Model\PaymentInformationManagement"/>
+    <preference for="Magento\Checkout\Model\GuestPaymentInformationManagement" type="PayPalBR\PayPal\Model\GuestPaymentInformationManagement"/>
 
     <!-- PayPalPlus Adapter -->
 	<virtualType name="PayPalPlusRemoteMethodAdapter" type="Magento\Payment\Model\Method\Adapter">
@@ -17,7 +19,7 @@
             <argument name="formBlockType" xsi:type="string">Magento\Payment\Block\Form</argument>
             <argument name="infoBlockType" xsi:type="string">PayPalBR\PayPal\Block\Payment\Info\PayPalPlus</argument>
         </arguments>
-    </virtualType> 
+    </virtualType>
 
     <!-- Value Handler Pool -->
     <virtualType name="PayPalPlusValueHandlerPool" type="Magento\Payment\Gateway\Config\ValueHandlerPool">
@@ -78,7 +80,7 @@
             <argument name="formBlockType" xsi:type="string">Magento\Payment\Block\Form</argument>
             <argument name="infoBlockType" xsi:type="string">PayPalBR\PayPal\Block\Payment\Info\PayPalExpressCheckout</argument>
         </arguments>
-    </virtualType> 
+    </virtualType>
 
     <!-- Value Handler Pool -->
     <virtualType name="PayPalExpressCheckoutValueHandlerPool" type="Magento\Payment\Gateway\Config\ValueHandlerPool">

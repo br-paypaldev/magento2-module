@@ -18,19 +18,24 @@ Este módulo contém os principais produtos PayPal para o mercado Brasileiro:
 Para o correto funcionamento das soluções, é necessário verificar que a sua loja e servidor suporte alguns recursos:
 1. Para o checkout transparente (PayPal Plus), a sua loja precisa ter suporte ao TAX_VAT, portanto antes de ativar a solução garanta que a sua loja está devidamente configurada para suportar este campo;
 2. O servidor precisa ter suporte à TLS 1.2 ou superior e HTTPS 1.1 [(Referência Oficial)](https://www.paypal.com/sg/webapps/mpp/tls-http-upgrade).
+3. O servidor precisa ter suporte à PHP 7.0 ou superior;
 
-## PayPal Plus (Checkout Transparente)
+**Checkout Transparente (PayPal Plus)**
+O Checkout Transparente está disponível apenas para contas PayPal cadastradas com CNPJ (Conta Empresa), caso a sua conta seja de pessoa física, você deve abrir uma conta PayPal de pessoa jurídica por este link.
 
-Diferente dos outros produtos, o PayPal Plus só está disponível para contas PayPal criadas com CNPJ (Conta Empresa) e a sua utilização funciona mediante aprovação comercial. Caso já tenha uma conta PayPal do tipo Empresa, você pode solicitar a utilização do PayPal Plus pelo email: comercial@paypal.com.
+A solução requer aprovação comercial, entre em contato pelo 0800 721 6959 e solicite agora mesmo.
 
-Caso a sua conta seja de pessoa física, você deve abrir uma conta PayPal de pessoa jurídica por este [link](https://www.paypal.com/bizsignup/).
-
-
-***O PayPal Plus só irá funcionar caso tenha sido aprovado pelo PayPal.**
+**O PayPal Plus só irá funcionar caso tenha sido aprovado pelo PayPal.**
 
 ## Compatibilidade
 
 Este módulo é compatível com as versões do Magento 2.2.2 até 2.2.5. 
+
+## Módulos OneStepCheckout
+
+Atualmente este módulo é compatível trabalha com os seguintes módulos OneStepCheckout:
+1. Firecheckout
+
 
 ## Instalação
 
@@ -100,7 +105,7 @@ Para atualizar o módulo rode os comandos abaixo no Composer:
 
 Caso a sua dúvida não tenha sido respondida aqui, entre em contato com o PayPal pelo número 0800 047 4482.
 
-E caso necessite de algum suporte técnico e/ou acredita ter encontrado algum problema com este módulo abra um "issue" aqui no Github que iremos verificar.
+E caso necessite de algum suporte técnico e/ou acredita ter encontrado algum problema com este módulo acesse o nosso [portal de suporte técnico](https://www.paypal-support.com/s/?language=pt_BR) e abra um ticket detalhando o seu problema na seção "Fale Conosco".
 
 ## Changelog
 
