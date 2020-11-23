@@ -1,5 +1,5 @@
 1.0.4
-- Suporte para Magento 2.3.4
+- Suporte para Magento 2.4.1
 - Correção na aprovação do pedido via Webhook
 - Correção no Refund do pedido via Webhook
 - Compatibilidade com Firecheckout OSC
