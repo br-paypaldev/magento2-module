@@ -1,3 +1,6 @@
+1.0.5
+- Correção de compatibilidade com PHP 7.2, 7.3 e 7.4
+
 1.0.4
 - Suporte para Magento 2.4.1
 - Correção na aprovação do pedido via Webhook

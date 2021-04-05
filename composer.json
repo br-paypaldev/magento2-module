@@ -1,7 +1,7 @@
 {
     "name": "br-paypaldev/magento2-module",
     "license": "GPL-3.0-only",
-    "version": "1.0.4",
+    "version": "1.0.5",
     "type": "magento2-module",
     "description": "Módulo PayPal para Magento2",
     "repositories": [
@@ -11,7 +11,7 @@
         }
     ],
     "require": {
-        "php": "~7.0.0|~7.1.0",
+        "php": "~7.0.0|~7.1.0|~7.2.0|~7.3.0|~7.4.0",
         "paypal/rest-api-sdk-php" : "^1.13.0"
     },
     "require-dev": {
@@ -32,8 +32,8 @@
     },
     "authors":[
         {
-            "name":"Arthur Puhlmann",
-            "email":"apuhlmann@paypal.com"
+            "name":"Otávio Augusto",
+            "email":"odefranca@paypal.com"
         }
     ],
     "minimum-stability": "dev",
