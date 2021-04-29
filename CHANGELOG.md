@@ -1,3 +1,6 @@
+1.0.6
+- Correção de ambiente do SPB
+
 1.0.5
 - Correção de compatibilidade com PHP 7.2, 7.3 e 7.4
 
@@ -19,7 +22,7 @@
 - Atualização README
 
 1.0.1
-- Correções de bugs. 
+- Correções de bugs.
 - Chaves de API independentes para cada solução PayPal
 
 1.0.0

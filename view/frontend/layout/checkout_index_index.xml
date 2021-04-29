@@ -21,21 +21,6 @@
                                                 <item name="template" xsi:type="string">PayPalBR_PayPal/form/element/email</item>
                                             </item>
                                         </item>
-                                        <item name="summary" xsi:type="array">
-                                            <item name="children" xsi:type="array">
-                                                <item name="totals" xsi:type="array">
-                                                    <item name="children" xsi:type="array">
-                                                        <item name="customerbalance" xsi:type="array">
-                                                            <item name="component"  xsi:type="string">PayPalBR_PayPal/js/view/summary/customer-balance</item>
-                                                            <item name="config" xsi:type="array">
-                                                                <item name="title" translate="true" xsi:type="string">Store Credit</item>
-                                                            </item>
-                                                            <item name="sortOrder" xsi:type="string">95</item>
-                                                        </item>
-                                                    </item>
-                                                </item>
-                                            </item>
-                                        </item>
                                     </item>
                                 </item>
                                 <item name="steps" xsi:type="array">
@@ -58,13 +43,6 @@
                                                                             <item name="isBillingAddressRequired" xsi:type="boolean">false</item>
                                                                         </item>
                                                                     </item>
-                                                                </item>
-                                                            </item>
-                                                        </item>
-                                                        <item name="afterMethods" xsi:type="array">
-                                                            <item name="children" xsi:type="array">
-                                                                <item name="storeCredit" xsi:type="array">
-                                                                    <item name="component" xsi:type="string">PayPalBR_PayPal/js/view/payment/customer-balance</item>
                                                                 </item>
                                                             </item>
                                                         </item>

@@ -18,6 +18,10 @@ class DataAssign implements ObserverInterface
 {
      const WEBHOOK_URL_ALREADY_EXISTS = 'WEBHOOK_URL_ALREADY_EXISTS';
 
+     const PAYPAL_PLUS = '1';
+
+     const PAYPAL_EXPRESS_CHECKOUT = '2';
+
     /**
      * Contains the config provider for Paypal Plus
      *
@@ -138,7 +142,7 @@ class DataAssign implements ObserverInterface
         }
         $disableModule = false;
 
-        $paypalConfig = $this->getPayPalConfigApi();
+        $paypalConfig = $this->getPayPalConfigApi(self::PAYPAL_EXPRESS_CHECKOUT);
         $apiContext = $this->getNewApiContext($clientId, $secretId);
 
         try {
@@ -175,7 +179,7 @@ class DataAssign implements ObserverInterface
 
         $disableModule = false;
 
-        $paypalConfig = $this->getPayPalConfigApi();
+        $paypalConfig = $this->getPayPalConfigApi(self::PAYPAL_PLUS);
         $apiContext = $this->getNewApiContext($clientId, $secretId);
 
         try {
@@ -327,17 +331,29 @@ class DataAssign implements ObserverInterface
         return $this;
     }
 
-    protected function getPayPalConfigApi()
+    protected function getPayPalConfigApi($context)
     {
-        return [
-            'http.headers.PayPal-Partner-Attribution-Id' => 'MagentoBrazil_Ecom_PPPlus2',
-            'mode' => $this->configProviderPayPalPlus->isModeSandbox()? 'sandbox' : 'live',
-            'log.LogEnabled' => true,
-            'log.FileName' => $this->dir->getPath('log') . '/paypalconfig-' . date('Y-m-d') . '.log',
-            'cache.FileName' => $this->dir->getPath('log') . '/auth.cache',
-            'log.LogLevel' => 'DEBUG', // PLEASE USE `INFO` LEVEL FOR LOGGING IN LIVE ENVIRONMENTS
-            'http.CURLOPT_SSLVERSION' => 'CURL_SSLVERSION_TLSv1_2'
-        ];
+        if ($context == '1') {
+            return [
+                'http.headers.PayPal-Partner-Attribution-Id' => 'MagentoBrazil_Ecom_PPPlus2',
+                'mode' => $this->configProviderPayPalPlus->isModeSandbox()? 'sandbox' : 'live',
+                'log.LogEnabled' => true,
+                'log.FileName' => $this->dir->getPath('log') . '/paypalconfig-' . date('Y-m-d') . '.log',
+                'cache.FileName' => $this->dir->getPath('log') . '/auth.cache',
+                'log.LogLevel' => 'DEBUG', // PLEASE USE `INFO` LEVEL FOR LOGGING IN LIVE ENVIRONMENTS
+                'http.CURLOPT_SSLVERSION' => 'CURL_SSLVERSION_TLSv1_2'
+            ];
+        } else {
+            return [
+                'http.headers.PayPal-Partner-Attribution-Id' => 'MagentoBrazil_Ecom_PPPlus2',
+                'mode' => $this->configProviderPayPalExpressCheckout->isModeSandbox()? 'sandbox' : 'live',
+                'log.LogEnabled' => true,
+                'log.FileName' => $this->dir->getPath('log') . '/paypalconfig-' . date('Y-m-d') . '.log',
+                'cache.FileName' => $this->dir->getPath('log') . '/auth.cache',
+                'log.LogLevel' => 'DEBUG', // PLEASE USE `INFO` LEVEL FOR LOGGING IN LIVE ENVIRONMENTS
+                'http.CURLOPT_SSLVERSION' => 'CURL_SSLVERSION_TLSv1_2'
+            ];
+        }
     }
 
     protected function getWebhookEventsType()

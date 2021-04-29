@@ -1,8 +1,17 @@
 <?php
 
+/**
+ * PayPalBR PayPal
+ *
+ * @package PayPalBR|PayPal
+ * @author Vitor Nicchio Alves <vitor@imaginationmedia.com>
+ * @copyright Copyright (c) 2020 Imagination Media (https://www.imaginationmedia.com/)
+ * @license https://opensource.org/licenses/OSL-3.0.php Open Software License 3.0
+ */
+
+declare(strict_types=1);
 
 namespace PayPalBR\PayPal\Model;
-
 
 use Magento\Checkout\Model\Cart;
 use Magento\Customer\Model\Session;
@@ -104,10 +113,6 @@ abstract class PaypalCommonApi
     {
         /** @var Quote $quote */
         $quote = $this->cart->getQuote();
-        $baseSubtotal = $this->cartSalesModelQuote->getBaseSubtotal();
-        $customerBalance = $quote->getData('customer_balance_amount_used');
-        $rewardPoints = $quote->getData('base_reward_currency_amount');
-        $giftCard = $quote->getData('base_gift_cards_amount_used');
 
         /** @var string $storeCurrency */
         $storeCurrency = $quote->getBaseCurrencyCode();
@@ -115,7 +120,6 @@ abstract class PaypalCommonApi
         $itemList = new ItemList();
         $cartItems = $quote->getItems();
         foreach ($cartItems as $cartItem) {
-
             $this->checkProductType($cartItem->getProductType());
 
             $item = new Item();
@@ -128,7 +132,7 @@ abstract class PaypalCommonApi
             $itemList->addItem($item);
         }
 
-        if($this->cartSalesModelQuote->getBaseDiscountAmount() !== '0.0000'){
+        if ($this->cartSalesModelQuote->getBaseDiscountAmount() !== '0.0000') {
             $item = new Item();
             $item->setName('Discount')
                 ->setDescription('Discount')
@@ -139,49 +143,7 @@ abstract class PaypalCommonApi
             $itemList->addItem($item);
         }
 
-        if($customerBalance && $customerBalance !== '0.0000'){
-            if((float)$customerBalance > 0.0000) {
-                $customerBalance = $customerBalance * (-1);
-            }
-            $item = new Item();
-            $item->setName('Store Credit Discount')
-                ->setDescription('Store Credit Discount')
-                ->setQuantity('1')
-                ->setPrice($customerBalance)
-                ->setSku('discountloja')
-                ->setCurrency($storeCurrency);
-            $itemList->addItem($item);
-        }
-
-        if($rewardPoints && $rewardPoints !== '0.0000'){
-            if((float)$rewardPoints > 0.0000) {
-                $rewardPoints = $rewardPoints * (-1);
-            }
-            $item = new Item();
-            $item->setName('Rewards Discount')
-                ->setDescription('Rewards Discount')
-                ->setQuantity('1')
-                ->setPrice($rewardPoints)
-                ->setSku('discountloja')
-                ->setCurrency($storeCurrency);
-            $itemList->addItem($item);
-        }
-
-        if($giftCard && $giftCard !== '0.0000'){
-            if((float)$giftCard > 0.0000) {
-                $giftCard = $giftCard * (-1);
-            }
-            $item = new Item();
-            $item->setName('Gift Card Discount')
-                ->setDescription('Gift Card Discount')
-                ->setQuantity('1')
-                ->setPrice($giftCard)
-                ->setSku('discountloja')
-                ->setCurrency($storeCurrency);
-            $itemList->addItem($item);
-        }
-
-        if(!$quote->isVirtual()) {
+        if (!$quote->isVirtual()) {
             $shippingAddress = $this->getShippingAddress();
             $itemList->setShippingAddress($shippingAddress);
         }
@@ -191,10 +153,10 @@ abstract class PaypalCommonApi
 
     protected function checkProductType($productType)
     {
-        if(($productType == 'downloadable') || ($productType == 'virtual')){
+        if (($productType == 'downloadable') || ($productType == 'virtual')) {
             $this->shippingPreference = self::NO_SHIPPING;
         }
-        if(($productType != 'downloadable') && ($productType != 'virtual')){
+        if (($productType != 'downloadable') && ($productType != 'virtual')) {
             $this->shippingPreference = self::SET_PROVIDED_ADDRESS;
         }
     }
@@ -225,7 +187,7 @@ abstract class PaypalCommonApi
                 ->setPostalCode($billing->getPostcode())
                 ->setPhone($billing->getTelephone())
                 ->setState($billing->getRegion());
-        }else{
+        } else {
             $shippingAddress
                 ->setRecipientName($customer->getName())
                 ->setLine1($cartShippingAddress->getStreetLine(1))
@@ -288,20 +250,9 @@ abstract class PaypalCommonApi
          */
         $baseSubtotal = $this->cartSalesModelQuote->getBaseSubtotal();
 
-        if ($quote->getBaseCustomerBalAmountUsed()) {
-            $baseSubtotal -= $quote->getBaseCustomerBalAmountUsed();
-        }
-        if ($quote->getData('base_reward_currency_amount')) {
-            $baseSubtotal -= $quote->getData('base_reward_currency_amount');
-        }
-
-        if ($quote->getData('base_gift_cards_amount_used')) {
-            $baseSubtotal -= $quote->getData('base_gift_cards_amount_used');
-        }
-
-        if($this->cartSalesModelQuote->getBaseDiscountAmount()){
+        if ($this->cartSalesModelQuote->getBaseDiscountAmount()) {
             $subtotal = $baseSubtotal + $this->cartSalesModelQuote->getBaseDiscountAmount();
-        }else{
+        } else {
             $subtotal = $baseSubtotal;
         }
 
@@ -309,7 +260,7 @@ abstract class PaypalCommonApi
         $details->setShipping($this->cartSalesModelQuote->getBaseShippingAmount())
             ->setSubtotal($subtotal);
 
-        if($this->cartSalesModelQuote->getBaseDiscountAmount() !== '0.0000'){
+        if ($this->cartSalesModelQuote->getBaseDiscountAmount() !== '0.0000') {
             $details->setShippingDiscount('-0.0000');
         }
 
@@ -386,9 +337,9 @@ abstract class PaypalCommonApi
         $baseUrl = $this->storeManager->getStore()->getBaseUrl(UrlInterface::URL_TYPE_WEB);
 
         $applicationContext = array(
-            'locale'=>'pt-BR',
-            'brand_name'=> $baseUrl,
-            'shipping_preference'=> $this->shippingPreference
+            'locale' => 'pt-BR',
+            'brand_name' => $baseUrl,
+            'shipping_preference' => $this->shippingPreference
         );
 
         return $applicationContext;

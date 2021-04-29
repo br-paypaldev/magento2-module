@@ -1,4 +1,16 @@
 <?php
+
+/**
+ * PayPalBR PayPal
+ *
+ * @package PayPalBR|PayPal
+ * @author Vitor Nicchio Alves <vitor@imaginationmedia.com>
+ * @copyright Copyright (c) 2020 Imagination Media (https://www.imaginationmedia.com/)
+ * @license https://opensource.org/licenses/OSL-3.0.php Open Software License 3.0
+ */
+
+declare(strict_types=1);
+
 namespace PayPalBR\PayPal\Model;
 
 use Magento\Framework\Serialize\Serializer\Json;
@@ -142,9 +154,9 @@ class PaypalPlusApi extends PaypalCommonApi
         $this->secretId = $this->configProvider->getSecretId();
         $edition = $this->productMetadata->getEdition();
 
-        if($debug == 1){
+        if ($debug == 1) {
             $debug = true;
-        }else{
+        } else {
             $debug = false;
         }
         $sdkConfig = array(
@@ -194,25 +206,25 @@ class PaypalPlusApi extends PaypalCommonApi
     {
         $quote = $this->checkoutSession->getQuote();
 
-        if (!$quote->isVirtual()){
+        if (!$quote->isVirtual()) {
             //Validate Customer Address
             $this->validateCustomerInformation($params);
         }
-        
+
         $amountTotal = $quote->getBaseGrandTotal();
         $amountItemsWithDiscount = $quote->getBaseSubtotalWithDiscount();
         $ship = $quote->getShippingAddress()->getBaseShippingAmount();
-        $creditStore = $quote->getData('customer_balance_amount_used');
         $tax = $quote->getShippingAddress()->getBaseTaxAmount();
-        $rewards = $quote->getData('reward_currency_amount');
-        $giftCardAmount = $quote->getData('base_gift_cards_amount_used');
 
-        $totalSum = $amountItemsWithDiscount + $ship + $tax - $creditStore - $rewards - $giftCardAmount;
+        $totalSum = $amountItemsWithDiscount + $ship + $tax;
         $amountTotal = (float)$amountTotal;
         $totalSum = (float)$totalSum;
 
-        if(strval($amountTotal) != strval($totalSum)) {
-            throw new \PayPal\Exception\PayPalConnectionException(null, __("Discrepancy found in the total order amount."));
+        if (strval($amountTotal) != strval($totalSum)) {
+            throw new \PayPal\Exception\PayPalConnectionException(
+                null,
+                __("Discrepancy found in the total order amount.")
+            );
         }
 
         $apiContext = $this->getApiContext();
@@ -236,8 +248,8 @@ class PaypalPlusApi extends PaypalCommonApi
         $paypalPayment = $payment->create($apiContext);
         $paypalPaymentId = $paypalPayment->getId();
         $quoteUpdatedAt = $quote->getUpdatedAt();
-        $this->checkoutSession->setPaypalPaymentId( $paypalPaymentId );
-        $this->checkoutSession->setQuoteUpdatedAt( $quoteUpdatedAt );
+        $this->checkoutSession->setPaypalPaymentId($paypalPaymentId);
+        $this->checkoutSession->setQuoteUpdatedAt($quoteUpdatedAt);
         $this->set($paypalPaymentId);
 
         //PAYP-95: Store amount send on the payment request(/payment)
@@ -254,8 +266,10 @@ class PaypalPlusApi extends PaypalCommonApi
         $address = $quote->getShippingAddress();
         $firstname = $address->getFirstname();
         $lastname = $address->getLastname();
-        $email = strtolower($address->getEmail());
-        if(empty($email)) {
+        if ($address->getEmail()) {
+            $email = strtolower($address->getEmail());
+        }
+        if (empty($email)) {
             $email = $customer->getEmail();
             if (empty($email) && isset($params['email'])) {
                 $email = $params['email'];
@@ -272,16 +286,16 @@ class PaypalPlusApi extends PaypalCommonApi
 
         $errors = array();
 
-        if(!$this->validate->is(array($firstname, $lastname), 'OnlyWords', true)){
+        if (!$this->validate->is(array($firstname, $lastname), 'OnlyWords', true)) {
             $errors[] = "NOME/SOBRENOME";
         }
-        if(!$this->validate->isValidTaxvat($payerTaxId)){
+        if (!$this->validate->isValidTaxvat($payerTaxId)) {
             $errors[] = 'CPF';
         }
-        if(!$this->validate->is($email, 'AddressMail', false)){
+        if (!$this->validate->is($email, 'AddressMail', false)) {
             $errors[] = 'EMAIL';
         }
-        if(!$this->validate->is($phone, 'OnlyNumbers', true)){
+        if (!$this->validate->is($phone, 'OnlyNumbers', true)) {
             $errors[] = 'TELEFONE';
         }
 
@@ -301,38 +315,16 @@ class PaypalPlusApi extends PaypalCommonApi
             $errors[] = 'CIDADE';
         }
 
-        if(!empty($errors)) {
-            throw new \Exception('Prezado cliente, favor preencher e/ou validar os campos: ' . $this->json->serialize($errors));
+        if (!empty($errors)) {
+            throw new \Exception(
+                'Prezado cliente, favor preencher e/ou validar os campos: ' . $this->json->serialize($errors)
+            );
         }
-
-//
-//        $address = $quote->getBillingAddress();
-//
-//        $firstname = $this->_getFirstname($address);
-//        $lastname = $this->_getLastname($address);
-//        $email = strtolower($this->_getEmail($address));
-//        $payerTaxId = $this->_getPayerTaxId($address);
-//        $phone = $this->_getTelephone($address);
-//
-//        if (!Esmart_PayPalBrasil_Model_Paypal_Validate::is(array($firstname, $lastname), 'OnlyWords', true) ||
-//            !Esmart_PayPalBrasil_Model_Paypal_Validate::is($email, 'AddressMail', false) ||
-//            !Esmart_PayPalBrasil_Model_Paypal_Validate::is($phone, 'OnlyNumbers', true) ||
-//            !Esmart_PayPalBrasil_Model_Paypal_Validate::isValidTaxvat($payerTaxId)) {
-//            throw new Exception("getCustomerInformation Exception", 1);
-//        }
-
-//        throw new \Exception('Favor validar os passos anteriores.');
     }
 
     public function execute($params)
     {
         try {
-
-            // if ($this->isQuoteChanged()) {
-            //     $paypalPayment = $this->patchAndGetPayment();
-            // } else {
-
-            // }
             $paypalPayment = $this->createAndGetPayment($params);
 
             $result = [

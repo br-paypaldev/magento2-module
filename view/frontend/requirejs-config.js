@@ -2,9 +2,6 @@ var config = {
     map: {
         '*': {
             'Magento_Checkout/js/action/select-shipping-method': 'PayPalBR_PayPal/js/action/select-shipping-method',
-            'Magento_Reward/js/view/payment/reward':             'PayPalBR_PayPal/js/view/payment/reward',
-            'Magento_GiftCardAccount/js/view/payment/gift-card-account':    'PayPalBR_PayPal/js/view/payment/gift-card-account',
-            'Magento_GiftCardAccount/js/view/summary/gift-card-account':    'PayPalBR_PayPal/js/view/summary/gift-card-account',
             'Magento_Checkout/js/model/step-navigator':          'PayPalBR_PayPal/js/model/step-navigator',
             'Magento_Checkout/js/model/checkout-data-resolver':  'PayPalBR_PayPal/js/model/checkout-data-resolver',
             'Magento_Checkout/template/sidebar.html':            'PayPalBR_PayPal/template/sidebar.html',

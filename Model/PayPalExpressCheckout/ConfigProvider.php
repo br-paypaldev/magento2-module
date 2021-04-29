@@ -173,7 +173,7 @@ class ConfigProvider
     public function getModeToString()
     {
         $mode = $this->scopeConfig->getValue(self::XML_PATH_MODE, ScopeInterface::SCOPE_STORE);
-        if($mode == true){
+        if($mode == 1){
             $modeString = 'sandbox';
         }else{
             $modeString = 'production';
@@ -514,5 +514,5 @@ class ConfigProvider
         }
         return $locate;
     }
-    
+
 }

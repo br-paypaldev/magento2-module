@@ -1,10 +1,21 @@
 <?php
+
+/**
+ * PayPalBR PayPal
+ *
+ * @package PayPalBR|PayPal
+ * @author Vitor Nicchio Alves <vitor@imaginationmedia.com>
+ * @copyright Copyright (c) 2020 Imagination Media (https://www.imaginationmedia.com/)
+ * @license https://opensource.org/licenses/OSL-3.0.php Open Software License 3.0
+ */
+
+declare(strict_types=1);
+
 namespace PayPalBR\PayPal\Model;
 
 use Braintree\Exception;
 use PayPalBR\PayPal\Api\LoginPayPalCreateManagementInterface;
 use Magento\Framework\Filesystem\DirectoryList;
-
 
 class LoginPayPalManagementApi implements LoginPayPalCreateManagementInterface
 {
@@ -222,9 +233,9 @@ class LoginPayPalManagementApi implements LoginPayPalCreateManagementInterface
         $this->configId = $this->configProvider->getClientId();
         $this->secretId = $this->configProvider->getSecretId();
 
-        if($debug == 1){
+        if ($debug == 1) {
             $debug = true;
-        }else{
+        } else {
             $debug = false;
         }
         $sdkConfig = array(
@@ -239,17 +250,17 @@ class LoginPayPalManagementApi implements LoginPayPalCreateManagementInterface
         );
 
         $apiContext = new \PayPal\Rest\ApiContext(
-                new \PayPal\Auth\OAuthTokenCredential(
-                    $this->configId,
-                    $this->secretId
-                )
-            );
+            new \PayPal\Auth\OAuthTokenCredential(
+                $this->configId,
+                $this->secretId
+            )
+        );
 
         $apiContext->setConfig($sdkConfig);
 
         $cred = new \PayPal\Auth\OAuthTokenCredential(
             $this->configId,
-             $this->secretId
+            $this->secretId
         );
 
         $this->checkoutSession->setAccessTokenBearer($cred->getAccessToken($sdkConfig));
@@ -322,7 +333,7 @@ class LoginPayPalManagementApi implements LoginPayPalCreateManagementInterface
             ->setPostalCode($billing->getPostcode())
             ->setPhone($billing->getTelephone())
             ->setState($billing->getRegion());
-        }else{
+        } else {
             $shippingAddress
             ->setRecipientName($customer->getName())
             ->setLine1($cartShippingAddress->getStreetLine(1))
@@ -355,7 +366,6 @@ class LoginPayPalManagementApi implements LoginPayPalCreateManagementInterface
         $itemList = new \PayPal\Api\ItemList();
         $cartItems = $quote->getItems();
         foreach ($cartItems as $cartItem) {
-
             $this->checkProductType($cartItem->getProductType());
 
             $item = new \PayPal\Api\Item();
@@ -368,7 +378,7 @@ class LoginPayPalManagementApi implements LoginPayPalCreateManagementInterface
             $itemList->addItem($item);
         }
 
-        if($this->cartSalesModelQuote->getBaseDiscountAmount() !== '0.0000'){
+        if ($this->cartSalesModelQuote->getBaseDiscountAmount() !== '0.0000') {
             $item = new \PayPal\Api\Item();
             $item->setName('Discount')
                 ->setDescription('Discount')
@@ -401,16 +411,9 @@ class LoginPayPalManagementApi implements LoginPayPalCreateManagementInterface
          */
         $baseSubtotal = $this->cartSalesModelQuote->getBaseSubtotal();
 
-        if ($quote->getBaseGiftCardsAmount()) {
-            $baseSubtotal -= $quote->getBaseGiftCardsAmount();
-        }
-
-        if ($quote->getBaseCustomerBalAmountUsed()) {
-            $baseSubtotal -= $quote->getBaseCustomerBalAmountUsed();
-        }
-        if($this->cartSalesModelQuote->getBaseDiscountAmount()){
-            $subtotal = $baseSubtotal + $this->cartSalesModelQuote->getBaseDiscountAmount(); 
-        }else{
+        if ($this->cartSalesModelQuote->getBaseDiscountAmount()) {
+            $subtotal = $baseSubtotal + $this->cartSalesModelQuote->getBaseDiscountAmount();
+        } else {
             $subtotal = $baseSubtotal;
         }
 
@@ -418,7 +421,7 @@ class LoginPayPalManagementApi implements LoginPayPalCreateManagementInterface
         $details->setShipping($this->cartSalesModelQuote->getBaseShippingAmount())
             ->setSubtotal($subtotal);
 
-        if($this->cartSalesModelQuote->getBaseDiscountAmount() !== '0.0000'){
+        if ($this->cartSalesModelQuote->getBaseDiscountAmount() !== '0.0000') {
             $details->setShippingDiscount('-0.0000');
         }
 
@@ -471,17 +474,17 @@ class LoginPayPalManagementApi implements LoginPayPalCreateManagementInterface
      * Creates Application Context Values to create and get payment
      *
      * @return $applicationContext
-     */    
-    
+     */
+
     protected function getApplicationContextValues()
     {
 
         $baseUrl = $this->storeManager->getStore()->getBaseUrl(\Magento\Framework\UrlInterface::URL_TYPE_WEB);
 
         $applicationContext = array(
-            'locale'=>'pt-BR',
-            'brand_name'=> $baseUrl,
-            'shipping_preference'=> $this->shippingPreference
+            'locale' => 'pt-BR',
+            'brand_name' => $baseUrl,
+            'shipping_preference' => $this->shippingPreference
         );
 
         return $applicationContext;
@@ -518,14 +521,12 @@ class LoginPayPalManagementApi implements LoginPayPalCreateManagementInterface
     public function initPayPalLightBox()
     {
         try {
-
             $paypalPayment = $this->createAndGetPayment();
 
             $result = [
                 'status' => 'success',
                 'paymentID' => $paypalPayment->getId()
             ];
-
         } catch (\PayPal\Exception\PayPalConnectionException $e) {
             $result = [
                 'status' => 'error',
@@ -542,7 +543,6 @@ class LoginPayPalManagementApi implements LoginPayPalCreateManagementInterface
     {
 
         try {
-
             $paypalPayment = $this->addAdditionalInformationOnQuote($data);
 
             $payerInfo = $paypalPayment->getPayer()->getPayerInfo();
@@ -550,13 +550,13 @@ class LoginPayPalManagementApi implements LoginPayPalCreateManagementInterface
             $userEmail = $payerInfo->getEmail();
             $websiteId = $this->storeManager->getWebsite()->getId();
 
-            $customerResponse = $this->findCustomerByEmail($userEmail,$websiteId);
+            $customerResponse = $this->findCustomerByEmail($userEmail, $websiteId);
 
-            if(!$customerResponse){
+            if (!$customerResponse) {
                 $this->createUser($payerInfo, $websiteId);
             }
 
-            if($customerResponse){
+            if ($customerResponse) {
                 $this->updateUserInfo($customerResponse, $paypalPayment);
                 $this->customerSession->loginById($customerResponse->getId());
             }
@@ -566,7 +566,6 @@ class LoginPayPalManagementApi implements LoginPayPalCreateManagementInterface
                 'paymentID' => $paypalPayment->getId(),
                 'redirect' => $this->storeManager->getStore()->getUrl('expresscheckout/revieworder')
             ];
-
         } catch (\PayPal\Exception\PayPalConnectionException $e) {
             $result = [
                 'status' => 'error',
@@ -615,11 +614,12 @@ class LoginPayPalManagementApi implements LoginPayPalCreateManagementInterface
         $this->customerSession->loginById($customer->getId());
 
         $message = __(
-            'Identificamos pelo seu e-mail PayPal (<b>%1</b>) que você não possui uma conta na loja. Criamos uma conta para você, por favor acesse seu e-mail para gerar uma senha. <br> Você pode finalizar sua compra normalmente e criar a senha depois.',
+            'Identificamos pelo seu e-mail PayPal (<b>%1</b>) que você não possui uma conta na loja.
+            Criamos uma conta para você, por favor acesse seu e-mail para gerar uma senha.
+            <br> Você pode finalizar sua compra normalmente e criar a senha depois.',
             $payerInfo->getEmail()
         );
         $this->messageManager->addSuccess($message);
-
     }
 
     /**
@@ -646,19 +646,23 @@ class LoginPayPalManagementApi implements LoginPayPalCreateManagementInterface
             ->setRpToken($this->mathRandom->getUniqueHash())
             ->setRpTokenCreatedAt($date);
 
-        try{
+        try {
             $customer->save();
             $customerRepository = $this->customerRepository->getById($customer->getId());
-            $this->emailNotification->newAccount($customerRepository, 'registered_no_password' ,'checkout', $store->getId(), null);
-
-        }catch (Exception $e){
+            $this->emailNotification->newAccount(
+                $customerRepository,
+                'registered_no_password',
+                'checkout',
+                $store->getId(),
+                null
+            );
+        } catch (Exception $e) {
             $this->messageManager->addError(__($e->getMessage()));
             $this->_redirect('/checkout/cart', ['_nosecret' => true]);
             $this->logger($e);
         }
 
         return $customer;
-
     }
 
     /**
@@ -669,9 +673,15 @@ class LoginPayPalManagementApi implements LoginPayPalCreateManagementInterface
     protected function saveAddress($payerInfo, $customer)
     {
         $region = $this->regionFactory->create();
-        $regionId = $region->loadByCode($payerInfo->getShippingAddress()->getState(), $payerInfo->getShippingAddress()->getCountryCode())->getId();
+        $regionId = $region->loadByCode(
+            $payerInfo->getShippingAddress()->getState(),
+            $payerInfo->getShippingAddress()->getCountryCode()
+        )->getId();
 
-        $street = $payerInfo->getShippingAddress()->getLine1() . PHP_EOL . $payerInfo->getShippingAddress()->getLine2() ?? '';
+        $street = $payerInfo->getShippingAddress()->getLine1()
+            . PHP_EOL
+            . $payerInfo->getShippingAddress()->getLine2()
+            ?? '';
         $payerPhone = $payerInfo->getPhone() ?? '000000000';
 
         $address = $this->address->create()
@@ -689,12 +699,10 @@ class LoginPayPalManagementApi implements LoginPayPalCreateManagementInterface
             ->setIsDefaultShipping('1')
             ->setSaveInAddressBook('1');
 
-        try{
+        try {
             $address->save();
             $this->setQuoteBillingAndShippingAddress($payerInfo, $customer, $address, $regionId, $payerPhone, $street);
-
-
-        }catch (Exception $e){
+        } catch (Exception $e) {
             $this->messageManager->addError(__($e->getMessage()));
             $this->_redirect('/checkout/cart', ['_nosecret' => true]);
             $this->logger($e);
@@ -713,34 +721,41 @@ class LoginPayPalManagementApi implements LoginPayPalCreateManagementInterface
 
         $addressMatch = false;
 
-        foreach($addresses as $address){
-
+        foreach ($addresses as $address) {
             $magentoCustomerStreetArray = $address->getStreet();
 
             $magentoStreetLine2 = !empty($magentoCustomerStreetArray[1]) ? $magentoCustomerStreetArray[1] : '';
             $magentoCustomerStreetLine = $magentoCustomerStreetArray[0]  . PHP_EOL . $magentoStreetLine2;
 
-            $paypalCustomerStreet = $payerInfo->getShippingAddress()->getLine1() . PHP_EOL . $payerInfo->getShippingAddress()->getLine2() ?? '';
+            $paypalCustomerStreet = $payerInfo->getShippingAddress()->getLine1()
+                . PHP_EOL
+                . $payerInfo->getShippingAddress()->getLine2()
+                ?? '';
 
-            if($magentoCustomerStreetLine == $paypalCustomerStreet){
+            if ($magentoCustomerStreetLine == $paypalCustomerStreet) {
                 $address->setIsDefaultBilling(true);
                 $address->setIsDefaultShipping(true);
                 $address->save();
 
                 $payerPhone = $payerInfo->getPhone() ?? '00000000000';
 
-                $this->setQuoteBillingAndShippingAddress($payerInfo, $customerResponse, $address, $address->getRegionId(), $payerPhone, $paypalCustomerStreet);
+                $this->setQuoteBillingAndShippingAddress(
+                    $payerInfo,
+                    $customerResponse,
+                    $address,
+                    $address->getRegionId(),
+                    $payerPhone,
+                    $paypalCustomerStreet
+                );
 
                 $addressMatch = true;
                 continue;
             }
-
         }
 
-        if(!$addressMatch){
+        if (!$addressMatch) {
             $this->saveAddress($payerInfo, $customerResponse);
         }
-
     }
 
     protected function logger($array)
@@ -759,8 +774,14 @@ class LoginPayPalManagementApi implements LoginPayPalCreateManagementInterface
      * @param $payerPhone
      * @param $street
      */
-    protected function setQuoteBillingAndShippingAddress($payerInfo, $customer, $address, $regionId, $payerPhone, $street)
-    {
+    protected function setQuoteBillingAndShippingAddress(
+        $payerInfo,
+        $customer,
+        $address,
+        $regionId,
+        $payerPhone,
+        $street
+    ) {
         $quoteShippingAddress = $this->quoteData->getShippingAddress();
 
         $quoteShippingAddress->setCustomerAddressId(null)
@@ -804,12 +825,10 @@ class LoginPayPalManagementApi implements LoginPayPalCreateManagementInterface
 
         $links = $paypalPayment->getLinks();
 
-        foreach($links as $link){
-
-            if($link->getRel() == 'approval_url'){
+        foreach ($links as $link) {
+            if ($link->getRel() == 'approval_url') {
                 $response = $link->getHref();
             }
-
         }
 
         return $response;
@@ -879,7 +898,7 @@ class LoginPayPalManagementApi implements LoginPayPalCreateManagementInterface
 
         if (!$paymentID) {
             throw new Exception("Payment Id is null", 1);
-            
+
         }
 
         $paypalPayment = $this->getUserInfo($paymentID);
@@ -888,20 +907,18 @@ class LoginPayPalManagementApi implements LoginPayPalCreateManagementInterface
 
         $userEmail = $this->customerSession->getCustomer()->getEmail();
 
-        $customerResponse = $this->findCustomerByEmail($userEmail,$websiteId);
+        $customerResponse = $this->findCustomerByEmail($userEmail, $websiteId);
 
         $this->updateUserInfo($customerResponse, $paypalPayment);
     }
 
     protected function checkProductType($productType)
     {
-        if($productType == 'downloadable'){
+        if ($productType == 'downloadable') {
             $this->shippingPreference = self::NO_SHIPPING;
         }
-        if($productType != 'downloadable'){
+        if ($productType != 'downloadable') {
             $this->shippingPreference = self::SET_PROVIDED_ADDRESS;
         }
     }
-
-
 }

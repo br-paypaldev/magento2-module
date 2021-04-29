@@ -5,7 +5,6 @@
     <preference for="PayPalBR\PayPal\Gateway\Transaction\Base\Config\ConfigInterface" type="PayPalBR\PayPal\Gateway\Transaction\Base\Config\Config"/>
     <preference for="PayPalBR\PayPal\Api\CartItemRequestDataProviderInterface" type="PayPalBR\PayPal\Gateway\Transaction\Base\ResourceGateway\Request\CartItemRequestDataProvider"/>
     <preference for="PayPalBR\PayPal\Api\PayPalPlusRequestDataProviderInterface" type="PayPalBR\PayPal\Gateway\Transaction\PayPalPlus\ResourceGateway\Create\RequestDataProvider"/>
-    <preference for="Magento\Checkout\Block\Checkout\AttributeMerger" type="PayPalBR\PayPal\Block\Checkout\AttributeMerger"/>
     <preference for="PayPalBR\PayPal\Api\LoginPayPalCreateManagementInterface" type="PayPalBR\PayPal\Model\LoginPayPalManagementApi"/>
     <preference for="Magento\Checkout\Model\PaymentInformationManagement" type="PayPalBR\PayPal\Model\PaymentInformationManagement"/>
     <preference for="Magento\Checkout\Model\GuestPaymentInformationManagement" type="PayPalBR\PayPal\Model\GuestPaymentInformationManagement"/>

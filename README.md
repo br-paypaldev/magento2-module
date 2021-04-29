@@ -29,7 +29,7 @@ A solução requer aprovação comercial, entre em contato pelo 0800 721 6959 e 
 
 ## Compatibilidade
 
-Este módulo é compatível com as versões do Magento 2.2.2 até 2.4.1. 
+Este módulo é compatível com as versões do Magento 2.2.2 até 2.4.2.
 
 ## Módulos OneStepCheckout
 
@@ -39,10 +39,10 @@ Atualmente este módulo é compatível trabalha com os seguintes módulos OneSte
 
 ## Instalação
 
-Este módulo está disponível através do Composer, você não precisa mais especificar o repositório. 
+Este módulo está disponível através do Composer, você não precisa mais especificar o repositório.
 
 Para instalar, adicione as seguintes linhas ao seu composer.json:
- 
+
 ```
 ...
 "require":{
@@ -55,7 +55,7 @@ Ou simplesmente digite  o comando abaixo:
 composer require br-paypaldev/magento2-module --no-update
 
 ```
- 
+
 Em seguida, digite os seguintes comandos da sua raiz do Magento:
 
 ```
@@ -73,13 +73,13 @@ Você verá o **PayPalBR_PayPal** na lista de ativos.
 ## Configuração
 ### - Credenciais de API
 Para configurar as soluções PayPal, você deverá gerar as credenciais de API do tipo REST, no caso o Client ID e o Secret ID. Para obtê-las siga este passo-a-passo:
-                
+
 1. Efetuar o login com sua conta PayPal em https://developer.paypal.com e clicar no link na parte superior "Dashboard";
 2. Clique em "My Apps & Credentials";
 3. Abaixo de "Rest API apps" clique "Create App";
 4. Em seguida, insira o termo "ppplus" no campo "App Name" e clique em "Create App";
 5. No canto superior direito da tela, clique em "Live";
-6. Você deve copiar os códigos que aparecerem em "Client ID" e em "Secret" (Para visualizar o "Secret" será necessário clicar em "Show") e colar estes códigos na página de configuração da solução que irá utilizar. 
+6. Você deve copiar os códigos que aparecerem em "Client ID" e em "Secret" (Para visualizar o "Secret" será necessário clicar em "Show") e colar estes códigos na página de configuração da solução que irá utilizar.
 
 ### - PayPal Plus
 Para o PayPal Plus, o campo CPF/CNPJ é obrigatório, para habilitá-lo siga os passos abaixo dentro do painel administrativo do Magento:

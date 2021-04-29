@@ -1,4 +1,16 @@
 <?php
+
+/**
+ * PayPalBR PayPal
+ *
+ * @package PayPalBR|PayPal
+ * @author Vitor Nicchio Alves <vitor@imaginationmedia.com>
+ * @copyright Copyright (c) 2020 Imagination Media (https://www.imaginationmedia.com/)
+ * @license https://opensource.org/licenses/OSL-3.0.php Open Software License 3.0
+ */
+
+declare(strict_types=1);
+
 namespace PayPalBR\PayPal\Model;
 
 /**
@@ -88,9 +100,9 @@ class PaypalExpressCheckoutApi extends PaypalCommonApi
         $this->configId = $this->configProvider->getClientId();
         $this->secretId = $this->configProvider->getSecretId();
 
-        if($debug == 1){
+        if ($debug == 1) {
             $debug = true;
-        }else{
+        } else {
             $debug = false;
         }
 
@@ -144,17 +156,17 @@ class PaypalExpressCheckoutApi extends PaypalCommonApi
         $amountTotal = $quote->getBaseGrandTotal();
         $amountItemsWithDiscount = $quote->getBaseSubtotalWithDiscount();
         $ship = $quote->getShippingAddress()->getBaseShippingAmount();
-        $creditStore = $quote->getData('customer_balance_amount_used');
         $tax = $quote->getShippingAddress()->getBaseTaxAmount();
-        $rewards = $quote->getData('reward_currency_amount');
-        $giftCardAmount = $quote->getData('base_gift_cards_amount_used');
 
-        $totalSum = $amountItemsWithDiscount + $ship + $tax - $creditStore - $rewards - $giftCardAmount;
+        $totalSum = $amountItemsWithDiscount + $ship + $tax;
         $amountTotal = (float)$amountTotal;
         $totalSum = (float)$totalSum;
 
-        if(strval($amountTotal) != strval($totalSum)) {
-            throw new \PayPal\Exception\PayPalConnectionException(null, __("Discrepancy found in the total order amount."));
+        if (strval($amountTotal) != strval($totalSum)) {
+            throw new \PayPal\Exception\PayPalConnectionException(
+                null,
+                __("Discrepancy found in the total order amount.")
+            );
         }
 
         $apiContext = $this->getApiContext();
@@ -180,8 +192,8 @@ class PaypalExpressCheckoutApi extends PaypalCommonApi
         $paypalPayment = $payment->create($apiContext);
         $paypalPaymentId = $paypalPayment->getId();
         $quoteUpdatedAt = $quote->getUpdatedAt();
-        $this->checkoutSession->setPaypalPaymentId( $paypalPaymentId );
-        $this->checkoutSession->setQuoteUpdatedAt( $quoteUpdatedAt );
+        $this->checkoutSession->setPaypalPaymentId($paypalPaymentId);
+        $this->checkoutSession->setQuoteUpdatedAt($quoteUpdatedAt);
 
 
         return $paypalPayment;
@@ -214,12 +226,11 @@ class PaypalExpressCheckoutApi extends PaypalCommonApi
 
     protected function checkProductType($productType)
     {
-        if($productType == 'downloadable'){
+        if ($productType == 'downloadable') {
             $this->shippingPreference = self::NO_SHIPPING;
         }
-        if($productType != 'downloadable'){
+        if ($productType != 'downloadable') {
             $this->shippingPreference = self::SET_PROVIDED_ADDRESS;
         }
     }
-
 }

@@ -1,5 +1,16 @@
 <?php
 
+/**
+ * PayPalBR PayPal
+ *
+ * @package PayPalBR|PayPal
+ * @author Vitor Nicchio Alves <vitor@imaginationmedia.com>
+ * @copyright Copyright (c) 2020 Imagination Media (https://www.imaginationmedia.com/)
+ * @license https://opensource.org/licenses/OSL-3.0.php Open Software License 3.0
+ */
+
+declare(strict_types=1);
+
 namespace PayPalBR\PayPal\Gateway\Transaction\PayPalExpressCheckout\ResourceGateway\Create;
 
 use function Couchbase\defaultDecoder;
@@ -16,7 +27,6 @@ use PayPalBR\PayPal\Api\CartItemRequestDataProviderInterfaceFactory;
 use PayPalBR\PayPal\Model\PayPalExpressCheckout\ConfigProvider;
 use Magento\Payment\Model\Cart\SalesModel\Factory;
 use Magento\Framework\Filesystem\DirectoryList;
-
 
 class RequestBuilder implements BuilderInterface
 {
@@ -60,7 +70,6 @@ class RequestBuilder implements BuilderInterface
         $this->setConfigProvider($configProvider);
         $this->_checkoutSession = $checkoutSession;
         $this->dir = $dir;
-
     }
 
     protected $paymentData;
@@ -83,7 +92,6 @@ class RequestBuilder implements BuilderInterface
         $requestDataProvider = $this->createRequestDataProvider();
 
         return $this->createNewRequest($requestDataProvider);
-
     }
 
     /**
@@ -127,8 +135,9 @@ class RequestBuilder implements BuilderInterface
      * @param PayPalPlusRequestDataProviderInterfaceFactory $requestDataProviderFactory
      * @return RequestBuilder
      */
-    protected function setRequestDataProviderFactory(PayPalPlusRequestDataProviderInterfaceFactory $requestDataProviderFactory)
-    {
+    protected function setRequestDataProviderFactory(
+        PayPalPlusRequestDataProviderInterfaceFactory $requestDataProviderFactory
+    ) {
         $this->requestDataProviderFactory = $requestDataProviderFactory;
         return $this;
     }
@@ -145,8 +154,9 @@ class RequestBuilder implements BuilderInterface
      * @param CartItemRequestDataProviderInterfaceFactory $cartItemRequestDataProviderFactory
      * @return self
      */
-    protected function setCartItemRequestProviderFactory(CartItemRequestDataProviderInterfaceFactory $cartItemRequestDataProviderFactory)
-    {
+    protected function setCartItemRequestProviderFactory(
+        CartItemRequestDataProviderInterfaceFactory $cartItemRequestDataProviderFactory
+    ) {
         $this->cartItemRequestDataProviderFactory = $cartItemRequestDataProviderFactory;
         return $this;
     }
@@ -238,7 +248,6 @@ class RequestBuilder implements BuilderInterface
     public function setConfig($config)
     {
         $this->config = $config;
-
     }
 
     /**
@@ -288,9 +297,9 @@ class RequestBuilder implements BuilderInterface
         $this->configId = $this->getConfigProvider()->getClientId();
         $this->secretId = $this->getConfigProvider()->getSecretId();
 
-        if($debug == 1){
+        if ($debug == 1) {
             $debug = true;
-        }else{
+        } else {
             $debug = false;
         }
         $apiContext = new \PayPal\Rest\ApiContext(
@@ -345,8 +354,9 @@ class RequestBuilder implements BuilderInterface
         $patchRequest->addPatch($itemListPatch);
 
         if ($this->getConfig()->getStoreName()) {
-            $descriptionValue = __('Invoice #%1 ', $requestDataProvider->getTransactionReference()) . __('- Store: #%1', $this->getConfig()->getStoreName());
-        }else{
+            $descriptionValue = __('Invoice #%1 ', $requestDataProvider->getTransactionReference()) .
+                __('- Store: #%1', $this->getConfig()->getStoreName());
+        } else {
             $descriptionValue = __('Invoice #%1 ', $requestDataProvider->getTransactionReference());
         }
 
@@ -354,14 +364,10 @@ class RequestBuilder implements BuilderInterface
         $description
             ->setOp('add')
             ->setPath('/transactions/0/description')
-            ->setValue($descriptionValue );
+            ->setValue($descriptionValue);
         $patchRequest->addPatch($description);
 
         $quote = $this->getCart()->getQuote();
-//        $customerBalance = $quote->getData('customer_balance_amount_used');
-//        if((float)$customerBalance > 0.0000) {
-//            $customerBalance = $customerBalance * (-1);
-//        }
 
         $baseGrandTotal = $quote->getBaseGrandTotal();
         $shipping = $quote->getShippingAddress()->getBaseShippingAmount();
@@ -406,9 +412,6 @@ class RequestBuilder implements BuilderInterface
         /** @var \Magento\Quote\Model\Quote $quote */
         $quote = $this->cart->getQuote();
         $baseSubtotal = $this->cartSalesModelQuote->getBaseSubtotal();
-        $customerBalance = $quote->getData('customer_balance_amount_used');
-        $rewardPoints = $quote->getData('base_reward_currency_amount');
-        $giftCard = $quote->getData('base_gift_cards_amount_used');
 
         /** @var string $storeCurrency */
         $storeCurrency = $quote->getBaseCurrencyCode();
@@ -426,54 +429,12 @@ class RequestBuilder implements BuilderInterface
             $itemList->addItem($item);
         }
 
-        if($this->cartSalesModelQuote->getBaseDiscountAmount() !== '0.0000'){
+        if ($this->cartSalesModelQuote->getBaseDiscountAmount() !== '0.0000') {
             $item = new \PayPal\Api\Item();
             $item->setName('Discount')
                 ->setDescription('Discount')
                 ->setQuantity('1')
                 ->setPrice($this->cartSalesModelQuote->getBaseDiscountAmount())
-                ->setSku('discountloja')
-                ->setCurrency($storeCurrency);
-            $itemList->addItem($item);
-        }
-
-        if($customerBalance && $customerBalance !== '0.0000'){
-            if((float)$customerBalance > 0.0000) {
-                $customerBalance = $customerBalance * (-1);
-            }
-            $item = new \PayPal\Api\Item();
-            $item->setName('Store Credit Discount')
-                ->setDescription('Store Credit Discount')
-                ->setQuantity('1')
-                ->setPrice($customerBalance)
-                ->setSku('discountloja')
-                ->setCurrency($storeCurrency);
-            $itemList->addItem($item);
-        }
-
-        if($rewardPoints && $rewardPoints !== '0.0000'){
-            if((float)$rewardPoints > 0.0000) {
-                $rewardPoints = $rewardPoints * (-1);
-            }
-            $item = new \PayPal\Api\Item();
-            $item->setName('Rewards Discount')
-                ->setDescription('Rewards Discount')
-                ->setQuantity('1')
-                ->setPrice($rewardPoints)
-                ->setSku('discountloja')
-                ->setCurrency($storeCurrency);
-            $itemList->addItem($item);
-        }
-
-        if($giftCard && $giftCard !== '0.0000'){
-            if((float)$giftCard > 0.0000) {
-                $giftCard = $giftCard * (-1);
-            }
-            $item = new \PayPal\Api\Item();
-            $item->setName('Gift Card Discount')
-                ->setDescription('Gift Card Discount')
-                ->setQuantity('1')
-                ->setPrice($giftCard)
                 ->setSku('discountloja')
                 ->setCurrency($storeCurrency);
             $itemList->addItem($item);
@@ -498,15 +459,17 @@ class RequestBuilder implements BuilderInterface
             $error_msg = json_decode($e->getData());
             switch ($error_msg->name) {
                 case 'INTERNAL_SERVICE_ERROR':
-                    try{
+                    try {
                         $paypalPayment->execute($paymentExecution, $apiContext);
-                    } catch(\Exception $e){
-                        $message = 'Ocorreu um erro na captura do pagamento, por favor tente novamente e caso o problema persista entre em contato. #' . $error_msg->debug_id;
+                    } catch (\Exception $e) {
+                        $message = 'Ocorreu um erro na captura do pagamento, por favor tente novamente e caso o problema
+                         persista entre em contato. #' . $error_msg->debug_id;
                         throw new \Magento\Framework\Exception\NotFoundException(__($message));
                     }
                     break;
                 case 'INSTRUMENT_DECLINED':
-                    $message = 'O seu pagamento não foi aprovado pelo banco emissor, por favor tente novamente. #' . $error_msg->debug_id;
+                    $message = 'O seu pagamento não foi aprovado pelo banco emissor, por favor tente novamente. #' .
+                        $error_msg->debug_id;
                     throw new \Magento\Framework\Exception\NotFoundException(__($message));
                     break;
                 case 'CREDIT_CARD_REFUSED':
@@ -521,7 +484,8 @@ class RequestBuilder implements BuilderInterface
                     break;
 
                 default:
-                    $message = 'Ocorreu um erro na captura do pagamento, por favor tente novamente e caso o problema persista entre em contato. #' . $error_msg->debug_id;
+                    $message = 'Ocorreu um erro na captura do pagamento, por favor tente novamente e caso o problema
+                    persista entre em contato. #' . $error_msg->debug_id;
                     throw new \Magento\Framework\Exception\NotFoundException(__($message));
                     break;
             }
@@ -541,10 +505,13 @@ class RequestBuilder implements BuilderInterface
     {
         $apiContext = $this->getApiContext();
         $paypalPayment = $this->createPatch($apiContext, $requestDataProvider);
-        $paypalPaymentExecution = $this->createPaymentExecution($paypalPayment, $apiContext, $requestDataProvider->getPayerId());
+        $paypalPaymentExecution = $this->createPaymentExecution(
+            $paypalPayment,
+            $apiContext,
+            $requestDataProvider->getPayerId()
+        );
 
         return $paypalPaymentExecution;
-
     }
 
     /**
@@ -589,10 +556,10 @@ class RequestBuilder implements BuilderInterface
 
     protected function checkProductType($productType)
     {
-        if($productType == 'downloadable'){
+        if ($productType == 'downloadable') {
             $this->shippingPreference = self::NO_SHIPPING;
         }
-        if($productType != 'downloadable'){
+        if ($productType != 'downloadable') {
             $this->shippingPreference = self::SET_PROVIDED_ADDRESS;
         }
     }
