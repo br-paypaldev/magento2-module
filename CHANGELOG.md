@@ -1,3 +1,6 @@
+1.0.7
+- Atualização README
+
 1.0.6
 - Correção de ambiente do SPB
 
