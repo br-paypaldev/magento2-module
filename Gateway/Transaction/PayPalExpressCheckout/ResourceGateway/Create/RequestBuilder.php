@@ -377,7 +377,7 @@ class RequestBuilder implements BuilderInterface
             'currency' => 'BRL',
             'total'   => $quote->getBaseGrandTotal(),
             'details' => [
-                'shipping' => $quote->getShippingAddress()->getShippingAmount(),
+                'shipping' => $quote->getShippingAddress()->getBaseShippingAmount(),
                 'subtotal' => $subtotal
             ]
         ];
@@ -429,7 +429,7 @@ class RequestBuilder implements BuilderInterface
             $itemList->addItem($item);
         }
 
-        if ($this->cartSalesModelQuote->getBaseDiscountAmount() !== '0.0000') {
+        if ($this->cartSalesModelQuote->getBaseDiscountAmount() !== 0) {
             $item = new \PayPal\Api\Item();
             $item->setName('Discount')
                 ->setDescription('Discount')

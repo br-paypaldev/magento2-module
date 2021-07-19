@@ -277,7 +277,7 @@ abstract class PaypalCommonApi
         /** @var Quote $quote */
         $quote = $this->cart->getQuote();
         $storeCurrency = $quote->getBaseCurrencyCode();
-        $grandTotal = $quote->getGrandTotal();
+        $grandTotal = $quote->getBaseGrandTotal();
         $details = $this->getDetails();
 
         $amount = new Amount();

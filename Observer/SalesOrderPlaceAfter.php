@@ -109,7 +109,7 @@ class SalesOrderPlaceAfter implements ObserverInterface
         }
 
         $status = $payment->getAdditionalInformation('state_payPal');
-        
+
 
         $customerSession = $this->sessionFactory->create();
         if ($customerSession->isLoggedIn()){
@@ -126,8 +126,8 @@ class SalesOrderPlaceAfter implements ObserverInterface
             $this->logger($result);
         }
 
-        if ($order->getPayment()->getLastTransId() && 
-            ( $order->canInvoice() && $status == 'approved' || $order->canInvoice() && $status == 'completed' ) 
+        if ($order->getPayment()->getLastTransId() &&
+            ( $order->canInvoice() && $status == 'approved' || $order->canInvoice() && $status == 'completed' )
         ) {
             $result = $this->createInvoice($order);
             $this->logger($result);
@@ -148,7 +148,7 @@ class SalesOrderPlaceAfter implements ObserverInterface
             ->setParentTransactionId($order->getPayment()->getAdditionalInformation('pay_id'))
             ->setIsTransactionClosed(true)
             ->registerCaptureNotification(
-                $order->getGrandTotal(),
+                $order->getBaseGrandTotal(),
                 true
             );
         $order->save();

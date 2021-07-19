@@ -119,6 +119,8 @@ define([
                     "disableContinue": "continueButton",
                     "rememberedCards": window.checkoutConfig.payment.paypalbr_paypalplus.rememberedCard,
                     "iframeHeight": height,
+                    "merchantInstallmentSelection": 0,
+                    "merchantInstallmentSelectionOptional": false,
 
                     onLoad: function () {
                         fullScreenLoaderPayPal.stopLoader();

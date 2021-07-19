@@ -1,3 +1,6 @@
+1.0.8
+- Correção de moedas estrangeiras
+
 1.0.7
 - Atualização README
 
