@@ -95,8 +95,7 @@ Para o PayPal Plus, o campo CPF/CNPJ é obrigatório, para habilitá-lo siga os 
 Para atualizar o módulo rode os comandos abaixo no Composer:
 
 ```
-    $ composer require br-paypaldev/magento2-module --no-update
-    $ composer update
+    $ composer update br-paypaldev/magento2-module
     $ ./bin/magento setup:upgrade
     $ ./bin/magento setup:di:compile
 ```
