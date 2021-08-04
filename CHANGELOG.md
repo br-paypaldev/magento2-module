@@ -1,3 +1,6 @@
+1.0.9
+- Correções de bugs
+
 1.0.8
 - Correção de moedas estrangeiras
 
