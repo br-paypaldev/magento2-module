@@ -1,3 +1,6 @@
+1.0.10
+- Correção de CNPJ como pagador
+
 1.0.9
 - Correções de bugs
 

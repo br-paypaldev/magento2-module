@@ -102,6 +102,8 @@ define([
                 var height = '';
             }
 
+            var isCPF = /^(([0-9]{3}.[0-9]{3}.[0-9]{3}-[0-9]{2})|([0-9]{11}))$/.test(taxVat);
+
             window.checkoutConfig.payment.paypalbr_paypalplus.paypalObject = PAYPAL.apps.PPP(
                 {
                     "approvalUrl": approvalUrl,
@@ -112,7 +114,7 @@ define([
                     "payerPhone": "055"+telephone,
                     "payerEmail": email,
                     "payerTaxId": taxVat,
-                    "payerTaxIdType": "BR_CPF",
+                    "payerTaxIdType": isCPF ? "BR_CPF" : "BR_CNPJ",
                     "language": "pt_BR",
                     "country": "BR",
                     "enableContinue": "continueButton",
