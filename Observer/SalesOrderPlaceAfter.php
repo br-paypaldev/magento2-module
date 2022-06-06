@@ -1,10 +1,23 @@
 <?php
 
+/**
+ * PayPalBR PayPal
+ *
+ * @package PayPalBR|PayPal
+ * @author Vitor Nicchio Alves <vitor@imaginationmedia.com>
+ * @copyright Copyright (c) 2021 Imagination Media (https://www.imaginationmedia.com/)
+ * @license https://opensource.org/licenses/OSL-3.0.php Open Software License 3.0
+ */
+
+declare(strict_types=1);
+
 namespace PayPalBR\PayPal\Observer;
 
 use Magento\Framework\Event\ObserverInterface;
 use Magento\Framework\Event\Observer as EventObserver;
 use Magento\Checkout\Model\Session;
+use PayPalBR\PayPal\Logger\Handler;
+use PayPalBR\PayPal\Logger\Logger;
 use Psr\Log\LoggerInterface;
 use Magento\Sales\Model\Service\OrderService;
 use Magento\Customer\Model\CustomerFactory;
@@ -17,9 +30,6 @@ use Magento\Framework\Filesystem\DirectoryList;
 
 class SalesOrderPlaceAfter implements ObserverInterface
 {
-
-
-
     /** session factory */
     protected $_session;
 
@@ -66,6 +76,16 @@ class SalesOrderPlaceAfter implements ObserverInterface
     protected $dir;
 
     /**
+     * @var Logger
+     */
+    protected $customLogger;
+
+    /**
+     * @var Handler
+     */
+    protected $loggerHandler;
+
+    /**
      * @param \Magento\Checkout\Model\Session $checkoutSession
      * @param \Psr\Log\LoggerInterface $logger
      * @param Api $api
@@ -80,7 +100,9 @@ class SalesOrderPlaceAfter implements ObserverInterface
         InvoiceService $invoiceService,
         Transaction $transaction,
         InvoiceSender $invoiceSender,
-        DirectoryList $dir
+        DirectoryList $dir,
+        Logger $customLogger,
+        Handler $loggerHandler
     ) {
         $this->setCheckoutSession($checkoutSession);
         $this->setLogger($logger);
@@ -92,6 +114,8 @@ class SalesOrderPlaceAfter implements ObserverInterface
         $this->sessionFactory = $sessionFactory;
         $this->customerRepository = $customerRepository;
         $this->dir = $dir;
+        $this->customLogger = $customLogger;
+        $this->loggerHandler = $loggerHandler;
     }
 
     /**
@@ -153,15 +177,29 @@ class SalesOrderPlaceAfter implements ObserverInterface
             );
         $order->save();
         // notify customer
-        $invoice = $payment->getCreatedInvoice();
-        if ($invoice && !$order->getEmailSent()) {
-            $order->addStatusHistoryComment(
+        if ($order->canInvoice()) {
+            $invoice = $this->invoiceService->prepareInvoice($order);
+            $invoice->getOrder()->setFee(2);
+            $invoice->getOrder()->setBaseFee(2);
+            $invoice->register();
+            $invoice->save();
+            $transactionSave = $this->transaction->addObject(
+                $invoice
+            )->addObject(
+                $invoice->getOrder()
+            );
+            $transactionSave->save();
+            $this->invoiceSender->send($invoice);
+
+            if ($invoice && !$order->getEmailSent()) {
+                $order->addStatusHistoryComment(
                     __(
                         'Notified customer about invoice #%1.',
                         $invoice->getIncrementId()
                     )
                 )->setIsCustomerNotified(true)
-                ->save();
+                    ->save();
+            }
         }
 
         return true;
@@ -182,13 +220,10 @@ class SalesOrderPlaceAfter implements ObserverInterface
      * @param mixed $data
      */
     protected function logger($data){
-
-        $writer = new \Zend\Log\Writer\Stream($this->dir->getPath('log') . '/paypal-SalesOrderPlaceAfter-' . date('Y-m-d') . '.log');
-        $logger = new \Zend\Log\Logger();
-        $logger->addWriter($writer);
-        $logger->info('Debug Initial SalesOrderPlaceAfter');
-        $logger->info($data);
-        $logger->info('Debug Final SalesOrderPlaceAfter');
+        $this->loggerHandler->setFileName('paypal-SalesOrderPlaceAfter-' . date('Y-m-d'));
+        $this->customLogger->info('Debug Initial SalesOrderPlaceAfter');
+        $this->customLogger->info($data);
+        $this->customLogger->info('Debug Final SalesOrderPlaceAfter');
     }
 
     /**

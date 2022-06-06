@@ -12,6 +12,8 @@ use PayPalBR\PayPal\Api\EventsInterface;
 use Magento\Sales\Model\Order\CreditmemoFactory;
 use Magento\Sales\Model\Service\CreditmemoService;
 use Magento\Framework\Filesystem\DirectoryList;
+use PayPalBR\PayPal\Logger\Handler;
+use PayPalBR\PayPal\Logger\Logger;
 
 class Event implements EventsInterface
 {
@@ -77,18 +79,32 @@ class Event implements EventsInterface
      */
     protected $dir;
 
+    /**
+     * @var Logger
+     */
+    protected $customLogger;
+
+    /**
+     * @var Handler
+     */
+    protected $loggerHandler;
+
     public function __construct(
         \Magento\Sales\Model\Order\Payment\TransactionFactory $salesOrderPaymentTransactionFactory,
         \Magento\Sales\Model\OrderFactory $salesOrderFactory,
         CreditmemoFactory $creditmemoFactory,
         CreditmemoService $creditmemoService,
-        DirectoryList $dir
+        DirectoryList $dir,
+        Logger $customLogger,
+        Handler $loggerHandler
     ) {
         $this->salesOrderPaymentTransactionFactory = $salesOrderPaymentTransactionFactory;
         $this->salesOrderFactory = $salesOrderFactory;
         $this->creditmemoFactory = $creditmemoFactory;
         $this->creditmemoService = $creditmemoService;
         $this->dir = $dir;
+        $this->customLogger = $customLogger;
+        $this->loggerHandler = $loggerHandler;
     }
     /**
      * Process the given $webhookEvent
@@ -180,10 +196,8 @@ class Event implements EventsInterface
 
     protected function logger($array)
     {
-        $writer = new \Zend\Log\Writer\Stream($this->dir->getPath('log') . '/paypal-webhook-' . date('Y-m-d') . '.log');
-        $logger = new \Zend\Log\Logger();
-        $logger->addWriter($writer);
-        $logger->info($array);
+        $this->loggerHandler->setFileName('paypal-webhook-' . date('Y-m-d'));
+        $this->customLogger->info($array);
     }
 
     /**

@@ -4,6 +4,8 @@ namespace PayPalBR\PayPal\Model;
 use oauth;
 use PayPalBR\PayPal\Api\EventsInterface;
 use PayPalBR\PayPal\Api\WebHookManagementInterface;
+use PayPalBR\PayPal\Logger\Handler;
+use PayPalBR\PayPal\Logger\Logger;
 use PayPalBR\PayPal\Model\PayPalPlus\ConfigProvider;
 use PayPal\Api\VerifyWebhookSignature;
 use Magento\Framework\Filesystem\DirectoryList;
@@ -14,14 +16,28 @@ class WebHookManagement implements WebHookManagementInterface
     protected $configProvider;
     protected $dir;
 
+    /**
+     * @var Logger
+     */
+    protected $customLogger;
+
+    /**
+     * @var Handler
+     */
+    protected $loggerHandler;
+
     public function __construct(
         EventsInterface $eventWebhook,
         ConfigProvider $configProvider,
-        DirectoryList $dir
+        DirectoryList $dir,
+        Logger $customLogger,
+        Handler $loggerHandler
     ) {
         $this->setEventWebhook($eventWebhook);
         $this->setConfigProvider($configProvider);
         $this->dir = $dir;
+        $this->customLogger = $customLogger;
+        $this->loggerHandler = $loggerHandler;
     }
 
     /**
@@ -225,10 +241,8 @@ class WebHookManagement implements WebHookManagementInterface
 
     protected function logger($array)
     {
-        $writer = new \Zend\Log\Writer\Stream($this->dir->getPath('log') . '/paypal-webhook-' . date('Y-m-d') . '.log');
-        $logger = new \Zend\Log\Logger();
-        $logger->addWriter($writer);
-        $logger->info($array);
+        $this->loggerHandler->setFileName('paypal-webhook-' . date('Y-m-d'));
+        $this->customLogger->info($array);
     }
 
     /**

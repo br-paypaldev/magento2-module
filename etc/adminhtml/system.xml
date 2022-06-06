@@ -8,7 +8,7 @@
 <config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Config:etc/system_file.xsd">
     <system>
         <section id="payment">
-            <group id="paypalbr" sortOrder="6" showInDefault="0" showInWebsite="0" showInStore="1">
+            <group id="paypalbr" sortOrder="6" showInDefault="0" showInWebsite="0" showInStore="0">
                 <group id="paypalbr_paypalplus" translate="label comment" type="text" showInDefault="1" showInWebsite="1" showInStore="1">
                     <label>PayPal Plus</label>
                     <comment>The experience of an unbranded checkout processed with PayPal security. The user makes the payment directly on your website using only his credit card, without the need of a PayPal account.</comment>
@@ -121,6 +121,156 @@
                             <field id="iframe_height_active">1</field>
                         </depends>
                     </field>
+
+                    <group id="paypalbr_cost_to_buyer" translate="label" showInDefault="1" showInWebsite="1" showInStore="1" sortOrder="17000">
+                        <label>Cost to Buyer</label>
+                        <field id="active" translate="label" type="select" sortOrder="10" showInDefault="1" showInWebsite="1" showInStore="1">
+                            <label>Enable this Solution</label>
+                            <config_path>payment/paypalbr_paypalplus/cost_to_buyer_active</config_path>
+                            <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                            <comment>Para que essa opção funcione configure sua conta PayPal para aceitar parcelamentos.</comment>
+                            <tooltip>Caso tenha duvidas sobre como habilitar o parcelamento, entre em contato com o PayPal através do 0800 047 4482.</tooltip>
+                        </field>
+                        <field id="has_discount" translate="label" type="select" sortOrder="20" showInDefault="1" showInWebsite="1" showInStore="1">
+                            <label>Has cash discount</label>
+                            <config_path>payment/paypalbr_paypalplus/cost_to_buyer_has_discount</config_path>
+                            <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                            <comment>Desconto para pagamento à vista informado na conta PayPal do lojista.</comment>
+                            <depends>
+                                <field id="active">1</field>
+                            </depends>
+                        </field>
+                        <field id="discount" translate="label" type="text" sortOrder="30" showInDefault="1" showInWebsite="1" showInStore="1">
+                            <label>Discount</label>
+                            <config_path>payment/paypalbr_paypalplus/cost_to_buyer_discount</config_path>
+                            <comment>Valor (%) informado na conta PayPal do lojista.</comment>
+                            <depends>
+                                <field id="active">1</field>
+                                <field id="has_discount">1</field>
+                            </depends>
+                        </field>
+                        <field id="qty_installments" translate="label" type="select" sortOrder="40" showInDefault="1" showInWebsite="1" showInStore="1">
+                            <label>Qty Installments</label>
+                            <source_model>PayPalBR\PayPal\Model\Config\Source\QtyInstallment</source_model>
+                            <config_path>payment/paypalbr_paypalplus/cost_to_buyer_qty_installments</config_path>
+                            <comment>Mínimo de 2 parcelas; máximo de 12 parcelas.</comment>
+                            <depends>
+                                <field id="active">1</field>
+                            </depends>
+                        </field>
+                        <field id="minimal_installment" translate="label" type="text" sortOrder="50" showInDefault="1" showInWebsite="1" showInStore="1">
+                            <label>Minimal Installment</label>
+                            <config_path>payment/paypalbr_paypalplus/cost_to_buyer_minimal_installment</config_path>
+                            <comment>Valor mínimo aceito pelo PayPal é de R$10,00. Este valor pode ser alterado para quantias maiores.</comment>
+                            <depends>
+                                <field id="active">1</field>
+                            </depends>
+                        </field>
+                        <field id="installment_2" translate="label" type="text" sortOrder="60" showInDefault="1" showInWebsite="1" showInStore="1">
+                            <label>Cost to 2nd Installment</label>
+                            <config_path>payment/paypalbr_paypalplus/cost_to_buyer_installment_2</config_path>
+                            <tooltip>Formato x.xx</tooltip>
+                            <depends>
+                                <field id="active">1</field>
+                            </depends>
+                        </field>
+                        <field id="installment_3" translate="label" type="text" sortOrder="70" showInDefault="1" showInWebsite="1" showInStore="1">
+                            <label>Cost to 3rd Installment</label>
+                            <config_path>payment/paypalbr_paypalplus/cost_to_buyer_installment_3</config_path>
+                            <tooltip>Formato x.xx</tooltip>
+                            <depends>
+                                <field id="active">1</field>
+                            </depends>
+                        </field>
+                        <field id="installment_4" translate="label" type="text" sortOrder="80" showInDefault="1" showInWebsite="1" showInStore="1">
+                            <label>Cost to 4th Installment</label>
+                            <config_path>payment/paypalbr_paypalplus/cost_to_buyer_installment_4</config_path>
+                            <tooltip>Formato x.xx</tooltip>
+                            <depends>
+                                <field id="active">1</field>
+                            </depends>
+                        </field>
+                        <field id="installment_5" translate="label" type="text" sortOrder="90" showInDefault="1" showInWebsite="1" showInStore="1">
+                            <label>Cost to 5th Installment</label>
+                            <config_path>payment/paypalbr_paypalplus/cost_to_buyer_installment_5</config_path>
+                            <tooltip>Formato x.xx</tooltip>
+                            <depends>
+                                <field id="active">1</field>
+                            </depends>
+                        </field>
+                        <field id="installment_6" translate="label" type="text" sortOrder="100" showInDefault="1" showInWebsite="1" showInStore="1">
+                            <label>Cost to 6th Installment</label>
+                            <config_path>payment/paypalbr_paypalplus/cost_to_buyer_installment_6</config_path>
+                            <tooltip>Formato x.xx</tooltip>
+                            <depends>
+                                <field id="active">1</field>
+                            </depends>
+                        </field>
+                        <field id="installment_7" translate="label" type="text" sortOrder="110" showInDefault="1" showInWebsite="1" showInStore="1">
+                            <label>Cost to 7th Installment</label>
+                            <config_path>payment/paypalbr_paypalplus/cost_to_buyer_installment_7</config_path>
+                            <tooltip>Formato x.xx</tooltip>
+                            <depends>
+                                <field id="active">1</field>
+                            </depends>
+                        </field>
+                        <field id="installment_8" translate="label" type="text" sortOrder="120" showInDefault="1" showInWebsite="1" showInStore="1">
+                            <label>Cost to 8th Installment</label>
+                            <config_path>payment/paypalbr_paypalplus/cost_to_buyer_installment_8</config_path>
+                            <tooltip>Formato x.xx</tooltip>
+                            <depends>
+                                <field id="active">1</field>
+                            </depends>
+                        </field>
+                        <field id="installment_9" translate="label" type="text" sortOrder="130" showInDefault="1" showInWebsite="1" showInStore="1">
+                            <label>Cost to 9th Installment</label>
+                            <config_path>payment/paypalbr_paypalplus/cost_to_buyer_installment_9</config_path>
+                            <tooltip>Formato x.xx</tooltip>
+                            <depends>
+                                <field id="active">1</field>
+                            </depends>
+                        </field>
+                        <field id="installment_10" translate="label" type="text" sortOrder="140" showInDefault="1" showInWebsite="1" showInStore="1">
+                            <label>Cost to 10th Installment</label>
+                            <config_path>payment/paypalbr_paypalplus/cost_to_buyer_installment_10</config_path>
+                            <tooltip>Formato x.xx</tooltip>
+                            <depends>
+                                <field id="active">1</field>
+                            </depends>
+                        </field>
+                        <field id="installment_11" translate="label" type="text" sortOrder="150" showInDefault="1" showInWebsite="1" showInStore="1">
+                            <label>Cost to 11th Installment</label>
+                            <config_path>payment/paypalbr_paypalplus/cost_to_buyer_installment_11</config_path>
+                            <tooltip>Formato x.xx</tooltip>
+                            <depends>
+                                <field id="active">1</field>
+                            </depends>
+                        </field>
+                        <field id="installment_12" translate="label" type="text" sortOrder="160" showInDefault="1" showInWebsite="1" showInStore="1">
+                            <label>Cost to 12th Installment</label>
+                            <config_path>payment/paypalbr_paypalplus/cost_to_buyer_installment_12</config_path>
+                            <tooltip>Formato x.xx</tooltip>
+                            <depends>
+                                <field id="active">1</field>
+                            </depends>
+                        </field>
+                        <field id="heading_installments" translate="label" type="text" sortOrder="170" showInDefault="1" showInWebsite="1" showInStore="1">
+                            <label>Personalization</label>
+                            <frontend_model>Magento\Config\Block\System\Config\Form\Field\Heading</frontend_model>
+                            <depends>
+                                <field id="active">1</field>
+                            </depends>
+                        </field>
+                        <field id="installment_text" translate="label" type="text" sortOrder="180" showInDefault="1" showInWebsite="1" showInStore="1">
+                            <label>Exibition Name</label>
+                            <config_path>payment/paypalbr_paypalplus/cost_to_buyer_installment_text</config_path>
+                            <tooltip>Valor Padrão - Juros</tooltip>
+                            <comment>Texto que será exibido ao cliente no checkout.</comment>
+                            <depends>
+                                <field id="active">1</field>
+                            </depends>
+                        </field>
+                    </group>
                 </group>
 
                 <group id="paypalbr_expresscheckout" translate="label comment" type="text" showInDefault="1" showInWebsite="1" showInStore="1">
@@ -266,6 +416,7 @@
                         <comment>When activated, declined transactions will generate orders</comment>
                     </field>
                 </group>
+
             </group>
         </section>
     </system>

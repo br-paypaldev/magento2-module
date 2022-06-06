@@ -16,6 +16,8 @@ namespace PayPalBR\PayPal\Model;
 use Braintree\Exception;
 use PayPalBR\PayPal\Api\LoginPayPalCreateManagementInterface;
 use Magento\Framework\Filesystem\DirectoryList;
+use PayPalBR\PayPal\Logger\Handler;
+use PayPalBR\PayPal\Logger\Logger;
 
 class LoginPayPalManagementApi implements LoginPayPalCreateManagementInterface
 {
@@ -152,12 +154,22 @@ class LoginPayPalManagementApi implements LoginPayPalCreateManagementInterface
     protected $dir;
 
     /**
+     * @var Logger
+     */
+    protected $customLogger;
+
+    /**
+     * @var Handler
+     */
+    protected $loggerHandler;
+
+    /**
      * LoginPayPalManagementApi constructor.
      * @param \Magento\Framework\App\Config\ScopeConfigInterface $scopeConfig
      * @param \Magento\Checkout\Model\Cart $cart
      * @param \Magento\Customer\Model\Session $customerSession
      * @param \Magento\Store\Model\StoreManagerInterface $storeManager
-     * @param ConfigProvider $configProvider
+     * @param PayPalExpressCheckout\ConfigProvider $configProvider
      * @param \Magento\Payment\Model\Cart\SalesModel\Factory $cartSalesModelFactory
      * @param \Magento\Checkout\Model\Session $checkoutSession
      * @param \Psr\Log\LoggerInterface $logger
@@ -172,6 +184,9 @@ class LoginPayPalManagementApi implements LoginPayPalCreateManagementInterface
      * @param \Magento\Framework\Message\ManagerInterface $messageManager
      * @param \Magento\Framework\Stdlib\DateTime\DateTime $date
      * @param \Magento\Framework\Math\Random $mathRandom
+     * @param DirectoryList $dir
+     * @param Logger $customLogger
+     * @param Handler $loggerHandler
      */
     public function __construct(
         \Magento\Framework\App\Config\ScopeConfigInterface $scopeConfig,
@@ -193,8 +208,9 @@ class LoginPayPalManagementApi implements LoginPayPalCreateManagementInterface
         \Magento\Framework\Message\ManagerInterface $messageManager,
         \Magento\Framework\Stdlib\DateTime\DateTime $date,
         \Magento\Framework\Math\Random $mathRandom,
-        DirectoryList $dir
-
+        DirectoryList $dir,
+        Logger $customLogger,
+        Handler $loggerHandler
     ) {
         $this->scopeConfig = $scopeConfig;
         $this->cart = $cart;
@@ -219,6 +235,8 @@ class LoginPayPalManagementApi implements LoginPayPalCreateManagementInterface
         $this->date = $date;
         $this->mathRandom = $mathRandom;
         $this->dir = $dir;
+        $this->customLogger = $customLogger;
+        $this->loggerHandler = $loggerHandler;
     }
 
     /**
@@ -232,6 +250,7 @@ class LoginPayPalManagementApi implements LoginPayPalCreateManagementInterface
         $debug = $this->configProvider->isDebugEnabled();
         $this->configId = $this->configProvider->getClientId();
         $this->secretId = $this->configProvider->getSecretId();
+        $logDir = $this->dir->getPath('log');
 
         if ($debug == 1) {
             $debug = true;
@@ -242,8 +261,8 @@ class LoginPayPalManagementApi implements LoginPayPalCreateManagementInterface
             'http.headers.PayPal-Partner-Attribution-Id' => 'MagentoBrazil_Ecom_Login2',
             'mode' => $this->configProvider->isModeSandbox() ? 'sandbox' : 'live',
             'log.LogEnabled' => $debug,
-            'log.FileName' => $this->dir->getPath('log') . '/paypal-login-' . date('Y-m-d') . '.log',
-            'cache.FileName' => $this->dir->getPath('log') . '/auth.cache',
+            'log.FileName' => $logDir . '/paypal-login-' . date('Y-m-d') . '.log',
+            'cache.FileName' => $logDir . '/auth.cache',
             'log.LogLevel' => 'DEBUG',
             'cache.enabled' => true,
             'http.CURLOPT_SSLVERSION' => 'CURL_SSLVERSION_TLSv1_2'
@@ -760,10 +779,8 @@ class LoginPayPalManagementApi implements LoginPayPalCreateManagementInterface
 
     protected function logger($array)
     {
-        $writer = new \Zend\Log\Writer\Stream($this->dir->getPath('log') . '/paypal_login-' . date('Y-m-d') . '.log');
-        $logger = new \Zend\Log\Logger();
-        $logger->addWriter($writer);
-        $logger->info($array);
+        $this->loggerHandler->setFileName('paypal_login-' . date('Y-m-d'));
+        $this->customLogger->info($array);
     }
 
     /**

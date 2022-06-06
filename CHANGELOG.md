@@ -1,3 +1,6 @@
+1.1.0
+- Adicionado Cost to Buyer
+
 1.0.10
 - Correção de CNPJ como pagador
 

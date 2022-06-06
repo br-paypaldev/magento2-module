@@ -99,6 +99,7 @@ class PaypalExpressCheckoutApi extends PaypalCommonApi
         $debug = $this->configProvider->isDebugEnabled();
         $this->configId = $this->configProvider->getClientId();
         $this->secretId = $this->configProvider->getSecretId();
+        $logDir = $this->dir->getPath('log');
 
         if ($debug == 1) {
             $debug = true;
@@ -110,8 +111,8 @@ class PaypalExpressCheckoutApi extends PaypalCommonApi
             'http.headers.PayPal-Partner-Attribution-Id' => 'MagentoBrazil_Ecom_EC2',
             'mode' => $this->configProvider->isModeSandbox() ? 'sandbox' : 'live',
             'log.LogEnabled' => $debug,
-            'log.FileName' => $this->dir->getPath('log') . '/paypal-express-checkout-' . date('Y-m-d') . '.log',
-            'cache.FileName' => $this->dir->getPath('log') . '/auth.cache',
+            'log.FileName' => $logDir . '/paypal-express-checkout-' . date('Y-m-d') . '.log',
+            'cache.FileName' => $logDir . '/auth.cache',
             'log.LogLevel' => 'DEBUG',
             'cache.enabled' => true,
             'http.CURLOPT_SSLVERSION' => 'CURL_SSLVERSION_TLSv1_2'

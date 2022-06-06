@@ -21,6 +21,33 @@
                                                 <item name="template" xsi:type="string">PayPalBR_PayPal/form/element/email</item>
                                             </item>
                                         </item>
+                                        <item name="summary" xsi:type="array">
+                                            <item name="children" xsi:type="array">
+                                                <item name="totals" xsi:type="array">
+                                                    <item name="children" xsi:type="array">
+                                                        <item name="processing_fee_paypal" xsi:type="array">
+                                                            <item name="component" xsi:type="string">PayPalBR_PayPal/js/view/checkout/cart/totals/processing-fee-paypal</item>
+                                                            <item name="sortOrder" xsi:type="string">20</item>
+                                                            <item name="config" xsi:type="array">
+                                                                <item name="template" xsi:type="string">PayPalBR_PayPal/checkout/cart/totals/processing-fee-paypal</item>
+                                                                <item name="title" xsi:type="helper" helper="PayPalBR\PayPal\Helper\Installment::getTitle"/>
+                                                            </item>
+                                                        </item>
+                                                    </item>
+                                                </item>
+                                                <item name="cart_items" xsi:type="array">
+                                                    <item name="children" xsi:type="array">
+                                                        <item name="details" xsi:type="array">
+                                                            <item name="children" xsi:type="array">
+                                                                <item name="subtotal" xsi:type="array">
+                                                                    <item name="component" xsi:type="string">Magento_Tax/js/view/checkout/summary/item/details/subtotal</item>
+                                                                </item>
+                                                            </item>
+                                                        </item>
+                                                    </item>
+                                                </item>
+                                            </item>
+                                        </item>
                                     </item>
                                 </item>
                                 <item name="steps" xsi:type="array">
@@ -52,7 +79,11 @@
                                         </item>
                                     </item>
                                 </item>
+
                             </item>
+                        </item>
+                        <item name="installment-cost-buyer" xsi:type="array">
+                            <item name="component" xsi:type="string">PayPalBR_PayPal/js/view/payment/installment</item>
                         </item>
                     </item>
                 </argument>

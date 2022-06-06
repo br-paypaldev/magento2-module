@@ -16,6 +16,7 @@ define([
     return {
 
         defaultQuote: quote,
+        alreadyPlacedOrder: false,
 
         runPayPal: function(approvalUrl, context = this) {
             // fullScreenLoaderPayPal.startLoader();
@@ -102,8 +103,6 @@ define([
                 var height = '';
             }
 
-            var isCPF = /^(([0-9]{3}.[0-9]{3}.[0-9]{3}-[0-9]{2})|([0-9]{11}))$/.test(taxVat);
-
             window.checkoutConfig.payment.paypalbr_paypalplus.paypalObject = PAYPAL.apps.PPP(
                 {
                     "approvalUrl": approvalUrl,
@@ -114,14 +113,16 @@ define([
                     "payerPhone": "055"+telephone,
                     "payerEmail": email,
                     "payerTaxId": taxVat,
-                    "payerTaxIdType": isCPF ? "BR_CPF" : "BR_CNPJ",
+                    "payerTaxIdType": "BR_CPF",
                     "language": "pt_BR",
                     "country": "BR",
                     "enableContinue": "continueButton",
                     "disableContinue": "continueButton",
                     "rememberedCards": window.checkoutConfig.payment.paypalbr_paypalplus.rememberedCard,
                     "iframeHeight": height,
-                    "merchantInstallmentSelection": 0,
+                    "merchantInstallmentSelection": !window.checkoutConfig.payment.cost_to_buyer.enabled
+                        ? 0
+                        : window.checkoutConfig.payment.cost_to_buyer.option,
                     "merchantInstallmentSelectionOptional": false,
 
                     onLoad: function () {
@@ -157,7 +158,10 @@ define([
                         $('#paypalbr_paypalplus_term').val(term);
 
                         $('#ppplus').hide();
-                        self.placePendingOrder();
+                        if (!self.alreadyPlacedOrder){
+                            self.placePendingOrder();
+                            self.alreadyPlacedOrder = true;
+                        }
                     },
 
                     /**
@@ -233,22 +237,12 @@ define([
             var serviceUrl = urlBuilder.build('paypalplus/payment/index');
             var approvalUrl = '';
             console.log('initialize do helper.js');
-            // fullScreenLoader.startLoader();
-            // if(this.validateAddress() === false) {
-            //     fullScreenLoader.startLoader();
-            //     setTimeout(function(){
-            //         alert ($.mage.__('Prezado cliente, favor preencher e/ou validar os dados dos passos anteriores antes de selecionar a Forma de Pagamento. Caso o problema persista por favor entre em contato.'));
-            //         location.reload();
-            //     }, 1000);
-            //     return;
-            // }
 
-            // storage.post(serviceUrl, '')
             jQuery.ajax({
                 url: serviceUrl,
                 type: "POST",
                 dataType: 'json',
-                data: {email: $('#customer-email').val()},
+                data: {email: $('#customer-email').val(), installment: window.checkoutConfig.payment.cost_to_buyer.option},
             })
                 .done(function (response) {
                     // console.log(response);

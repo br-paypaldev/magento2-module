@@ -56,7 +56,7 @@ define([
         isPaymentReady: false,
         defaultQuote: quote,
         shippingValue: quote.totals().base_shipping_amount,
-
+        installmentEnabled: ko.observable(false),
 
         getNamePay: function(){
             return "Cartão de Crédito " + window.checkoutConfig.payment.paypalbr_paypalplus.exibitionName;
@@ -84,7 +84,11 @@ define([
                         return false;
                     }
 
-                    helper.initializeIframe(self);
+                    if(!this.installmentEnabled) {
+                        helper.initializeIframe(self);
+                    }
+
+                    fullScreenLoaderPayPal.stopLoader();
                 }
                 window.checkoutConfig.payment.paypalbr_paypalplus.is_payment_ready = true;
                 self.isPaymentReady = true;
@@ -100,7 +104,9 @@ define([
             $('#ppplus').css('display', 'none');
             $('#continueButton').prop("disabled", true);
 
-            if(quote.billingAddress._latestValue || quote.shippingAddress.length){ //Not initialize iframe if quote don't have address.
+            if(window.checkoutConfig.payment.cost_to_buyer.option == null && window.checkoutConfig.payment.cost_to_buyer.enabled){
+                $('#ppplus').parent().find('.payment-method-billing-address').css('display', 'none');
+            }else if(quote.billingAddress._latestValue || quote.shippingAddress.length){ //Not initialize iframe if quote don't have address.
                 if (this.validate() && additionalValidators.validate()) {
                     $('#iframe-error').hide();
                     $('#ppplus').parent().find('.payment-method-billing-address').css('display', 'none');
@@ -125,20 +131,27 @@ define([
                                     $('#continueButton').prop("disabled", true);
                                     return false;
                                 }
-                                helper.initializeIframe(self);
+                                if(!this.installmentEnabled) {
+                                    helper.initializeIframe(self);
+                                }
                             }
                             window.checkoutConfig.payment.paypalbr_paypalplus.is_payment_ready = true;
                             self.isPaymentReady = true;
                         } else {
-                            helper.initializeIframe();
+                            if(!this.installmentEnabled) {
+                                helper.initializeIframe();
+                            }
                         }
                     }, 1000);
+
+                    fullScreenLoaderPayPal.stopLoader();
                 } else {
                     $('#paypalbr_paypalplus').prop("checked", false);
                     selectPaymentMethodAction(null);
                     return false;
                 }
             }
+
 
             selectPaymentMethodAction(this.getData());
             // checkoutData.setSelectedPaymentMethod(this.item.method);
@@ -256,5 +269,9 @@ define([
             // return this.item.method;
             return 'paypalbr_paypalplus';
         },
+
+        costToBuyer: function() {
+            return window.checkoutConfig.payment.cost_to_buyer.enabled;
+        }
     });
 });

@@ -17,8 +17,14 @@ use Magento\Framework\Serialize\Serializer\Json;
 use Magento\Framework\Stdlib\CookieManagerInterface;
 use Magento\Framework\Stdlib\Cookie\CookieMetadataFactory;
 use Magento\Framework\Session\SessionManagerInterface;
+use Magento\Quote\Model\Quote;
+use PayPal\Api\Item;
+use PayPal\Api\ItemList;
+use PayPalBR\PayPal\Helper\Installment;
 use PayPalBR\PayPal\Model\PayPal\Validate;
 use Magento\Framework\Filesystem\DirectoryList;
+use PayPal\Api\Amount;
+use PayPal\Api\Details;
 
 /**
  * Class PaypalPlusApi
@@ -97,6 +103,8 @@ class PaypalPlusApi extends PaypalCommonApi
 
     protected $json;
 
+    protected $installmentHelper;
+
     /**
      * PaypalPlusApi constructor.
      *
@@ -119,7 +127,8 @@ class PaypalPlusApi extends PaypalCommonApi
         SessionManagerInterface $sessionManager,
         Validate $validate,
         Json $json,
-        DirectoryList $dir
+        DirectoryList $dir,
+        Installment $installmentHelper
     ) {
         parent::__construct(
             $cart,
@@ -139,6 +148,7 @@ class PaypalPlusApi extends PaypalCommonApi
         $this->validate = $validate;
         $this->json = $json;
         $this->dir = $dir;
+        $this->installmentHelper = $installmentHelper;
     }
 
     /**
@@ -153,6 +163,7 @@ class PaypalPlusApi extends PaypalCommonApi
         $this->configId = $this->configProvider->getClientId();
         $this->secretId = $this->configProvider->getSecretId();
         $edition = $this->productMetadata->getEdition();
+        $logDir = $this->dir->getPath('log');
 
         if ($debug == 1) {
             $debug = true;
@@ -163,8 +174,8 @@ class PaypalPlusApi extends PaypalCommonApi
             'http.headers.PayPal-Partner-Attribution-Id' => 'MagentoBrazil_Ecom_PPPlus2',
             'mode' => $this->configProvider->isModeSandbox() ? 'sandbox' : 'live',
             'log.LogEnabled' => $debug,
-            'log.FileName' => $this->dir->getPath('log') . '/paypal-plus-' . date('Y-m-d') . '.log',
-            'cache.FileName' => $this->dir->getPath('log') . '/auth.cache',
+            'log.FileName' => $logDir . '/paypal-plus-' . date('Y-m-d') . '.log',
+            'cache.FileName' => $logDir . '/auth.cache',
             'log.LogLevel' => 'DEBUG',
             'cache.enabled' => true,
             'http.CURLOPT_SSLVERSION' => 'CURL_SSLVERSION_TLSv1_2'
@@ -215,9 +226,20 @@ class PaypalPlusApi extends PaypalCommonApi
         $amountItemsWithDiscount = $quote->getBaseSubtotalWithDiscount();
         $ship = $quote->getShippingAddress()->getBaseShippingAmount();
         $tax = $quote->getShippingAddress()->getBaseTaxAmount();
+        if ($params['installment'] === 1) {
+            $installment = floatval("-".$this->installmentHelper->getDiscountValue());
+        } else {
+            $installment = $this->installmentHelper->getCostValue($params['installment']);
+        }
 
-        $totalSum = $amountItemsWithDiscount + $ship + $tax;
-        $amountTotal = (float)$amountTotal;
+        $this->checkoutSession->setInstallment($params['installment']);
+        $this->checkoutSession->setFeeValue($installment);
+
+        $quote->getPayment()->setAdditionalInformation('paypalplus_installment', $params['installment']);
+        $quote->getPayment()->save();
+
+        $totalSum = $amountItemsWithDiscount + $ship + $tax + $installment;
+        $amountTotal = (float)$amountTotal + $installment;
         $totalSum = (float)$totalSum;
 
         if (strval($amountTotal) != strval($totalSum)) {
@@ -376,19 +398,102 @@ class PaypalPlusApi extends PaypalCommonApi
     }
 
     /**
-     * @return void
+     * Returns amount PayPal Plus API
+     *
+     * @return Amount
      */
-    public function delete()
+    protected function getAmount()
     {
-//        $metadata = $this->cookieMetadataFactory
-//            ->createPublicCookieMetadata()
-//            ->setDuration($duration)
-//            ->setPath($this->sessionManager->getCookiePath())
-//            ->setDomain($this->sessionManager->getCookieDomain());
+        /** @var Quote $quote */
+        $quote = $this->cart->getQuote();
 
-//        $this->cookieManager->deleteCookie(
-//            self::COOKIE_NAME,
-//            $metadata
-//        );
+        $installment = $quote->getPayment()->getAdditionalInformation('paypalplus_installment');
+        $feeValue = 0;
+        if ($installment != "1") {
+            $feeValue = $this->installmentHelper->getCostValue($installment);
+        }
+
+        $storeCurrency = $quote->getBaseCurrencyCode();
+        $grandTotal = $quote->getBaseGrandTotal() + $feeValue;
+        $details = $this->getDetails();
+
+        $amount = new Amount();
+        $amount->setCurrency($storeCurrency);
+        $amount->setTotal($grandTotal);
+        $amount->setDetails($details);
+
+        return $amount;
+    }
+
+    /**
+     * Returns details for PayPal Plus API
+     *
+     * @return Details
+     */
+    protected function getDetails()
+    {
+        /** @var Quote $quote */
+        $quote = $this->cart->getQuote();
+
+        /**
+         * If subtotal + shipping + tax not equals grand total,
+         * then a disscount might be applying, get subtotal with disscount then.
+         */
+        $baseSubtotal = $this->cartSalesModelQuote->getBaseSubtotal();
+
+        if ($quote->getPayment()->getAdditionalInformation('paypalplus_installment') != "1") {
+            $baseSubtotal += $this->installmentHelper->getCostValue(
+                $quote->getPayment()->getAdditionalInformation('paypalplus_installment')
+            );
+        }
+
+        if ($this->cartSalesModelQuote->getBaseDiscountAmount()) {
+            $subtotal = $baseSubtotal + $this->cartSalesModelQuote->getBaseDiscountAmount();
+        } else {
+            $subtotal = $baseSubtotal;
+        }
+
+        $details = new Details();
+        $details->setShipping($this->cartSalesModelQuote->getBaseShippingAmount())
+            ->setSubtotal($subtotal);
+
+        if ($this->cartSalesModelQuote->getBaseDiscountAmount() !== '0.0000') {
+            $details->setShippingDiscount('-0.0000');
+        }
+
+        return $details;
+    }
+
+    /**
+     * Returns the items in the cart
+     *
+     * @return ItemList
+     */
+    protected function getItemList()
+    {
+        $itemList = parent::getItemList();
+        /** @var Quote $quote */
+        $quote = $this->cart->getQuote();
+
+        /** @var string $storeCurrency */
+        $storeCurrency = $quote->getBaseCurrencyCode();
+
+        $valueInstallment = $this->installmentHelper
+            ->getCostValue($quote->getPayment()->getAdditionalInformation('paypalplus_installment'));
+
+        if ($quote->getPayment()->getAdditionalInformation('paypalplus_installment') != "1") {
+            if ($valueInstallment !== 0.0) {
+                $item = new Item();
+                $item->setName($this->installmentHelper->getTitle())
+                    ->setDescription($this->installmentHelper->getTitle())
+                    ->setQuantity('1')
+                    ->setPrice($valueInstallment)
+                    ->setSku('PaypalBr' . $this->installmentHelper->getTitle())
+                    ->setCurrency($storeCurrency);
+                $itemList->addItem($item);
+            }
+        }
+
+        return $itemList;
     }
 }
