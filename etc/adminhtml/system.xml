@@ -102,12 +102,6 @@
                         <comment>The logs will be saved at: var/log/</comment>
                         <tooltip>Enable this mode to debug the application.</tooltip>
                     </field>
-                    <field id="toggle" translate="label comment tooltip" type="select" sortOrder="14000" showInDefault="1" showInWebsite="1" showInStore="1">
-                        <label>Create order from declined transactions</label>
-                        <config_path>payment/paypalbr_paypalplus/toggle</config_path>
-                        <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
-                        <comment>When activated, declined transactions will generate orders</comment>
-                    </field>
                     <field id="iframe_height_active" translate="label" type="select" sortOrder="15000" showInDefault="1" showInWebsite="1" showInStore="1">
                         <label>Enable fixed form height</label>
                         <config_path>payment/paypalbr_paypalplus/iframe_height_active</config_path>
@@ -408,12 +402,6 @@
                         <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
                         <comment>The logs will be saved at: var/log/</comment>
                         <tooltip>Enable this mode to debug the application.</tooltip>
-                    </field>
-                    <field id="toggle" translate="label comment tooltip" type="select" sortOrder="0" showInDefault="1" showInWebsite="1" showInStore="1">
-                        <label>Create order from declined transactions</label>
-                        <config_path>payment/paypalbr_expresscheckout/toggle</config_path>
-                        <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
-                        <comment>When activated, declined transactions will generate orders</comment>
                     </field>
                 </group>
 

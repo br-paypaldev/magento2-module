@@ -1,3 +1,6 @@
+1.1.1
+- Remoção de feature de criação de Pedidos de transação rejeitada
+
 1.1.0
 - Adicionado Cost to Buyer
 
