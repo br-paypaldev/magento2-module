@@ -157,9 +157,12 @@ class PaypalExpressCheckoutApi extends PaypalCommonApi
         $amountTotal = $quote->getBaseGrandTotal();
         $amountItemsWithDiscount = $quote->getBaseSubtotalWithDiscount();
         $ship = $quote->getShippingAddress()->getBaseShippingAmount();
+        $creditStore = $quote->getData('customer_balance_amount_used');
         $tax = $quote->getShippingAddress()->getBaseTaxAmount();
+        $rewards = $quote->getData('reward_currency_amount');
+        $giftCardAmount = $quote->getData('base_gift_cards_amount_used');
 
-        $totalSum = $amountItemsWithDiscount + $ship + $tax;
+        $totalSum = $amountItemsWithDiscount + $ship + $tax - $creditStore - $rewards - $giftCardAmount;
         $amountTotal = (float)$amountTotal;
         $totalSum = (float)$totalSum;
 

@@ -46,10 +46,10 @@ class PayPalPlus extends \Magento\Payment\Model\Method\AbstractMethod
         \Magento\Payment\Helper\Data $paymentData,
         \Magento\Framework\App\Config\ScopeConfigInterface $scopeConfig,
         \Magento\Payment\Model\Method\Logger $logger,
+        \PayPalBR\PayPal\Model\PayPalPlus\ConfigProvider $configProvider,
         \Magento\Framework\Model\ResourceModel\AbstractResource $resource = null,
         \Magento\Framework\Data\Collection\AbstractDb $resourceCollection = null,
-        array $data = [],
-        \PayPalBR\PayPal\Model\PayPalPlus\ConfigProvider $configProvider
+        array $data = []
     )
     {
         parent::__construct(

@@ -412,6 +412,9 @@ class RequestBuilder implements BuilderInterface
         /** @var \Magento\Quote\Model\Quote $quote */
         $quote = $this->cart->getQuote();
         $baseSubtotal = $this->cartSalesModelQuote->getBaseSubtotal();
+        $customerBalance = $quote->getData('customer_balance_amount_used');
+        $rewardPoints = $quote->getData('base_reward_currency_amount');
+        $giftCard = $quote->getData('base_gift_cards_amount_used');
 
         /** @var string $storeCurrency */
         $storeCurrency = $quote->getBaseCurrencyCode();
@@ -435,6 +438,48 @@ class RequestBuilder implements BuilderInterface
                 ->setDescription('Discount')
                 ->setQuantity('1')
                 ->setPrice($this->cartSalesModelQuote->getBaseDiscountAmount())
+                ->setSku('discountloja')
+                ->setCurrency($storeCurrency);
+            $itemList->addItem($item);
+        }
+
+        if ($customerBalance && $customerBalance !== '0.0000') {
+            if ((float)$customerBalance > 0.0000) {
+                $customerBalance = $customerBalance * (-1);
+            }
+            $item = new \PayPal\Api\Item();
+            $item->setName('Store Credit Discount')
+                ->setDescription('Store Credit Discount')
+                ->setQuantity('1')
+                ->setPrice($customerBalance)
+                ->setSku('discountloja')
+                ->setCurrency($storeCurrency);
+            $itemList->addItem($item);
+        }
+
+        if ($rewardPoints && $rewardPoints !== '0.0000') {
+            if ((float)$rewardPoints > 0.0000) {
+                $rewardPoints = $rewardPoints * (-1);
+            }
+            $item = new \PayPal\Api\Item();
+            $item->setName('Rewards Discount')
+                ->setDescription('Rewards Discount')
+                ->setQuantity('1')
+                ->setPrice($rewardPoints)
+                ->setSku('discountloja')
+                ->setCurrency($storeCurrency);
+            $itemList->addItem($item);
+        }
+
+        if ($giftCard && $giftCard !== '0.0000') {
+            if ((float)$giftCard > 0.0000) {
+                $giftCard = $giftCard * (-1);
+            }
+            $item = new \PayPal\Api\Item();
+            $item->setName('Gift Card Discount')
+                ->setDescription('Gift Card Discount')
+                ->setQuantity('1')
+                ->setPrice($giftCard)
                 ->setSku('discountloja')
                 ->setCurrency($storeCurrency);
             $itemList->addItem($item);

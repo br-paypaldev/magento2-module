@@ -225,7 +225,11 @@ class PaypalPlusApi extends PaypalCommonApi
         $amountTotal = $quote->getBaseGrandTotal();
         $amountItemsWithDiscount = $quote->getBaseSubtotalWithDiscount();
         $ship = $quote->getShippingAddress()->getBaseShippingAmount();
+        $creditStore = $quote->getData('customer_balance_amount_used');
         $tax = $quote->getShippingAddress()->getBaseTaxAmount();
+        $rewards = $quote->getData('reward_currency_amount');
+        $giftCardAmount = $quote->getData('base_gift_cards_amount_used');
+
         if ($params['installment'] === 1) {
             $installment = floatval("-".$this->installmentHelper->getDiscountValue());
         } else {
@@ -238,7 +242,7 @@ class PaypalPlusApi extends PaypalCommonApi
         $quote->getPayment()->setAdditionalInformation('paypalplus_installment', $params['installment']);
         $quote->getPayment()->save();
 
-        $totalSum = $amountItemsWithDiscount + $ship + $tax + $installment;
+        $totalSum = $amountItemsWithDiscount + $ship + $tax + $installment - $creditStore - $rewards - $giftCardAmount;
         $amountTotal = (float)$amountTotal + $installment;
         $totalSum = (float)$totalSum;
 
@@ -445,6 +449,17 @@ class PaypalPlusApi extends PaypalCommonApi
             $baseSubtotal += $this->installmentHelper->getCostValue(
                 $quote->getPayment()->getAdditionalInformation('paypalplus_installment')
             );
+        }
+
+        if ($quote->getBaseCustomerBalAmountUsed()) {
+            $baseSubtotal -= $quote->getBaseCustomerBalAmountUsed();
+        }
+        if ($quote->getData('base_reward_currency_amount')) {
+            $baseSubtotal -= $quote->getData('base_reward_currency_amount');
+        }
+
+        if ($quote->getData('base_gift_cards_amount_used')) {
+            $baseSubtotal -= $quote->getData('base_gift_cards_amount_used');
         }
 
         if ($this->cartSalesModelQuote->getBaseDiscountAmount()) {

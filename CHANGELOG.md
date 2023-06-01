@@ -1,3 +1,7 @@
+1.1.2
+- Correção para Magento 2.4.5
+- Adicionado funcionalidades para Magento Enterprise
+
 1.1.1
 - Remoção de feature de criação de Pedidos de transação rejeitada
 
