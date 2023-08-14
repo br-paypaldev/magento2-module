@@ -29,7 +29,7 @@ A solução requer aprovação comercial, entre em contato pelo 0800 721 6959 e 
 
 ## Compatibilidade
 
-Este módulo é compatível com as versões do Magento 2.2.2 até 2.4.2.
+Este módulo é compatível com as versões do Magento 2.2.2 até 2.4.6.
 
 ## Módulos OneStepCheckout
 

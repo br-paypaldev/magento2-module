@@ -1,3 +1,7 @@
+1.1.3
+- Atualização Composer
+- Atualização README
+
 1.1.2
 - Correção para Magento 2.4.5
 - Adicionado funcionalidades para Magento Enterprise
