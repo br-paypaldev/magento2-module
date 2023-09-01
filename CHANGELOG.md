@@ -1,3 +1,6 @@
+1.1.4
+- Correções de bugs
+
 1.1.3
 - Atualização Composer
 - Atualização README
