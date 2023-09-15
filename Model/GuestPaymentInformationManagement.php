@@ -44,29 +44,17 @@ class GuestPaymentInformationManagement extends MGuestPaymentInformationManageme
         \Magento\Checkout\Api\PaymentInformationManagementInterface $paymentInformationManagement,
         \Magento\Quote\Model\QuoteIdMaskFactory $quoteIdMaskFactory,
         CartRepositoryInterface $cartRepository,
-        LoggerInterface $logger,
-        \Magento\Framework\App\ProductMetadataInterface $productMetadata
+        LoggerInterface $logger
     ) {
-        if (version_compare($productMetadata->getVersion(), '2.4.6', '>=')) {
-            parent::__construct(
-                $billingAddressManagement,
-                $paymentMethodManagement,
-                $cartManagement,
-                $paymentInformationManagement,
-                $quoteIdMaskFactory,
-                $cartRepository,
-                $logger
-            );
-        } else {
-            parent::__construct(
-                $billingAddressManagement,
-                $paymentMethodManagement,
-                $cartManagement,
-                $paymentInformationManagement,
-                $quoteIdMaskFactory,
-                $cartRepository
-            );
-        }
+        parent::__construct(
+            $billingAddressManagement,
+            $paymentMethodManagement,
+            $cartManagement,
+            $paymentInformationManagement,
+            $quoteIdMaskFactory,
+            $cartRepository,
+            $logger
+        );
 
         $this->logger = $logger;
     }
