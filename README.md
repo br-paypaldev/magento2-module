@@ -6,26 +6,15 @@ Página oficial do módulo PayPal com as soluções utilizadas no mercado Brasil
 ## Descrição
 
 Este módulo contém os principais produtos PayPal para o mercado Brasileiro:
-- **Smart Payment Button (Novo Express Checkout)**: Solução de carteira digital aonde o cliente paga com a sua conta PayPal ou cria uma no momento da compra.
-- **PayPal Plus**: Checkout transparente PayPal aonde o cliente paga somente utilizando o seu cartão de crédito, sem a necessidade de ter uma conta PayPal.
-- **PayPal Login**: O cliente utiliza a sua conta PayPal para fazer login e comprar com PayPal;
-- **PayPal no Carrinho**: O cliente utiliza a sua conta PayPal para comprar diretamente do carrinho;
-
-**É recomendado que o PayPal Plus seja utilizado juntamente com o Smart Payment Button, oferecendo assim ao cliente uma experiência de checkout completa com as soluções transparente e de carteira.**
+- **PayPal Checkout**: Solução de carteira digital aonde o cliente paga com a sua conta PayPal ou cria uma no momento da compra.
+- **Cartãi de crédito e Débito**: Checkout transparente PayPal aonde o cliente paga somente utilizando o seu cartão de crédito ou débito, sem a necessidade de ter uma conta PayPal.
 
 ## Requisitos
 
 Para o correto funcionamento das soluções, é necessário verificar que a sua loja e servidor suporte alguns recursos:
-1. Para o checkout transparente (PayPal Plus), a sua loja precisa ter suporte ao TAX_VAT, portanto antes de ativar a solução garanta que a sua loja está devidamente configurada para suportar este campo;
+1. Para o checkout transparente, recomendamos que a sua loja tenha suporte ao TAX_VAT, portanto antes de ativar a solução garanta que a sua loja está devidamente configurada para suportar este campo;
 2. O servidor precisa ter suporte à TLS 1.2 ou superior e HTTPS 1.1 [(Referência Oficial)](https://www.paypal.com/sg/webapps/mpp/tls-http-upgrade).
 3. O servidor precisa ter suporte à PHP 7.0 ou superior;
-
-**Checkout Transparente (PayPal Plus)**
-O Checkout Transparente está disponível apenas para contas PayPal cadastradas com CNPJ (Conta Empresa), caso a sua conta seja de pessoa física, você deve abrir uma conta PayPal de pessoa jurídica por este link.
-
-A solução requer aprovação comercial, entre em contato pelo 0800 721 6959 e solicite agora mesmo.
-
-**O PayPal Plus só irá funcionar caso tenha sido aprovado pelo PayPal.**
 
 ## Compatibilidade
 
@@ -81,8 +70,8 @@ Para configurar as soluções PayPal, você deverá gerar as credenciais de API 
 5. No canto superior direito da tela, clique em "Live";
 6. Você deve copiar os códigos que aparecerem em "Client ID" e em "Secret" (Para visualizar o "Secret" será necessário clicar em "Show") e colar estes códigos na página de configuração da solução que irá utilizar.
 
-### - PayPal Plus
-Para o PayPal Plus, o campo CPF/CNPJ é obrigatório, para habilitá-lo siga os passos abaixo dentro do painel administrativo do Magento:
+### - Cartão de crédito e Débito
+É recomendado disponibilizar o campo CPF/CNPJ, para habilitá-lo siga os passos abaixo dentro do painel administrativo do Magento:
 
 **Habilitar o VAT Number no Front-end:**
 - STORES -> Settings -> Configuration -> Customers -> Customer Configuration -> Create New Account Options -> Show VAT Number on Storefront (Habilitar como "Yes")
