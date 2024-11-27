@@ -1,3 +1,23 @@
+1.1.4
+- Correções de bugs
+
+1.1.3
+- Atualização Composer
+- Atualização README
+
+1.1.2
+- Correção para Magento 2.4.5
+- Adicionado funcionalidades para Magento Enterprise
+
+1.1.1
+- Remoção de feature de criação de Pedidos de transação rejeitada
+
+1.1.0
+- Adicionado Cost to Buyer
+
+1.0.10
+- Correção de CNPJ como pagador
+
 1.0.9
 - Correções de bugs
 

@@ -71,7 +71,7 @@ class Button extends Template
         $this->_customerUrl = $customerUrl;
         $this->_customerSession = $customerSession;
         $this->_cart = $cart;
-        $this->_config = $config;        
+        $this->_config = $config;
         $this->_urlBuilder = $urlBuilder;
     }
 
@@ -144,11 +144,6 @@ class Button extends Template
     public function getLoginPayPalActive()
     {
         return $this->_config->isLoginPayPalActive();
-    }
-    
-    public function getButtonActive()
-    {
-        return $this->_config->getPayPalMiniCartActive();
     }
 
     public function getCreateUrl()

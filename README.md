@@ -29,7 +29,7 @@ A solução requer aprovação comercial, entre em contato pelo 0800 721 6959 e 
 
 ## Compatibilidade
 
-Este módulo é compatível com as versões do Magento 2.2.2 até 2.4.2.
+Este módulo é compatível com as versões do Magento 2.2.2 até 2.4.6.
 
 ## Módulos OneStepCheckout
 
@@ -95,7 +95,8 @@ Para o PayPal Plus, o campo CPF/CNPJ é obrigatório, para habilitá-lo siga os 
 Para atualizar o módulo rode os comandos abaixo no Composer:
 
 ```
-    $ composer update br-paypaldev/magento2-module
+    $ composer require br-paypaldev/magento2-module --no-update
+    $ composer update
     $ ./bin/magento setup:upgrade
     $ ./bin/magento setup:di:compile
 ```

@@ -1,0 +1,21 @@
+<div id="custom-modal" style="display: none;">
+    <p style="white-space: pre;"><?php echo $block->getTransactionLog(); ?></p>
+</div>
+
+<script>
+    require(['jquery', 'Magento_Ui/js/modal/modal', 'mage/translate'], function($, modal, $t) {
+        var options = {
+            type: 'popup',
+            responsive: true,
+            innerScroll: true,
+            title: $t('Transaction Info'),
+            buttons: []
+        };
+
+        var popup = modal(options, $('#custom-modal'));
+
+        $('#transaction-modal').on('click', function() {
+            $('#custom-modal').modal('openModal');
+        });
+    });
+</script>

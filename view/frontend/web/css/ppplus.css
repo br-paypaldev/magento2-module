@@ -24,7 +24,6 @@
     border-radius: 10px;
     margin: 0 auto 22px;
     text-align: center;
-    padding: 30px 0 15px;
     font-family: 'PayPal light'
 }
 .why-buy-with-paypal .paypal-top-info > p {
@@ -34,6 +33,55 @@
     word-spacing: 1px;
     margin-bottom: 22px;
 }
+
+.why-buy-with-paypal-bcdc {
+    width: 100%;
+    max-width: 750px;
+    background-color: #f5f5f5;
+    border: 1px solid #e4e4e4;
+    border-radius: 10px;
+    text-align: center;
+}
+
+.why-buy-with-paypal-bcdc .paypal-intro {
+    margin: 16px 32px;
+}
+
+.why-buy-with-paypal-bcdc .paypal-bcdc-content {
+    width: 75%;
+    border-top: 2px solid #e4e4e4;
+    padding: 16px 0;
+    margin: auto;
+}
+
+.why-buy-with-paypal-bcdc .paypal-bcdc-content .general-information {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 4px;
+}
+
+.why-buy-with-paypal-bcdc .paypal-bcdc-content .general-information > span{
+    font-weight: 900;
+    font-size: medium;
+}
+
+.why-buy-with-paypal-bcdc .paypal-intro .title{
+    font-family: 'Helvetica', 'Arial', sans-serif;
+    font-weight: 400;
+    color: #000;
+    font-size: 18px;
+    line-height: 18px;
+}
+
+.why-buy-with-paypal-bcdc .paypal-intro .description{
+    font-family: 'Helvetica', 'Arial', sans-serif;
+    font-weight: 400;
+    color: #000;
+    font-size: 12px;
+    line-height: 18px;
+}
+
 .why-buy-with-paypal .payment-options {
 	font-size: 14px;
 	color: #2c2e2f;
@@ -99,9 +147,6 @@
 .paypal-bottom-info-alt {
 	color: #159bd7;
 }
-.checkout-index-index #paypal-button-container {
-    margin-left: 60%;
-}
 
 @media only screen and (max-width: 530px) {
     .why-buy-with-paypal .paypal-middle-info {
@@ -127,7 +172,7 @@
 }
 
 .login_paypalBr {
-    display: block;    
+    display: block;
     margin-top: 0.83em;
     margin-bottom: -0.1em;
     margin-left: 0;

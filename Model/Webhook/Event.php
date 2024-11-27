@@ -12,38 +12,34 @@ use PayPalBR\PayPal\Api\EventsInterface;
 use Magento\Sales\Model\Order\CreditmemoFactory;
 use Magento\Sales\Model\Service\CreditmemoService;
 use Magento\Framework\Filesystem\DirectoryList;
+use PayPalBR\PayPal\Logger\Handler;
+use PayPalBR\PayPal\Logger\Logger;
 
 class Event implements EventsInterface
 {
-    /**
-     * Payment sale completed event type code
-     */
-    const PAYMENT_SALE_COMPLETED = 'PAYMENT.SALE.COMPLETED';
+    const PAYMENT_CAPTURE_COMPLETED = "PAYMENT.CAPTURE.COMPLETED";
 
-    /**
-     * Payment sale pending  event type code
-     */
-    const PAYMENT_SALE_PENDING = 'PAYMENT.SALE.PENDING';
+    const PAYMENT_CAPTURE_DENIED = "PAYMENT.CAPTURE.DENIED";
 
-    /**
-     * Payment sale refunded event type
-     */
-    const PAYMENT_SALE_REFUNDED = 'PAYMENT.SALE.REFUNDED';
+    const PAYMENT_CAPTURE_REFUNDED = "PAYMENT.CAPTURE.REFUNDED";
 
-    /**
-     * Payment sale reversed event type code
-     */
-    const PAYMENT_SALE_REVERSED = 'PAYMENT.SALE.REVERSED';
+    const PAYMENT_CAPTURE_REVERSED = "PAYMENT.CAPTURE.REVERSED";
 
-    /**
-     * Risk dispute created event type code
-     */
-    const RISK_DISPUTE_CREATED = 'RISK.DISPUTE.CREATED';
+    const PAYMENT_CAPTURE_PENDING = "PAYMENT.CAPTURE.PENDING";
 
-    /**
-     * Customer dispute created event type code
-     */
-    const CUSTOMER_DISPUTE_CREATED = 'CUSTOMER.DISPUTE.CREATED';
+    const CHECKOUT_ORDER_COMPLETED = "CHECKOUT.ORDER.COMPLETED";
+
+    const CHECKOUT_ORDER_APPROVED = "CHECKOUT.ORDER.APPROVED";
+
+    const CHECKOUT_ORDER_PROCESSED = "CHECKOUT.ORDER.PROCESSED";
+
+    const PAYMENT_AUTHORIZATION_CREATED = "PAYMENT.AUTHORIZATION.CREATED";
+
+    const PAYMENT_AUTHORIZATION_VOIDED = "PAYMENT.AUTHORIZATION.VOIDED";
+
+    const RISK_DISPUTE_CREATED = "RISK.DISPUTE.CREATED";
+
+    const CUSTOMER_DISPUTE_CREATED = "CUSTOMER.DISPUTE.CREATED";
 
     /**
      * Store order instance
@@ -77,31 +73,41 @@ class Event implements EventsInterface
      */
     protected $dir;
 
+    /**
+     * @var Logger
+     */
+    protected $customLogger;
+
+    /**
+     * @var Handler
+     */
+    protected $loggerHandler;
+
     public function __construct(
         \Magento\Sales\Model\Order\Payment\TransactionFactory $salesOrderPaymentTransactionFactory,
         \Magento\Sales\Model\OrderFactory $salesOrderFactory,
         CreditmemoFactory $creditmemoFactory,
         CreditmemoService $creditmemoService,
-        DirectoryList $dir
+        DirectoryList $dir,
+        Logger $customLogger,
+        Handler $loggerHandler
     ) {
         $this->salesOrderPaymentTransactionFactory = $salesOrderPaymentTransactionFactory;
         $this->salesOrderFactory = $salesOrderFactory;
         $this->creditmemoFactory = $creditmemoFactory;
         $this->creditmemoService = $creditmemoService;
         $this->dir = $dir;
+        $this->customLogger = $customLogger;
+        $this->loggerHandler = $loggerHandler;
     }
-    /**
-     * Process the given $webhookEvent
-     *
-     * @param \PayPal\Api\WebhookEvent $webhookEvent
-     */
-    public function processWebhookRequest(\PayPal\Api\WebhookEvent $webhookEvent)
+
+    public function processWebhookRequest($webhookEvent)
     {
-        if ($webhookEvent->getEventType() !== null && in_array($webhookEvent->getEventType(),
+        if ($webhookEvent->event_type !== null && in_array($webhookEvent->event_type,
                 $this->getSupportedWebhookEvents())
         ) {
             $this->getOrder($webhookEvent);
-            $this->{$this->eventTypeToHandler($webhookEvent->getEventType())}($webhookEvent);
+            $this->{$this->eventTypeToHandler($webhookEvent->event_type)}($webhookEvent);
         }
 
         return $this;
@@ -115,10 +121,16 @@ class Event implements EventsInterface
     public function getSupportedWebhookEvents()
     {
         return array(
-            self::PAYMENT_SALE_COMPLETED,
-            self::PAYMENT_SALE_PENDING,
-            self::PAYMENT_SALE_REFUNDED,
-            self::PAYMENT_SALE_REVERSED,
+            self::PAYMENT_CAPTURE_COMPLETED,
+            self::PAYMENT_CAPTURE_DENIED,
+            self::PAYMENT_CAPTURE_REFUNDED,
+            self::PAYMENT_CAPTURE_REVERSED,
+            self::PAYMENT_CAPTURE_PENDING,
+            self::CHECKOUT_ORDER_COMPLETED,
+            self::CHECKOUT_ORDER_APPROVED,
+            self::CHECKOUT_ORDER_PROCESSED,
+            self::PAYMENT_AUTHORIZATION_CREATED,
+            self::PAYMENT_AUTHORIZATION_VOIDED,
             self::RISK_DISPUTE_CREATED,
             self::CUSTOMER_DISPUTE_CREATED
         );
@@ -143,14 +155,9 @@ class Event implements EventsInterface
         return implode('', $eventParts);
     }
 
-    /**
-     * Mark transaction as completed
-     *
-     * @param \PayPal\Api\WebhookEvent $webhookEvent
-     */
-    protected function paymentSaleCompleted(\PayPal\Api\WebhookEvent $webhookEvent)
+    protected function paymentCaptureCompleted($webhookEvent)
     {
-        $paymentResource = $webhookEvent->getResource();
+        $paymentResource = $webhookEvent->resource;
         $parentTransactionId = $paymentResource['parent_payment'];
         $payment = $this->_order->getPayment();
         $payment->setTransactionId($paymentResource['id'])
@@ -180,87 +187,59 @@ class Event implements EventsInterface
 
     protected function logger($array)
     {
-        $writer = new \Zend\Log\Writer\Stream($this->dir->getPath('log') . '/paypal-webhook-' . date('Y-m-d') . '.log');
-        $logger = new \Zend\Log\Logger();
-        $logger->addWriter($writer);
-        $logger->info($array);
+        $this->loggerHandler->setFileName('paypal-webhook-' . date('Y-m-d'));
+        $this->customLogger->info($array);
     }
 
-    /**
-     * Mark transaction as refunded
-     *
-     * @param \PayPal\Api\WebhookEvent $webhookEvent
-     * @throws \Exception
-     */
-    protected function paymentSaleRefunded(\PayPal\Api\WebhookEvent $webhookEvent)
+    protected function paymentCaptureRefunded($webhookEvent)
     {
         $this->_order->getPayment()->setAdditionalInformation('state_payPal', 'refunded')->save();
         $creditmemo = $this->creditmemoFactory->createByOrder($this->_order);
         $creditmemoServiceRefund = $this->creditmemoService->refund($creditmemo, true);
     }
 
-    /**
-     * Mark transaction as pending
-     *
-     * @param \PayPal\Api\WebhookEvent $webhookEvent
-     */
-    protected function paymentSalePending(\PayPal\Api\WebhookEvent $webhookEvent)
+    protected function paymentCapturePending($webhookEvent)
     {
-        $paymentResource = $webhookEvent->getResource();
+        $paymentResource = $webhookEvent->resource;
         $this->_order->getPayment()
-            ->setPreparedMessage($webhookEvent->getSummary())
+            ->setPreparedMessage($webhookEvent->summary)
             ->setTransactionId($paymentResource['id'])
             ->setIsTransactionClosed(0);
         $this->_order->getPayment()->save();
     }
 
-    /**
-     * Mark transaction as reversed
-     *
-     * @param \PayPal\Api\WebhookEvent $webhookEvent
-     */
-    protected function paymentSaleReversed(\PayPal\Api\WebhookEvent $webhookEvent)
+    protected function paymentCaptureReversed($webhookEvent)
     {
         $this->_order->setStatus(\Magento\Paypal\Model\Info::ORDER_STATUS_REVERSED);
         $this->_order->save();
         $this->_order
             ->addStatusHistoryComment(
-                $webhookEvent->getSummary(),
+                $webhookEvent->summary,
                 \Magento\Paypal\Model\Info::ORDER_STATUS_REVERSED
             )->setIsCustomerNotified(false)
             ->save();
         $this->_order->getPayment()->setAdditionalInformation('state_payPal', 'refunded')->save();
     }
 
-    /**
-     * Add risk dispute to order comment
-     *
-     * @param \PayPal\Api\WebhookEvent $webhookEvent
-     */
-    protected function riskDisputeCreated(\PayPal\Api\WebhookEvent $webhookEvent)
+    protected function riskDisputeCreated($webhookEvent)
     {
         $this->_order->setStatus(\Magento\Paypal\Model\Info::ORDER_STATUS_REVERSED);
         $this->_order->save();
         $this->_order
             ->addStatusHistoryComment(
-                $webhookEvent->getSummary(),
+                $webhookEvent->summary,
                 \Magento\Paypal\Model\Info::ORDER_STATUS_REVERSED
             )->setIsCustomerNotified(false)
             ->save();
     }
 
-    /**
-     * Add risk dispute to order comment
-     *
-     * @param \PayPal\Api\WebhookEvent $webhookEvent
-     */
-    protected function customerDisputeCreated(\PayPal\Api\WebhookEvent $webhookEvent)
+    protected function customerDisputeCreated($webhookEvent)
     {
         $this->_order->setStatus(\Magento\Paypal\Model\Info::ORDER_STATUS_REVERSED);
         $this->_order->save();
         $this->_order
             ->addStatusHistoryComment(
-                $webhookEvent->getSummary(),
+                $webhookEvent->summary,
                 \Magento\Paypal\Model\Info::ORDER_STATUS_REVERSED
             )->setIsCustomerNotified(false)
             ->save();
@@ -272,22 +251,22 @@ class Event implements EventsInterface
      * @return \Magento\Sales\Model\Order
      * @throws \Exception
      */
-    protected function getOrder(\PayPal\Api\WebhookEvent $webhookEvent)
+    protected function getOrder($webhookEvent)
     {
         // get proper order
-        $resource = $webhookEvent->getResource();
+        $resource = $webhookEvent->resource;
         if (!$resource) {
             throw new \Exception('Event resource not found.');
         }
-        $type = $webhookEvent->getEventType();
+        $type = $webhookEvent->event_type;
         if ($type == 'CUSTOMER.DISPUTE.CREATED') {
-            $transactionId = $resource['disputed_transactions'][0]['seller_transaction_id'];
-        }elseif ($type == 'RISK.DISPUTE.CREATED') {
-            $transactionId = $resource['seller_payment_id'];
-        }elseif ($type == 'PAYMENT.SALE.REFUNDED'){
-            $transactionId = $resource['sale_id'];
-        }else{
-            $transactionId = $resource['id'];
+            $transactionId = $resource instanceof \stdClass ? $resource->disputed_transactions[0]->seller_transaction_id : $resource['disputed_transactions'][0]['seller_transaction_id'];
+        } elseif ($type == 'RISK.DISPUTE.CREATED') {
+            $transactionId = $resource instanceof \stdClass ? $resource->seller_payment_id : $resource['seller_payment_id'];
+        } elseif ($type == 'PAYMENT.SALE.REFUNDED') {
+            $transactionId = $resource instanceof \stdClass ? $resource->sale_id : $resource['sale_id'];
+        } else {
+            $transactionId = $resource instanceof \stdClass ? $resource->id : $resource['id'];
         }
 
         $transaction = $this->salesOrderPaymentTransactionFactory->create()->load($transactionId, 'txn_id');

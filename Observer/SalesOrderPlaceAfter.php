@@ -1,25 +1,35 @@
 <?php
 
+/**
+ * PayPalBR PayPal
+ *
+ * @package PayPalBR|PayPal
+ * @author Vitor Nicchio Alves <vitor@imaginationmedia.com>
+ * @copyright Copyright (c) 2021 Imagination Media (https://www.imaginationmedia.com/)
+ * @license https://opensource.org/licenses/OSL-3.0.php Open Software License 3.0
+ */
+
+declare(strict_types=1);
+
 namespace PayPalBR\PayPal\Observer;
 
 use Magento\Framework\Event\ObserverInterface;
 use Magento\Framework\Event\Observer as EventObserver;
 use Magento\Checkout\Model\Session;
+use PayPalBR\PayPal\Logger\Handler;
+use PayPalBR\PayPal\Logger\Logger;
 use Psr\Log\LoggerInterface;
 use Magento\Sales\Model\Service\OrderService;
 use Magento\Customer\Model\CustomerFactory;
-use Magento\Customer\Model\SessionFactory;
 use Magento\Customer\Api\CustomerRepositoryInterface;
 use Magento\Sales\Model\Service\InvoiceService;
 use Magento\Sales\Model\Order\Email\Sender\InvoiceSender;
 use Magento\Framework\DB\Transaction;
 use Magento\Framework\Filesystem\DirectoryList;
+use Magento\Sales\Model\Order\Invoice;
 
 class SalesOrderPlaceAfter implements ObserverInterface
 {
-
-
-
     /** session factory */
     protected $_session;
 
@@ -66,6 +76,16 @@ class SalesOrderPlaceAfter implements ObserverInterface
     protected $dir;
 
     /**
+     * @var Logger
+     */
+    protected $customLogger;
+
+    /**
+     * @var Handler
+     */
+    protected $loggerHandler;
+
+    /**
      * @param \Magento\Checkout\Model\Session $checkoutSession
      * @param \Psr\Log\LoggerInterface $logger
      * @param Api $api
@@ -75,12 +95,14 @@ class SalesOrderPlaceAfter implements ObserverInterface
         LoggerInterface $logger,
         OrderService $orderService,
         CustomerFactory $customerFactory,
-        SessionFactory $sessionFactory,
+        // SessionFactory $sessionFactory,
         CustomerRepositoryInterface $customerRepository,
         InvoiceService $invoiceService,
         Transaction $transaction,
         InvoiceSender $invoiceSender,
-        DirectoryList $dir
+        DirectoryList $dir,
+        Logger $customLogger,
+        Handler $loggerHandler
     ) {
         $this->setCheckoutSession($checkoutSession);
         $this->setLogger($logger);
@@ -89,9 +111,11 @@ class SalesOrderPlaceAfter implements ObserverInterface
         $this->setInvoiceService($invoiceService);
         $this->setInvoiceSender($invoiceSender);
         $this->customerFactory = $customerFactory;
-        $this->sessionFactory = $sessionFactory;
+        // $this->sessionFactory = $sessionFactory;
         $this->customerRepository = $customerRepository;
         $this->dir = $dir;
+        $this->customLogger = $customLogger;
+        $this->loggerHandler = $loggerHandler;
     }
 
     /**
@@ -104,22 +128,21 @@ class SalesOrderPlaceAfter implements ObserverInterface
         $order = $event->getOrder();
         $payment = $order->getPayment();
 
-        if ($payment->getMethod() != 'paypalbr_paypalplus') {
+        if (($payment->getMethod() != 'paypalbr_expresscheckout') && ($payment->getMethod() != 'paypalbr_bcdc')) {
             return $this;
         }
 
         $status = $payment->getAdditionalInformation('state_payPal');
 
-
-        $customerSession = $this->sessionFactory->create();
-        if ($customerSession->isLoggedIn()){
-            $r_card = $payment->getAdditionalInformation('remembered_card');
-            $customer = $customerSession->getCustomer();
-            $customer = $this->customerRepository->getById($customer->getId());
-            $customer->getCustomAttribute('remembered_card');
-            $customer->setCustomAttribute('remembered_card', $r_card);
-            $customer = $this->customerRepository->save($customer);
-        }
+        // $customerSession = $this->sessionFactory->create();
+        // if ($customerSession->isLoggedIn()){
+        //     $r_card = $payment->getAdditionalInformation('remembered_card');
+        //     $customer = $customerSession->getCustomer();
+        //     $customer = $this->customerRepository->getById($customer->getId());
+        //     $customer->getCustomAttribute('remembered_card');
+        //     $customer->setCustomAttribute('remembered_card', $r_card);
+        //     $customer = $this->customerRepository->save($customer);
+        // }
 
         if ($order->canCancel() && $status == 'denied') {
             $result = $this->cancelOrder($order);
@@ -127,7 +150,7 @@ class SalesOrderPlaceAfter implements ObserverInterface
         }
 
         if ($order->getPayment()->getLastTransId() &&
-            ( $order->canInvoice() && $status == 'approved' || $order->canInvoice() && $status == 'completed' )
+            ( $order->canInvoice() && $status == 'APPROVED' || $order->canInvoice() && $status == 'COMPLETED' )
         ) {
             $result = $this->createInvoice($order);
             $this->logger($result);
@@ -151,17 +174,45 @@ class SalesOrderPlaceAfter implements ObserverInterface
                 $order->getBaseGrandTotal(),
                 true
             );
-        $order->save();
         // notify customer
-        $invoice = $payment->getCreatedInvoice();
-        if ($invoice && !$order->getEmailSent()) {
-            $order->addStatusHistoryComment(
+        if ($order->canInvoice()) {
+            $invoice = $this->invoiceService->prepareInvoice($order);
+            $invoice->setRequestedCaptureCase(Invoice::CAPTURE_ONLINE);
+            $invoice->setState(Invoice::STATE_PAID);
+            $invoice->setBaseGrandTotal($order->getBaseGrandTotal());
+            $invoice->register();
+            $invoice->getOrder()->setIsInProcess(true);
+            $invoice->setTransactionId($order->getPayment()->getAdditionalInformation('pay_id'));
+            $invoice->pay();
+
+            $transactionSave = $this->transaction
+                ->addObject($invoice)
+                ->addObject($order);
+
+            $order->setTotalPaid($order->getTotalPaid());
+            $order->setBaseTotalPaid($order->getBaseTotalPaid());
+
+            $order->save();
+
+            $transactionSave->save();
+            $invoice->save();
+            $transactionSave = $this->transaction->addObject(
+                $invoice
+            )->addObject(
+                $invoice->getOrder()
+            );
+            $transactionSave->save();
+            $this->invoiceSender->send($invoice);
+
+            if ($invoice && !$order->getEmailSent()) {
+                $order->addStatusHistoryComment(
                     __(
                         'Notified customer about invoice #%1.',
                         $invoice->getIncrementId()
                     )
                 )->setIsCustomerNotified(true)
-                ->save();
+                    ->save();
+            }
         }
 
         return true;
@@ -182,13 +233,10 @@ class SalesOrderPlaceAfter implements ObserverInterface
      * @param mixed $data
      */
     protected function logger($data){
-
-        $writer = new \Zend\Log\Writer\Stream($this->dir->getPath('log') . '/paypal-SalesOrderPlaceAfter-' . date('Y-m-d') . '.log');
-        $logger = new \Zend\Log\Logger();
-        $logger->addWriter($writer);
-        $logger->info('Debug Initial SalesOrderPlaceAfter');
-        $logger->info($data);
-        $logger->info('Debug Final SalesOrderPlaceAfter');
+        $this->loggerHandler->setFileName('paypal-SalesOrderPlaceAfter-' . date('Y-m-d'));
+        $this->customLogger->info('Debug Initial SalesOrderPlaceAfter');
+        $this->customLogger->info($data);
+        $this->customLogger->info('Debug Final SalesOrderPlaceAfter');
     }
 
     /**

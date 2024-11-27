@@ -127,9 +127,4 @@ class Success extends OnepageSuccess
 
         return $value;
     }
-
-    public function getCleanUrl()
-    {
-        return $this->storeManager->getStore()->getBaseUrl() . 'paypalplus/clean/index/';
-    }
 }

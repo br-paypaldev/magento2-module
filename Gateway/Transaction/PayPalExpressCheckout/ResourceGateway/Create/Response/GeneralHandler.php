@@ -5,6 +5,7 @@ namespace PayPalBR\PayPal\Gateway\Transaction\PayPalExpressCheckout\ResourceGate
 use Magento\Payment\Gateway\Response\HandlerInterface;
 use PayPalBR\PayPal\Gateway\Transaction\Base\ResourceGateway\Response\AbstractHandler;
 use PayPalBR\PayPal\Gateway\Transaction\Base\Config\ConfigInterface;
+use PayPalBR\PayPal\Model\PayPalRequests;
 
 class GeneralHandler extends AbstractHandler implements HandlerInterface
 {
@@ -12,14 +13,18 @@ class GeneralHandler extends AbstractHandler implements HandlerInterface
 
     protected $config;
 
+    protected $paypalRequests;
+
     /**
      * GeneralHandler constructor.
      * @param Config $config
      */
     public function __construct(
-        ConfigInterface $config
+        ConfigInterface $config,
+        PayPalRequests $paypalRequests
     ) {
         $this->setConfig($config);
+        $this->paypalRequests = $paypalRequests;
     }
 
     /**
@@ -27,27 +32,43 @@ class GeneralHandler extends AbstractHandler implements HandlerInterface
      */
     protected function _handle($payment, $response)
     {
-        if (get_class($response) == 'stdClass') {
-            $payment->setAdditionalInformation('state_payPal', 'denied');
-            $payment->setAdditionalInformation('state_error_name', $response->name);
-            $payment->setAdditionalInformation('state_error_message', $response->message);
-            $payment->setAdditionalInformation('state_error_details', $response->details);
+        $order = $payment->getOrder();
 
-            return $this;
+        $links = json_decode($payment->getAdditionalInformation('order_data'))->links;
+
+        $patchUrl = "";
+        $captureUrl = "";
+        foreach ($links as $link) {
+            if ($link->rel == 'self') {
+                $patchUrl = $link->href;
+                $captureUrl = $link->href . '/capture';
+            }
         }
 
-    	$transactions = $response->getTransactions();
-    	foreach ($transactions as $id => $transaction) {
-    		foreach ($transaction->getRelatedResources() as $id => $relatedResources) {
-                $sale = $relatedResources->getSale();
+        $transaction = null;
+        try {
+            $this->paypalRequests->updateOrder($patchUrl ,$order->getIncrementid());
 
-                $parentTransactionId = $payment->getAdditionalInformation('pay_id');
-                $payment->setTransactionId($sale->getId());
-                $payment->setParentTransactionId($parentTransactionId);
-                $payment->setIsTransactionClosed(false);
-                $payment->setAdditionalInformation('state_payPal', $sale->getState());
-    		}
-    	}
+            $orderDetails = $this->paypalRequests->getOrderDetails($patchUrl);
+
+            $transaction = $this->paypalRequests->captureOrder($captureUrl, $order->getIncrementid());
+        } catch (\Exception $e) {
+            throw new \Exception("Error Processing Request", 1);
+        }
+
+        $capture = $transaction->purchase_units[0]->payments->captures[0];
+
+        $payment->setAdditionalInformation('transaction_log', json_encode($transaction));
+
+        $order->save();
+
+        $payment->setAdditionalInformation('pay_id', $capture->id);
+        $payment->setAdditionalInformation('invoice_id', $capture->invoice_id);
+        $payment->setAdditionalInformation('state_payPal', $capture->status);
+        $payment->setAdditionalInformation('term', $orderDetails->credit_financing_offer->term);
+        $payment->setTransactionId($capture->id);
+        $payment->setParentTransactionId($response->id);
+        $payment->setIsTransactionClosed(false);
 
         return $this;
     }

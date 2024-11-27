@@ -6,7 +6,6 @@ use Magento\Framework\App\Action\Context;
 use Magento\Customer\Model\Session;
 use Magento\Framework\Controller\Result\JsonFactory;
 use Magento\Framework\View\Result\PageFactory;
-use \PayPalBR\PayPal\Model\LoginPayPalManagementApi;
 
 class Index extends \Magento\Framework\App\Action\Action
 {
@@ -19,8 +18,6 @@ class Index extends \Magento\Framework\App\Action\Action
 
     protected $customerSession;
 
-    protected $loginPayPal;
-
     protected $messageManager;
 
     public function __construct(
@@ -29,13 +26,11 @@ class Index extends \Magento\Framework\App\Action\Action
         JsonFactory $jsonFactory,
         PageFactory $pageFactory,
         Session $customerSession,
-        LoginPayPalManagementApi $loginPayPal
     ){
         parent::__construct($context);
         $this->jsonFactory = $jsonFactory;
         $this->pageFactory = $pageFactory;
         $this->customerSession = $customerSession;
-        $this->loginPayPal = $loginPayPal;
         $this->messageManager = $messageManager;
     }
 
@@ -60,7 +55,7 @@ class Index extends \Magento\Framework\App\Action\Action
 
            return; # code...
         }
-        
+
 
         $result = $this->pageFactory->create();
         $result->getConfig()->getTitle()->set("Review Order");

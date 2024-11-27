@@ -4,9 +4,12 @@ namespace PayPalBR\PayPal\Model;
 use oauth;
 use PayPalBR\PayPal\Api\EventsInterface;
 use PayPalBR\PayPal\Api\WebHookManagementInterface;
-use PayPalBR\PayPal\Model\PayPalPlus\ConfigProvider;
+use PayPalBR\PayPal\Logger\Handler;
+use PayPalBR\PayPal\Logger\Logger;
 use PayPal\Api\VerifyWebhookSignature;
 use Magento\Framework\Filesystem\DirectoryList;
+use Magento\PaypalCaptcha\Model\Checkout\ConfigProviderPayPal;
+use PayPalBR\PayPal\Model\PayPalBCDC\ConfigProvider as PayPalBCDCConfigProvider;
 
 class WebHookManagement implements WebHookManagementInterface
 {
@@ -14,52 +17,32 @@ class WebHookManagement implements WebHookManagementInterface
     protected $configProvider;
     protected $dir;
 
-    public function __construct(
-        EventsInterface $eventWebhook,
-        ConfigProvider $configProvider,
-        DirectoryList $dir
-    ) {
-        $this->setEventWebhook($eventWebhook);
-        $this->setConfigProvider($configProvider);
-        $this->dir = $dir;
-    }
+    /**
+     * @var Logger
+     */
+    protected $customLogger;
 
     /**
-     * Builds and returns the api context to be used in PayPal Plus API
-     *
-     * @return \PayPal\Rest\ApiContext
+     * @var Handler
      */
-    protected function getApiContext()
-    {
+    protected $loggerHandler;
 
-        $debug = $this->getConfigProvider()->isDebugEnabled();
-        $this->configId = $this->getConfigProvider()->getClientId();
-        $this->secretId = $this->getConfigProvider()->getSecretId();
+    protected $paypalRequests;
 
-        if($debug == 1){
-            $debug = true;
-        }else{
-            $debug = false;
-        }
-        $apiContext = new \PayPal\Rest\ApiContext(
-            new \PayPal\Auth\OAuthTokenCredential(
-                $this->configId,
-                $this->secretId
-            )
-        );
-        $apiContext->setConfig(
-            [
-                //'http.headers.PayPal-Partner-Attribution-Id' => 'MagentoBrazil_Ecom_PPPlus2',
-                'mode' => $this->configProvider->isModeSandbox() ? 'sandbox' : 'live',
-                'log.LogEnabled' => $debug,
-                'log.FileName' => $this->dir->getPath('log') . '/paypal-webhook-' . date('Y-m-d') . '.log',
-                'cache.FileName' => $this->dir->getPath('log') . '/auth.cache',
-                'log.LogLevel' => 'DEBUG',
-                'cache.enabled' => true,
-                'http.CURLOPT_SSLVERSION' => 'CURL_SSLVERSION_TLSv1_2'
-            ]
-        );
-        return $apiContext;
+    public function __construct(
+        EventsInterface $eventWebhook,
+        DirectoryList $dir,
+        PayPalBCDCConfigProvider $configProvider,
+        PayPalRequests $paypalRequests,
+        Logger $customLogger,
+        Handler $loggerHandler
+    ) {
+        $this->setEventWebhook($eventWebhook);
+        $this->dir = $dir;
+        $this->customLogger = $customLogger;
+        $this->loggerHandler = $loggerHandler;
+        $this->configProvider = $configProvider;
+        $this->paypalRequests = $paypalRequests;
     }
 
     /**
@@ -94,25 +77,24 @@ class WebHookManagement implements WebHookManagementInterface
                 $requestBody = false;
             }
 
-            $signatureVerification = new VerifyWebhookSignature();
-            $signatureVerification->setAuthAlgo($paypalAuthAlgo);
-            $signatureVerification->setTransmissionId($paypalTransmissionId);
-            $signatureVerification->setCertUrl($paypalCertUrl);
-            $signatureVerification->setWebhookId($this->getConfigProvider()->getWebhookId());
-            $signatureVerification->setTransmissionSig($paypalTransmissionSig);
-            $signatureVerification->setTransmissionTime($paypalTransmissionTime);
+            $requestBody = json_decode($requestBody);
 
-            $signatureVerification->setRequestBody($requestBody);
+            // $signatureVerification = new VerifyWebhookSignature();
+            $signatureVerificationInfo = [
+                "transmission_id" => $paypalTransmissionId,
+                "transmission_time" => $paypalTransmissionTime,
+                "cert_url" => $paypalCertUrl,
+                "auth_algo" => $paypalAuthAlgo,
+                "transmission_sig" => $paypalTransmissionSig,
+                "webhook_id" => $this->configProvider->getWebhookId(),
+                "webhook_event" => $requestBody
+            ];
 
-            if ($this->getConfigProvider()->isDebugEnabled()) {
-                $this->logger($signatureVerification);
-            }
-
-            $output = $signatureVerification->post($this->getApiContext());
+            $output = $this->paypalRequests->verifyWebhookSignature($signatureVerificationInfo);
 
             if ($output->verification_status == 'FAILURE') {
                 $this->logger('initial debug');
-                $this->logger($signatureVerification);
+                $this->logger($signatureVerificationInfo);
                 $this->logger($output);
                 $this->logger('final debug');
 
@@ -143,23 +125,8 @@ class WebHookManagement implements WebHookManagementInterface
         if (! $id) {
             return false;
         }
-
-        $webhookApi = new \PayPal\Api\WebhookEvent;
-
-        $webhookApi
-            ->setId($id)
-            ->setCreateTime($create_time)
-            ->setResourceType($resource_type)
-            ->setEventType($event_type)
-            ->setSummary($summary)
-            ->setResource($resource)
-            ->setLinks($links);
         try {
-
-            if ($this->getConfigProvider()->isDebugEnabled()) {
-                $this->logger($array);
-            }
-            $this->getEventWebhook()->processWebhookRequest($webhookApi);
+            $this->getEventWebhook()->processWebhookRequest($requestBody);
             $return = [
                 [
                     'status' => 200,
@@ -179,14 +146,18 @@ class WebHookManagement implements WebHookManagementInterface
             ];
         }
 
-        return $return;
+        return [
+            [
+                'status' => 200,
+                'message' => 'SUCESSO'
+            ]
+        ];
     }
 
     protected function getHeader1($header)
     {
         if (empty($header)) {
-            #require_once 'Zend/Controller/Request/Exception.php';
-            throw new Zend_Controller_Request_Exception('An HTTP header name is required');
+            throw new \Exception('An HTTP header name is required');
         }
 
         // Try to get it from the $_SERVER array first
@@ -205,8 +176,6 @@ class WebHookManagement implements WebHookManagementInterface
             return $_SERVER[$temp];
         }
 
-        // This seems to be the only way to get the Authorization header on
-        // Apache
         if (function_exists('apache_request_headers')) {
             $headers = apache_request_headers();
             if (isset($headers[$header])) {
@@ -225,10 +194,8 @@ class WebHookManagement implements WebHookManagementInterface
 
     protected function logger($array)
     {
-        $writer = new \Zend\Log\Writer\Stream($this->dir->getPath('log') . '/paypal-webhook-' . date('Y-m-d') . '.log');
-        $logger = new \Zend\Log\Logger();
-        $logger->addWriter($writer);
-        $logger->info($array);
+        $this->loggerHandler->setFileName('paypal-webhook-' . date('Y-m-d'));
+        $this->customLogger->info($array);
     }
 
     /**
@@ -247,26 +214,6 @@ class WebHookManagement implements WebHookManagementInterface
     public function setEventWebhook($eventWebhook)
     {
         $this->eventWebhook = $eventWebhook;
-
-        return $this;
-    }
-
-    /**
-     * @return mixed
-     */
-    public function getConfigProvider()
-    {
-        return $this->configProvider;
-    }
-
-    /**
-     * @param mixed $configProvider
-     *
-     * @return self
-     */
-    public function setConfigProvider($configProvider)
-    {
-        $this->configProvider = $configProvider;
 
         return $this;
     }

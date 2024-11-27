@@ -5,6 +5,6 @@
             <block class="PayPalBR\PayPal\Block\Button\Button" name="paypal_form_login" template="PayPalBR_PayPal::button/button.phtml">
                 <container name="form.additional.info" as="form_additional_info"/>
             </block>
-        </referenceContainer> 
+        </referenceContainer>
     </body>
 </page>

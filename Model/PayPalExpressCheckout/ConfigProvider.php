@@ -35,32 +35,27 @@ class ConfigProvider
     /**
      * Contains the client ID of PayPal Express Checkout (Sandbox)
      */
-    const XML_PATH_CLIENT_ID_SBOX = 'payment/paypalbr_expresscheckout/client_id_sandbox';
+    const XML_PATH_CLIENT_ID_SBOX = 'payment/paypalbr/client_id_sandbox';
 
     /**
      * Contains the secret ID of PayPal Express Checkout (Sandbox)
      */
-    const XML_PATH_SECRET_ID_SBOX = 'payment/paypalbr_expresscheckout/secret_id_sandbox';
+    const XML_PATH_SECRET_ID_SBOX = 'payment/paypalbr/secret_id_sandbox';
 
     /**
      * Contains the secret ID of PayPal Express Checkout (Production)
      */
-    const XML_PATH_CLIENT_ID_PROD= 'payment/paypalbr_expresscheckout/client_id_production';
+    const XML_PATH_CLIENT_ID_PROD= 'payment/paypalbr/client_id_production';
 
     /**
      * Contains the secret ID of PayPal Express Checkout (Production)
      */
-    const XML_PATH_SECRET_ID_PROD = 'payment/paypalbr_expresscheckout/secret_id_production';
-
-    /**
-     * Contains the secret ID of PayPal Express Checkout (Production)
-     */
-    const XML_PATH_WEBHOOK_ID = 'payment/paypalbr_expresscheckout/webhook_id';
+    const XML_PATH_SECRET_ID_PROD = 'payment/paypalbr/secret_id_production';
 
     /**
      * Contains the current mode, sandbox or production (live)
      */
-    const XML_PATH_MODE = 'payment/paypalbr_expresscheckout/mode';
+    const XML_PATH_MODE = 'payment/paypalbr/mode';
 
     /**
      * Contains the configuration path for showing customer tax show
@@ -79,40 +74,25 @@ class ConfigProvider
     const XML_PATH_CURRENCY_OPTIONS_BASE = 'currency/options/base';
 
     /**
-     * Contains the debug status
-     */
-    const XML_PATH_DEBUG_STATUS = 'payment/paypalbr_expresscheckout/depuration_mode';
-
-    /**
      * Contains the view TAx in store front
      */
     const XML_PATH_TAX_VIEW = 'customer/create_account/vat_frontend_visibility';
 
     /**
-     * Contains the PayPal Login
-     */
-    const XML_PATH_PAYPAL_LOGIN = 'payment/paypalbr_expresscheckout/active_login';
-
-    /**
-     * Contains the PayPal Login Mini
-     */
-    const XML_PATH_PAYPAL_LOGIN_MINICART = 'payment/paypalbr_expresscheckout/active_login_minicart';
-
-    /**
      * Contains the PayPal Login BUTTON
      */
-    const XML_PATH_PAYPAL_LOGIN_BUTTON = 'payment/paypalbr_paypalplus/button_login_button';
+    const XML_PATH_PAYPAL_LOGIN_BUTTON = 'payment/paypalbr_expresscheckout/button_login_button';
 
     /**
      * Contains the PayPal Login SHAPE
      */
-    const XML_PATH_PAYPAL_LOGIN_SHAPE = 'payment/paypalbr_paypalplus/button_login_shape';
+    const XML_PATH_PAYPAL_LOGIN_SHAPE = 'payment/paypalbr_expresscheckout/button_login_shape';
 
 
     /**
      * Contains the PayPal Login COLOR
      */
-    const XML_PATH_PAYPAL_LOGIN_COLOR = 'payment/paypalbr_paypalplus/button_login_color';
+    const XML_PATH_PAYPAL_LOGIN_COLOR = 'payment/paypalbr_expresscheckout/button_login_color';
 
     //const XML_PATH_GENERAL_COUNTRY_DEFAULT = 'general/country/default';
     const XML_PATH_GENERAL_COUNTRY_DEFAULT = 'general/locale/code';
@@ -129,29 +109,6 @@ class ConfigProvider
     {
         $this->scopeConfig = $scopeConfig;
         $this->config = $config;
-    }
-
-    /**
-     * Returns the debug configuration
-     *
-     * @return string
-     */
-    public function getDebug()
-    {
-        $debug = $this->scopeConfig->getValue(self::XML_PATH_DEBUG_STATUS, ScopeInterface::SCOPE_STORE);
-        return $debug;
-    }
-
-    /**
-     * Check if debug mode is enabled or not
-     *
-     * @return bool
-     */
-    public function isDebugEnabled()
-    {
-        $debug = $this->getDebug();
-
-        return $debug == 1;
     }
 
     /**
@@ -431,41 +388,6 @@ class ConfigProvider
             return false;
 
         return true;
-    }
-
-    /**
-     * Returns if minicart is active
-     *
-     * This configuration uses \Magento\Config\Model\Config\Source\Yesno as backend.
-     * 1 is for YES, and 0 is for NO.
-     *
-     * @return bool
-     */
-    public function getPayPalMiniCartActive()
-    {
-        $active = $this->scopeConfig->getValue(self::XML_PATH_PAYPAL_LOGIN_MINICART, ScopeInterface::SCOPE_STORE);
-        $active_2 = $this->scopeConfig->getValue(self::XML_PATH_ACTIVE, ScopeInterface::SCOPE_STORE);
-
-        return $active && $active_2;
-    }
-
-    /**
-     * Returns if minicart is active
-     *
-     * This configuration uses \Magento\Config\Model\Config\Source\Yesno as backend.
-     *
-     * ,3-
-     *
-     * @return string
-     */
-    public function getPayPalLoginButton()
-    {
-        $active = $this->scopeConfig->getValue(self::XML_PATH_PAYPAL_LOGIN_BUTTON, ScopeInterface::SCOPE_STORE);
-        $active_module = $this->scopeConfig->getValue(self::XML_PATH_ACTIVE, ScopeInterface::SCOPE_STORE);
-        if($active == 'checkout' && $active_module == '1') {
-            return $active;
-        }
-        return false;
     }
 
     /**

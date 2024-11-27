@@ -21,6 +21,21 @@
                                                 <item name="template" xsi:type="string">PayPalBR_PayPal/form/element/email</item>
                                             </item>
                                         </item>
+                                        <item name="summary" xsi:type="array">
+                                            <item name="children" xsi:type="array">
+                                                <item name="cart_items" xsi:type="array">
+                                                    <item name="children" xsi:type="array">
+                                                        <item name="details" xsi:type="array">
+                                                            <item name="children" xsi:type="array">
+                                                                <item name="subtotal" xsi:type="array">
+                                                                    <item name="component" xsi:type="string">Magento_Tax/js/view/checkout/summary/item/details/subtotal</item>
+                                                                </item>
+                                                            </item>
+                                                        </item>
+                                                    </item>
+                                                </item>
+                                            </item>
+                                        </item>
                                     </item>
                                 </item>
                                 <item name="steps" xsi:type="array">
@@ -39,10 +54,20 @@
                                                                         <item name="paypalbr_paypalplus" xsi:type="array">
                                                                             <item name="isBillingAddressRequired" xsi:type="boolean">true</item>
                                                                         </item>
+                                                                        <item name="paypalbr_bcdc" xsi:type="array">
+                                                                            <item name="isBillingAddressRequired" xsi:type="boolean">true</item>
+                                                                        </item>
                                                                         <item name="paypalbr_expresscheckout" xsi:type="array">
                                                                             <item name="isBillingAddressRequired" xsi:type="boolean">false</item>
                                                                         </item>
                                                                     </item>
+                                                                </item>
+                                                            </item>
+                                                        </item>
+                                                        <item name="afterMethods" xsi:type="array">
+                                                            <item name="children" xsi:type="array">
+                                                                <item name="storeCredit" xsi:type="array">
+                                                                    <item name="component" xsi:type="string">PayPalBR_PayPal/js/view/payment/customer-balance</item>
                                                                 </item>
                                                             </item>
                                                         </item>
@@ -52,6 +77,7 @@
                                         </item>
                                     </item>
                                 </item>
+
                             </item>
                         </item>
                     </item>
@@ -61,5 +87,8 @@
         <referenceContainer name="content">
             <block class="PayPalBR\PayPal\Block\Checkout\OSC" name="osc" template="PayPalBR_PayPal::checkout/osc.phtml" />
         </referenceContainer>
+        <referenceBlock name="head.additional">
+            <block class="PayPalBR\PayPal\Block\Checkout\ClientId" name="paypal_client_id" template="PayPalBR_PayPal::checkout/client_id.phtml"/>
+        </referenceBlock>
     </body>
 </page>

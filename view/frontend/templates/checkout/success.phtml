@@ -18,14 +18,3 @@
         customerData.invalidate(sections);
     });
 </script>
-<script>
-    window.onload = function(){
-        jQuery.ajax({
-            url: "<?php echo $block->getCleanUrl(); ?>",
-            type: 'get',
-            success: function(results) {
-                console.log('success');
-            }
-        });
-    }
-</script>

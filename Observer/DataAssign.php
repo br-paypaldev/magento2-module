@@ -1,10 +1,8 @@
 <?php
 namespace PayPalBR\PayPal\Observer;
 use Magento\Framework\Event\ObserverInterface;
-use Magento\Framework\App\Request\DataPersistorInterface;
-use Magento\Framework\App\ObjectManager;
 use PayPal\Rest\ApiContext;
-use PayPalBR\PayPal\Model\PayPalPlus\ConfigProvider as PayPalPlusConfigProvider;
+use PayPalBR\PayPal\Model\PayPalBCDC\ConfigProvider as PayPalBCDCConfigProvider;
 use PayPalBR\PayPal\Model\PayPalExpressCheckout\ConfigProvider as PayPalExpressCheckoutConfigProvider;
 use Magento\Framework\Message\ManagerInterface;
 use Magento\Store\Model\StoreManagerInterface;
@@ -13,24 +11,25 @@ use Magento\Framework\App\ResponseFactory;
 use Magento\Framework\App\Cache\TypeListInterface;
 use Magento\Framework\App\Cache\Frontend\Pool;
 use Magento\Framework\Filesystem\DirectoryList;
+use PayPalBR\PayPal\Model\PayPalRequests;
 
 class DataAssign implements ObserverInterface
 {
      const WEBHOOK_URL_ALREADY_EXISTS = 'WEBHOOK_URL_ALREADY_EXISTS';
 
-     const PAYPAL_PLUS = '1';
+     const PAYPAL_BCDC = '1';
 
      const PAYPAL_EXPRESS_CHECKOUT = '2';
 
-    /**
-     * Contains the config provider for Paypal Plus
+     /**
+     * Contains the config provider for Paypal BCDC
      *
-     * @var \PayPalBR\PayPal\Model\PayPalPlus\ConfigProvider
+     * @var \PayPalBR\PayPal\Model\PayPalBCDC\ConfigProvider
      */
-    protected $configProviderPayPalPlus;
+    protected $configProviderPayPalBCDC;
 
     /**
-     * Contains the config provider for Paypal Plus
+     * Contains the config provider for Paypal Express Checkout
      *
      * @var \PayPalBR\PayPal\Model\PayPalExpressCheckout\ConfigProvider
      */
@@ -68,12 +67,17 @@ class DataAssign implements ObserverInterface
     protected $cacheFrontendPool;
 
     /**
+     * @var PayPalRequests
+     */
+    protected $paypalRequests;
+
+    /**
      * @var
      */
     protected $dir;
 
     public function __construct(
-        PayPalPlusConfigProvider $configProviderPayPalPlus,
+        PayPalBCDCConfigProvider $configProviderPayPalBCDC,
         PayPalExpressCheckoutConfigProvider $configProviderPayPalExpressCheckout,
         ManagerInterface $messageManager,
         StoreManagerInterface $storeManager,
@@ -81,17 +85,19 @@ class DataAssign implements ObserverInterface
         ResponseFactory $responseFactory,
         TypeListInterface $cacheTypeList,
         Pool $cacheFrontendPool,
+        PayPalRequests $paypalRequests,
         DirectoryList $dir
     )
     {
         $this->storeManager = $storeManager;
-        $this->configProviderPayPalPlus = $configProviderPayPalPlus;
         $this->messageManager = $messageManager;
         $this->urlBuilder = $urlBuilder;
         $this->responseFactory = $responseFactory;
         $this->cacheTypeList = $cacheTypeList;
         $this->cacheFrontendPool = $cacheFrontendPool;
+        $this->configProviderPayPalBCDC = $configProviderPayPalBCDC;
         $this->configProviderPayPalExpressCheckout = $configProviderPayPalExpressCheckout;
+        $this->paypalRequests = $paypalRequests;
         $this->dir = $dir;
     }
 
@@ -101,18 +107,17 @@ class DataAssign implements ObserverInterface
      */
     public function execute(\Magento\Framework\Event\Observer $observer)
     {
-        $this->validateConfigMagento();
-        $resultPayPalPlus = $this->validatePayPalPlus();
+        $resultPayPalBCDC = $this->validatePayPalBCDC();
         $resultPayPalExpressCheckout = $this->validatePayPalExpressCheckout();
 
-        if ($resultPayPalPlus || $resultPayPalExpressCheckout) {
+        if ($resultPayPalBCDC || $resultPayPalExpressCheckout) {
             $url = $this->urlBuilder->getUrl('adminhtml/system_config/edit/section/payment');
             $disableMessage= [];
-            if (is_array($resultPayPalPlus) && $resultPayPalPlus['status']) {
-                $this->configProviderPayPalPlus->desactivateModule();
-                $this->configProviderPayPalPlus->desactivateClientId();
-                $this->configProviderPayPalPlus->desactivateSecretId();
-                foreach ($resultPayPalPlus['message'] as $key => $message) {
+            if (is_array($resultPayPalBCDC) && $resultPayPalBCDC['status']) {
+                $this->configProviderPayPalBCDC->desactivateModule();
+                $this->configProviderPayPalBCDC->desactivateClientId();
+                $this->configProviderPayPalBCDC->desactivateSecretId();
+                foreach ($resultPayPalBCDC['message'] as $key => $message) {
                     $disableMessage[] = $message;
                 }
             }
@@ -132,25 +137,21 @@ class DataAssign implements ObserverInterface
         return $this;
     }
 
-    protected function validatePayPalExpressCheckout()
+    protected function validatePayPalBCDC()
     {
-        $clientId = $this->configProviderPayPalExpressCheckout->getClientId();
-        $secretId = $this->configProviderPayPalExpressCheckout->getSecretId();
+        $clientId = $this->configProviderPayPalBCDC->getClientId();
+        $secretId = $this->configProviderPayPalBCDC->getSecretId();
 
         if (!$clientId) {
             return false;
         }
         $disableModule = false;
 
-        $paypalConfig = $this->getPayPalConfigApi(self::PAYPAL_EXPRESS_CHECKOUT);
-        $apiContext = $this->getNewApiContext($clientId, $secretId);
-
         try {
-
-            $apiContext->setConfig($paypalConfig);
-
-            $oauth = new \PayPal\Auth\OAuthTokenCredential($clientId, $secretId);
-            $oauth->getAccessToken($paypalConfig);
+            $oauth = $this->paypalRequests->getAccessToken([
+                "authorization" => base64_encode($clientId . ':' . $secretId),
+                "type" => "id"
+            ]);
         } catch (\Exception $e) {
             $disableModule = true;
             $disableMessage[] = __('Incorrect API credentials in PayPal Express Checkout, please review it. Also, check var/log/paypalbr folder permissions.');
@@ -163,34 +164,29 @@ class DataAssign implements ObserverInterface
             ];
         }
 
-        $this->createWebhook($apiContext);
+        $this->createWebhook();
 
         return false;
     }
 
-    protected function validatePayPalPlus()
+    protected function validatePayPalExpressCheckout()
     {
-        $clientId = $this->configProviderPayPalPlus->getClientId();
-        $secretId = $this->configProviderPayPalPlus->getSecretId();
+        $clientId = $this->configProviderPayPalBCDC->getClientId();
+        $secretId = $this->configProviderPayPalBCDC->getSecretId();
 
         if (!$clientId) {
             return false;
         }
-
         $disableModule = false;
 
-        $paypalConfig = $this->getPayPalConfigApi(self::PAYPAL_PLUS);
-        $apiContext = $this->getNewApiContext($clientId, $secretId);
-
         try {
-
-            $apiContext->setConfig($paypalConfig);
-
-            $oauth = new \PayPal\Auth\OAuthTokenCredential($clientId, $secretId);
-            $oauth->getAccessToken($paypalConfig);
+            $oauth = $this->paypalRequests->getAccessToken([
+                "authorization" => base64_encode($clientId . ':' . $secretId),
+                "type" => "id"
+            ]);
         } catch (\Exception $e) {
             $disableModule = true;
-            $disableMessage[] = __('Incorrect API credentials in PayPal Plus, please review it. Also, check var/log/paypalbr folder permissions.');
+            $disableMessage[] = __('Incorrect API credentials in PayPal Express Checkout, please review it. Also, check var/log/paypalbr folder permissions.');
         }
 
         if ($disableModule) {
@@ -200,16 +196,16 @@ class DataAssign implements ObserverInterface
             ];
         }
 
-        $this->createWebhook($apiContext);
+        $this->createWebhook();
 
         return false;
     }
 
-    protected function createWebhook($apiContext)
+    protected function createWebhook()
     {
         try {
-            $output = \PayPal\Api\Webhook::getAll($apiContext);
-        } catch (Exception $e) {
+            $output = $this->paypalRequests->getWebhooks();
+        } catch (\Exception $e) {
             print_r("Error in list webhooks was: {$e->getMessage()}");
             die;
         }
@@ -220,83 +216,24 @@ class DataAssign implements ObserverInterface
 
             if ($webhook->url == $baseUrl) {
                 $newWebhook = false;
-                $this->configProviderPayPalPlus->saveWebhookId($webhook->id);
+                $this->configProviderPayPalBCDC->saveWebhookId($webhook->id);
             }
         }
 
         if($newWebhook){
-            $this->saveWebhook($baseUrl, $apiContext);
+            $this->saveWebhook($baseUrl);
         }
 
         return $this;
     }
 
-    protected function saveWebhook($baseUrl, $apiContext)
+    protected function saveWebhook($baseUrl)
     {
-        $webhook = new \PayPal\Api\Webhook();
-        $webhook->setUrl($baseUrl);
-
-        $webhook->setEventTypes($this->getWebhookEventsType());
-
         try {
-            $output = $webhook->create($apiContext);
-            $this->configProviderPayPalPlus->saveWebhookId($output->id);
-        } catch (\PayPal\Exception\PayPalConnectionException $ex) {
-            if ($ex->getData()) {
-                $data = json_decode($ex->getData(), true);
-                if (isset($data['name']) && $data['name'] == self::WEBHOOK_URL_ALREADY_EXISTS) {
-                    return true;
-                }
-                if (isset($data['details']) && isset($data['details'][0]) && isset($data['details'][0]['field']) && $data['details'][0]['field'] == 'url') {
-                    $disableMessage = $data['details'][0]['issue'] . '. Url must be contain https.';
-                    $this->messageManager->addError(__($disableMessage));
-                }
-            }
-            return false;
-        } catch (Exception $ex) {
+            $output = $this->paypalRequests->createWebhook($baseUrl, $this->getWebhookEventsType());
+            $this->configProviderPayPalBCDC->saveWebhookId($output->id);
+        } catch (\Exception $ex) {
             $this->messageManager->addError($ex->getMessage());
-        }
-
-        return $this;
-    }
-
-    protected function getNewApiContext($clientId, $secretId)
-    {
-        return new ApiContext(
-            new \PayPal\Auth\OAuthTokenCredential(
-                $clientId,
-                $secretId
-            )
-        );
-    }
-
-    protected function validateConfigMagento()
-    {
-        $disableModule = false;
-        $disableMessage;
-        $url = $this->urlBuilder->getUrl('adminhtml/system_config/edit/section/customer');
-
-        if(! $this->configProviderPayPalPlus->isStoreFrontActive() && $this->configProviderPayPalPlus->isActive()){
-            $disableModule = true;
-            $disableMessage[] = __("We have identified that your store does not have the active TAX / VAT feature. To add it's support, go to <a href='%1'> Here </a> or go to Customers-> Customer Settings-> Create New Customer Account-> Display VAT number in frontend. Also, go to Name and address options-> Show TAX / VAT number." ,
-                $url
-            );
-        }
-        if(! $this->configProviderPayPalPlus->isTelephoneSet() && $this->configProviderPayPalPlus->isActive()){
-            $disableModule = true;
-            $disableMessage[] = __('We have identified that your store does not have an active phone, please enable to activate the module');
-        }
-
-        if (! $this->configProviderPayPalPlus->isCurrencyBaseBRL() && $this->configProviderPayPalPlus->isActive()) {
-            $disableModule = true;
-            $disableMessage[] = __("Your base currency has to be BRL in order to activate this module.");
-        }
-
-        if ($disableModule) {
-            $this->configProviderPayPalPlus->desactivateModule();
-            $this->configProviderPayPalExpressCheckout->desactivateModule();
-
-            $this->disableModule($disableMessage, $url);
         }
 
         return $this;
@@ -331,53 +268,21 @@ class DataAssign implements ObserverInterface
         return $this;
     }
 
-    protected function getPayPalConfigApi($context)
-    {
-        if ($context == '1') {
-            return [
-                'http.headers.PayPal-Partner-Attribution-Id' => 'MagentoBrazil_Ecom_PPPlus2',
-                'mode' => $this->configProviderPayPalPlus->isModeSandbox()? 'sandbox' : 'live',
-                'log.LogEnabled' => true,
-                'log.FileName' => $this->dir->getPath('log') . '/paypalconfig-' . date('Y-m-d') . '.log',
-                'cache.FileName' => $this->dir->getPath('log') . '/auth.cache',
-                'log.LogLevel' => 'DEBUG', // PLEASE USE `INFO` LEVEL FOR LOGGING IN LIVE ENVIRONMENTS
-                'http.CURLOPT_SSLVERSION' => 'CURL_SSLVERSION_TLSv1_2'
-            ];
-        } else {
-            return [
-                'http.headers.PayPal-Partner-Attribution-Id' => 'MagentoBrazil_Ecom_PPPlus2',
-                'mode' => $this->configProviderPayPalExpressCheckout->isModeSandbox()? 'sandbox' : 'live',
-                'log.LogEnabled' => true,
-                'log.FileName' => $this->dir->getPath('log') . '/paypalconfig-' . date('Y-m-d') . '.log',
-                'cache.FileName' => $this->dir->getPath('log') . '/auth.cache',
-                'log.LogLevel' => 'DEBUG', // PLEASE USE `INFO` LEVEL FOR LOGGING IN LIVE ENVIRONMENTS
-                'http.CURLOPT_SSLVERSION' => 'CURL_SSLVERSION_TLSv1_2'
-            ];
-        }
-    }
-
     protected function getWebhookEventsType()
     {
         $webhookEventTypes = [];
-        $webhookEventTypes[] = new \PayPal\Api\WebhookEventType( '{ "name": "PAYMENT.SALE.COMPLETED" }' );
-        $webhookEventTypes[] = new \PayPal\Api\WebhookEventType( '{ "name": "PAYMENT.SALE.DENIED" }' );
-        $webhookEventTypes[] = new \PayPal\Api\WebhookEventType( '{ "name": "PAYMENT.SALE.PENDING" }'
-        );
-        $webhookEventTypes[] = new \PayPal\Api\WebhookEventType(
-            '{
-                "name": "PAYMENT.SALE.REFUNDED"
-            }'
-        );
-        $webhookEventTypes[] = new \PayPal\Api\WebhookEventType(
-            '{
-                "name": "RISK.DISPUTE.CREATED"
-            }'
-        );
-        $webhookEventTypes[] = new \PayPal\Api\WebhookEventType(
-            '{
-                "name": "CUSTOMER.DISPUTE.CREATED"
-            }'
-        );
+        $webhookEventTypes[] = ["name" => "PAYMENT.CAPTURE.COMPLETED"];
+        $webhookEventTypes[] = ["name" => "PAYMENT.CAPTURE.DENIED"];
+        $webhookEventTypes[] = ["name" => "PAYMENT.CAPTURE.REFUNDED"];
+        $webhookEventTypes[] = ["name" => "PAYMENT.CAPTURE.REVERSED"];
+        $webhookEventTypes[] = ["name" => "PAYMENT.CAPTURE.PENDING"];
+        $webhookEventTypes[] = ["name" => "CHECKOUT.ORDER.COMPLETED"];
+        $webhookEventTypes[] = ["name" => "CHECKOUT.ORDER.APPROVED"];
+        $webhookEventTypes[] = ["name" => "CHECKOUT.ORDER.PROCESSED"];
+        $webhookEventTypes[] = ["name" => "PAYMENT.AUTHORIZATION.CREATED"];
+        $webhookEventTypes[] = ["name" => "PAYMENT.AUTHORIZATION.VOIDED"];
+        $webhookEventTypes[] = ["name" => "RISK.DISPUTE.CREATED"];
+        $webhookEventTypes[] = ["name" => "CUSTOMER.DISPUTE.CREATED"];
 
         return $webhookEventTypes;
     }

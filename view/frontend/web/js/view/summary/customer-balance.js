@@ -1,6 +1,10 @@
 /**
- * Copyright © Magento, Inc. All rights reserved.
- * See COPYING.txt for license details.
+ * PayPalBR PayPalEnterprise
+ *
+ * @package PayPalBR|PayPalEnterprise
+ * @author Vitor Nicchio Alves <vitor@imaginationmedia.com>
+ * @copyright Copyright (c) 2020 Imagination Media (https://www.imaginationmedia.com/)
+ * @license https://opensource.org/licenses/OSL-3.0.php Open Software License 3.0
  */
 
 define([
@@ -63,7 +67,7 @@ define([
             customerBalanceAmount = parseFloat(parseFloat(customerBalanceAmount).toFixed(2));
             grandTotal = parseFloat(parseFloat(grandTotal).toFixed(2));
 
-            if((customerBalanceAmount < grandTotal) && (payPalPlusSelected)) {
+            if(payPalPlusSelected) {
                 fullScreenLoader.startLoader();
                 setTimeout(function () {
                     helper.initializeIframe();

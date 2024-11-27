@@ -14,6 +14,10 @@ define(
                 component: 'PayPalBR_PayPal/js/view/payment/method-renderer/paypal-plus'
             },
             {
+                type: 'paypalbr_bcdc',
+                component: 'PayPalBR_PayPal/js/view/payment/method-renderer/paypal-bcdc'
+            },
+            {
                 type: 'paypalbr_expresscheckout',
                 component: 'PayPalBR_PayPal/js/view/payment/method-renderer/paypal-expresscheckout'
             }

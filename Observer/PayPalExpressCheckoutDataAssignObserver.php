@@ -21,13 +21,10 @@ class PayPalExpressCheckoutDataAssignObserver extends AbstractDataAssignObserver
         if (!is_object($additionalData)) {
             $additionalData = new DataObject($additionalData ?: []);
         }
-        
+
         $dataAdditional = $additionalData->getData();
-        if (isset($dataAdditional['payId'])) {
-            $info->setAdditionalInformation('pay_id', $dataAdditional['payId']);
-            $info->setAdditionalInformation('payer_id', $dataAdditional['payerId']);
-            $info->setAdditionalInformation('token', $dataAdditional['token']);
-            $info->setAdditionalInformation('term', $dataAdditional['term']);
+        if (isset($dataAdditional['orderData'])) {
+            $info->setAdditionalInformation('order_data', $dataAdditional['orderData']);
         }
 
         return $this;

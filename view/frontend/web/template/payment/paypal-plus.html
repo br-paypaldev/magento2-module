@@ -37,6 +37,11 @@
             <div data-bind="visible: false" id="auth-div-error">
                 <span class="error-msg"><!-- ko i18n: 'Payment has been rejected, please try again with a different card.' --><!-- /ko --></span>
             </div>
+            <!-- ko if: costToBuyer() -->
+            <div data-bind="scope: 'installment-cost-buyer'">
+                <!-- ko template: getTemplate() --><!-- /ko -->
+            </div>
+            <!-- /ko -->
             <div style="width: 100%; max-height: 600px;" id="ppplus"></div>
             <div style="width: 100%;" id="ppplus-information">
                 <input type="hidden"
