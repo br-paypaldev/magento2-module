@@ -80,6 +80,9 @@
 
                             </item>
                         </item>
+                        <item name="installment-cost-buyer" xsi:type="array">
+                            <item name="component" xsi:type="string">PayPalBR_PayPal/js/view/payment/installment</item>
+                        </item>
                     </item>
                 </argument>
             </arguments>
