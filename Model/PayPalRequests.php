@@ -14,6 +14,7 @@ use PayPalBR\PayPal\Logger\Handler;
 use PayPalBR\PayPal\Logger\Logger;
 use Magento\Store\Model\StoreManagerInterface;
 use Magento\Backend\Model\UrlInterface;
+use PayPalBR\PayPal\DatadogLogger\DatadogLogger;
 
 class PayPalRequests
 {
@@ -44,7 +45,10 @@ class PayPalRequests
      */
     protected $backendUrl;
 
-
+    /**
+     * @var DatadogLogger
+     */
+    protected $datadogLogger;
 
     public function __construct(
         ConfigProvider $configProvider,
@@ -55,8 +59,7 @@ class PayPalRequests
         UrlInterface $backendUrl,
         Logger $customLogger,
         Handler $loggerHandler,
-    )
-    {
+    ) {
         $this->configProvider = $configProvider;
         $this->cacheTypeList = $cacheTypeList;
         $this->cacheFrontendPool = $cacheFrontendPool;
@@ -65,6 +68,7 @@ class PayPalRequests
         $this->backendUrl = $backendUrl;
         $this->loggerHandler = $loggerHandler;
         $this->storeManager = $storeManager;
+        $this->datadogLogger = new DatadogLogger();
     }
 
     public function getAccessToken($keys = false)
@@ -126,11 +130,21 @@ class PayPalRequests
             // 'Content-Type' => 'application/x-www-form-urlencoded',
             'PayPal-Partner-Attribution-Id' => 'MagentoBrazil_Ecom_EC2',
             'Authorization' => 'Basic ' . $key
-          ];
+        ];
 
         $client = new Client();
 
         $this->logger('PayPal V2 - OAuth REQUEST', 'POST', json_encode($headers), json_encode($options));
+        $this->datadogLogger->log(
+            "info",
+            $options,
+            [
+                'environment' => 'development',
+                'api_version' => 'v2',
+                'integration_type' => 'webhook',
+                'message_custom' => "PayPal V2 - OAuth REQUEST",
+            ]
+        );
 
         try {
             $response = $client->post($requestUrl, [
@@ -139,9 +153,29 @@ class PayPalRequests
             ]);
         } catch (\GuzzleHttp\Exception\ClientException $e) {
             $this->logger('PayPal V2 - Create Order EXCEPTION', 'POST', json_encode($headers), $e->getMessage());
+            $this->datadogLogger->log(
+                "error",
+                $options,
+                [
+                    'environment' => 'development',
+                    'api_version' => 'v2',
+                    'integration_type' => 'webhook',
+                    'message_custom' => ["PayPal V2 - Create Order EXCEPTION", $e->getMessage()],
+                ]
+            );
             throw new \Exception($e->getResponse()->getBody()->getContents());
         } catch (\GuzzleHttp\Exception\ServerException $e) {
             $this->logger('PayPal V2 - Create Order EXCEPTION', 'POST', json_encode($headers), $e->getMessage());
+            $this->datadogLogger->log(
+                "error",
+                $options,
+                [
+                    'environment' => 'development',
+                    'api_version' => 'v2',
+                    'integration_type' => 'webhook',
+                    'message_custom' => ["PayPal V2 - Create Order EXCEPTION", $e->getMessage()],
+                ]
+            );
             throw new \Exception($e->getResponse()->getBody()->getContents());
         }
 
@@ -150,6 +184,16 @@ class PayPalRequests
         $content = $response->getBody()->getContents();
 
         $this->logger('PayPal V2 - OAuth RESPONSE', 'POST', json_encode($response->getHeaders()), $content, $response->getStatusCode());
+        $this->datadogLogger->log(
+            "info",
+            json_decode($content, true),
+            [
+                'environment' => 'development',
+                'api_version' => 'v2',
+                'integration_type' => 'webhook',
+                'message_custom' => "PayPal V2 - OAuth RESPONSE",
+            ]
+        );
 
         $auth = json_decode($content);
 
@@ -173,7 +217,16 @@ class PayPalRequests
 
 
         $this->logger('PayPal V2 - Create Order REQUEST', 'POST', json_encode($headers), $body);
-
+        $this->datadogLogger->log(
+            "info",
+            json_decode($body, true),
+            [
+                'environment' => 'development',
+                'api_version' => 'v2',
+                'integration_type' => 'webhook',
+                'message_custom' => "PayPal V2 - Create Order REQUEST",
+            ]
+        );
 
         $requestUrl = $this->configProvider->getRequestUrl() . '/v2/checkout/orders';
 
@@ -184,15 +237,45 @@ class PayPalRequests
             ]);
         } catch (\GuzzleHttp\Exception\ClientException $e) {
             $this->logger('PayPal V2 - Create Order EXCEPTION', 'POST', json_encode($headers), $e->getMessage());
+            $this->datadogLogger->log(
+                "error",
+                json_decode($body, true),
+                [
+                    'environment' => 'development',
+                    'api_version' => 'v2',
+                    'integration_type' => 'webhook',
+                    'message_custom' => ["PayPal V2 - Create Order EXCEPTION", $e->getMessage()],
+                ]
+            );
             throw new \Exception($e->getResponse()->getBody()->getContents());
         } catch (\GuzzleHttp\Exception\ServerException $e) {
             $this->logger('PayPal V2 - Create Order EXCEPTION', 'POST', json_encode($headers), $e->getMessage());
+            $this->datadogLogger->log(
+                "error",
+                json_decode($body, true),
+                [
+                    'environment' => 'development',
+                    'api_version' => 'v2',
+                    'integration_type' => 'webhook',
+                    'message_custom' => ["PayPal V2 - Create Order EXCEPTION", $e->getMessage()],
+                ]
+            );
             throw new \Exception($e->getResponse()->getBody()->getContents());
         }
 
         $content = $response->getBody()->getContents();
 
         $this->logger('PayPal V2 - Create Order RESPONSE', 'POST', json_encode($response->getHeaders()), $content, $response->getStatusCode());
+        $this->datadogLogger->log(
+            "info",
+            json_decode($content, true),
+            [
+                'environment' => 'development',
+                'api_version' => 'v2',
+                'integration_type' => 'webhook',
+                'message_custom' => "PayPal V2 - Create Order RESPONSE",
+            ]
+        );
 
         return json_decode($content);
     }
@@ -206,11 +289,20 @@ class PayPalRequests
             'PayPal-Partner-Attribution-Id' => 'MagentoBrazil_Ecom_PPPlus2',
             'Content-Type' => 'application/json',
             'Authorization' => 'Bearer ' . $accessToken,
-          ];
+        ];
         $body = '{}';
 
         $this->logger('PayPal V2 - Capture Order REQUEST', 'POST', json_encode($headers), $body);
-
+        $this->datadogLogger->log(
+            "info",
+            json_decode($body, true),
+            [
+                'environment' => 'development',
+                'api_version' => 'v2',
+                'integration_type' => 'webhook',
+                'message_custom' => "PayPal V2 - Capture Order REQUEST",
+            ]
+        );
 
         try {
             $response = $client->post($captureUrl, [
@@ -219,16 +311,45 @@ class PayPalRequests
             ]);
         } catch (\GuzzleHttp\Exception\ClientException $e) {
             $this->logger('PayPal V2 - Capture Order EXCEPTION', 'POST', json_encode($headers), $e->getMessage());
+            $this->datadogLogger->log(
+                "error",
+                json_decode($body, true),
+                [
+                    'environment' => 'development',
+                    'api_version' => 'v2',
+                    'integration_type' => 'webhook',
+                    'message_custom' => ["PayPal V2 - Capture Order EXCEPTION", $e->getMessage()],
+                ]
+            );
             throw new \Exception($e->getResponse()->getBody()->getContents());
         } catch (\GuzzleHttp\Exception\ServerException $e) {
             $this->logger('PayPal V2 - Capture Order EXCEPTION', 'POST', json_encode($headers), $e->getMessage());
+            $this->datadogLogger->log(
+                "error",
+                json_decode($body, true),
+                [
+                    'environment' => 'development',
+                    'api_version' => 'v2',
+                    'integration_type' => 'webhook',
+                    'message_custom' => ["PayPal V2 - Capture Order EXCEPTION", $e->getMessage()],
+                ]
+            );
             throw new \Exception($e->getResponse()->getBody()->getContents());
         }
 
         $content = $response->getBody()->getContents();
 
-        $this->logger('PayPal V2 - Capture Order RESPONSE', 'POST', json_encode($response->getHeaders()), $content, $response->getStatusCode());
-
+        $this->logger('PayPal V2 - Capture Order RESPONSE - ' . $captureUrl, 'POST', json_encode($response->getHeaders()), $content, $response->getStatusCode());
+        $this->datadogLogger->log(
+            "info",
+            json_decode($content, true),
+            [
+                'environment' => 'development',
+                'api_version' => 'v2',
+                'integration_type' => 'webhook',
+                'message_custom' => "PayPal V2 - Capture Order RESPONSE",
+            ]
+        );
         $result = json_decode($content);
 
         return $result;
@@ -240,10 +361,20 @@ class PayPalRequests
         $client = new Client();
 
         $headers = [
-        'Authorization' => 'Bearer ' . $accessToken
+            'Authorization' => 'Bearer ' . $accessToken
         ];
 
         $this->logger('PayPal V2 - Get Order REQUEST', 'GET', json_encode($headers), '');
+        $this->datadogLogger->log(
+            "info",
+            [],
+            [
+                'environment' => 'development',
+                'api_version' => 'v2',
+                'integration_type' => 'webhook',
+                'message_custom' => "PayPal V2 - Get Order REQUEST",
+            ]
+        );
 
         $requestUrl = $this->configProvider->getRequestUrl() . '/v2/checkout/orders/';
 
@@ -254,6 +385,16 @@ class PayPalRequests
         $content = $response->getBody()->getContents();
 
         $this->logger('PayPal V2 - Get Order RESPONSE', 'GET', json_encode($response->getHeaders()), $content, $response->getStatusCode());
+        $this->datadogLogger->log(
+            "info",
+            json_decode($content, true),
+            [
+                'environment' => 'development',
+                'api_version' => 'v2',
+                'integration_type' => 'webhook',
+                'message_custom' => "PayPal V2 - Get Order RESPONSE",
+            ]
+        );
 
         return json_decode($content);
     }
@@ -276,6 +417,16 @@ class PayPalRequests
         ];
 
         $this->logger('PayPal V2 - Update Order REQUEST', 'PATCH', json_encode($headers), json_encode($body));
+        $this->datadogLogger->log(
+            "info",
+            $body,
+            [
+                'environment' => 'development',
+                'api_version' => 'v2',
+                'integration_type' => 'webhook',
+                'message_custom' => "PayPal V2 - Update Order REQUEST",
+            ]
+        );
 
         try {
             $response = $client->patch($updateUrl, [
@@ -284,18 +435,49 @@ class PayPalRequests
             ]);
         } catch (\GuzzleHttp\Exception\ClientException $e) {
             $this->logger('PayPal V2 - Update Order EXCEPTION', 'POST', json_encode($headers), $e->getMessage());
+            $this->datadogLogger->log(
+                "error",
+                $body,
+                [
+                    'environment' => 'development',
+                    'api_version' => 'v2',
+                    'integration_type' => 'webhook',
+                    'message_custom' => ["PayPal V2 - Update Order EXCEPTION", $e->getMessage()],
+                ]
+            );
             throw new \Exception($e->getResponse()->getBody()->getContents());
         } catch (\GuzzleHttp\Exception\ServerException $e) {
             $this->logger('PayPal V2 - Update Order EXCEPTION', 'POST', json_encode($headers), $e->getMessage());
+            $this->datadogLogger->log(
+                "error",
+                $body,
+                [
+                    'environment' => 'development',
+                    'api_version' => 'v2',
+                    'integration_type' => 'webhook',
+                    'message_custom' => ["PayPal V2 - Update Order EXCEPTION", $e->getMessage()],
+                ]
+            );
             throw new \Exception($e->getResponse()->getBody()->getContents());
         }
 
         $content = $response->getBody()->getContents();
 
         $this->logger('PayPal V2 - Update Order RESPONSE', 'POST', json_encode($response->getHeaders()), $content, $response->getStatusCode());
+        $this->datadogLogger->log(
+            "info",
+            json_decode($content, true) ?? [],
+            [
+                'environment' => 'development',
+                'api_version' => 'v2',
+                'integration_type' => 'webhook',
+                'message_custom' => "PayPal V2 - Update Order RESPONSE",
+            ]
+        );
     }
 
-    public function refundTransaction($transactionId, $amount = null) {
+    public function refundTransaction($transactionId, $amount = null)
+    {
         $accessToken = $this->getAccessToken();
         $client = new Client();
 
@@ -303,20 +485,30 @@ class PayPalRequests
             'PayPal-Partner-Attribution-Id' => 'MagentoBrazil_Ecom_PPPlus2',
             'Content-Type' => 'application/json',
             'Authorization' => 'Bearer ' . $accessToken
-          ];
+        ];
 
-          if ($amount) {
-              $body = json_encode([
-                  'amount' => [
-                      'value' => $amount,
-                      'currency_code' => $this->storeManager->getStore()->getCurrentCurrencyCode()
-                  ]
-              ]);
-          } else {
-              $body = '{}';
-          }
+        if ($amount) {
+            $body = json_encode([
+                'amount' => [
+                    'value' => $amount,
+                    'currency_code' => $this->storeManager->getStore()->getCurrentCurrencyCode()
+                ]
+            ]);
+        } else {
+            $body = '{}';
+        }
 
         $this->logger('PayPal V2 - Refund Order REQUEST', 'POST', json_encode($headers), $body);
+        $this->datadogLogger->log(
+            "info",
+            json_decode($body, true),
+            [
+                'environment' => 'development',
+                'api_version' => 'v2',
+                'integration_type' => 'webhook',
+                'message_custom' => "PayPal V2 - Refund Order REQUEST",
+            ]
+        );
 
         $requestUrl = $this->configProvider->getRequestUrl() . '/v2/payments/captures/' . $transactionId . '/refund';
 
@@ -327,16 +519,45 @@ class PayPalRequests
             ]);
         } catch (\GuzzleHttp\Exception\ClientException $e) {
             $this->logger('PayPal V2 - Refund Order EXCEPTION', 'POST', json_encode($headers), $e->getMessage());
+            $this->datadogLogger->log(
+                "error",
+                json_decode($body, true),
+                [
+                    'environment' => 'development',
+                    'api_version' => 'v2',
+                    'integration_type' => 'webhook',
+                    'message_custom' => ["PayPal V2 - Refund Order EXCEPTION", $e->getMessage()],
+                ]
+            );
             throw new \Exception($e->getResponse()->getBody()->getContents());
         } catch (\GuzzleHttp\Exception\ServerException $e) {
             $this->logger('PayPal V2 - Refund Order EXCEPTION', 'POST', json_encode($headers), $e->getMessage());
+            $this->datadogLogger->log(
+                "error",
+                json_decode($body, true),
+                [
+                    'environment' => 'development',
+                    'api_version' => 'v2',
+                    'integration_type' => 'webhook',
+                    'message_custom' => ["PayPal V2 - Refund Order EXCEPTION", $e->getMessage()],
+                ]
+            );
             throw new \Exception($e->getResponse()->getBody()->getContents());
         }
 
         $content = $response->getBody()->getContents();
 
         $this->logger('PayPal V2 - Refund Order RESPONSE', 'POST', json_encode($response->getHeaders()), $content, $response->getStatusCode());
-
+        $this->datadogLogger->log(
+            "info",
+            json_decode($content, true) ?? [],
+            [
+                'environment' => 'development',
+                'api_version' => 'v2',
+                'integration_type' => 'webhook',
+                'message_custom' => "PayPal V2 - Refund Order RESPONSE",
+            ]
+        );
         $result = json_decode($content);
 
         return $result;
@@ -348,10 +569,20 @@ class PayPalRequests
         $client = new Client();
 
         $headers = [
-        'Authorization' => 'Bearer ' . $accessToken
+            'Authorization' => 'Bearer ' . $accessToken
         ];
 
         $this->logger('PayPal V2 - Get Webhooks REQUEST', 'GET', json_encode($headers), '');
+        $this->datadogLogger->log(
+            "info",
+            [],
+            [
+                'environment' => 'development',
+                'api_version' => 'v2',
+                'integration_type' => 'webhook',
+                'message_custom' => "PayPal V2 - Get Webhooks REQUEST",
+            ]
+        );
 
         $requestUrl = $this->configProvider->getRequestUrl() . '/v1/notifications/webhooks/';
 
@@ -361,16 +592,45 @@ class PayPalRequests
             ]);
         } catch (\GuzzleHttp\Exception\ClientException $e) {
             $this->logger('PayPal V2 - Refund Order EXCEPTION', 'POST', json_encode($headers), $e->getMessage());
+            $this->datadogLogger->log(
+                "error",
+                [],
+                [
+                    'environment' => 'development',
+                    'api_version' => 'v2',
+                    'integration_type' => 'webhook',
+                    'message_custom' => ["PayPal V2 - Get Webhooks EXCEPTION", $e->getMessage()],
+                ]
+            );
             throw new \Exception($e->getResponse()->getBody()->getContents());
         } catch (\GuzzleHttp\Exception\ServerException $e) {
             $this->logger('PayPal V2 - Refund Order EXCEPTION', 'POST', json_encode($headers), $e->getMessage());
+            $this->datadogLogger->log(
+                "error",
+                [],
+                [
+                    'environment' => 'development',
+                    'api_version' => 'v2',
+                    'integration_type' => 'webhook',
+                    'message_custom' => ["PayPal V2 - Get Webhooks EXCEPTION", $e->getMessage()],
+                ]
+            );
             throw new \Exception($e->getResponse()->getBody()->getContents());
         }
 
         $content = $response->getBody()->getContents();
 
         $this->logger('PayPal V2 - Get Webhooks RESPONSE', 'GET', json_encode($response->getHeaders()), $content, $response->getStatusCode());
-
+        $this->datadogLogger->log(
+            "info",
+            json_decode($content, true) ?? [],
+            [
+                'environment' => 'development',
+                'api_version' => 'v2',
+                'integration_type' => 'webhook',
+                'message_custom' => "PayPal V2 - Get Webhooks RESPONSE",
+            ]
+        );
         return json_decode($content);
     }
 
@@ -391,6 +651,16 @@ class PayPalRequests
         ]);
 
         $this->logger('PayPal V2 - Create Webhook REQUEST', 'POST', json_encode($headers), $body);
+        $this->datadogLogger->log(
+            "info",
+            json_decode($body, true),
+            [
+                'environment' => 'development',
+                'api_version' => 'v2',
+                'integration_type' => 'webhook',
+                'message_custom' => "PayPal V2 - Create Webhook REQUEST",
+            ]
+        );
 
         $requestUrl = $this->configProvider->getRequestUrl() . '/v1/notifications/webhooks';
 
@@ -401,16 +671,45 @@ class PayPalRequests
             ]);
         } catch (\GuzzleHttp\Exception\ClientException $e) {
             $this->logger('PayPal V2 - Refund Order EXCEPTION', 'POST', json_encode($headers), $e->getMessage());
+            $this->datadogLogger->log(
+                "error",
+                json_decode($body, true),
+                [
+                    'environment' => 'development',
+                    'api_version' => 'v2',
+                    'integration_type' => 'webhook',
+                    'message_custom' => ["PayPal V2 - Create Webhook EXCEPTION", $e->getMessage()],
+                ]
+            );
             throw new \Exception($e->getResponse()->getBody()->getContents());
         } catch (\GuzzleHttp\Exception\ServerException $e) {
             $this->logger('PayPal V2 - Refund Order EXCEPTION', 'POST', json_encode($headers), $e->getMessage());
+            $this->datadogLogger->log(
+                "error",
+                json_decode($body, true),
+                [
+                    'environment' => 'development',
+                    'api_version' => 'v2',
+                    'integration_type' => 'webhook',
+                    'message_custom' => ["PayPal V2 - Create Webhook EXCEPTION", $e->getMessage()],
+                ]
+            );
             throw new \Exception($e->getResponse()->getBody()->getContents());
         }
 
         $content = $response->getBody()->getContents();
 
         $this->logger('PayPal V2 - Refund Order RESPONSE', 'POST', json_encode($response->getHeaders()), $content, $response->getStatusCode());
-
+        $this->datadogLogger->log(
+            "info",
+            json_decode($content, true) ?? [],
+            [
+                'environment' => 'development',
+                'api_version' => 'v2',
+                'integration_type' => 'webhook',
+                'message_custom' => "PayPal V2 - Create Webhook RESPONSE",
+            ]
+        );
         $result = json_decode($content);
 
         return $result;
@@ -432,7 +731,16 @@ class PayPalRequests
         $client = new Client();
 
         $this->logger('PayPal V2 - Verify Webhook Signature REQUEST', 'POST', json_encode($headers), json_encode($signatureVerificationInfo));
-
+        $this->datadogLogger->log(
+            "info",
+            $signatureVerificationInfo ?? [],
+            [
+                'environment' => 'development',
+                'api_version' => 'v2',
+                'integration_type' => 'webhook',
+                'message_custom' => "PayPal V2 - Verify Webhook Signature REQUEST",
+            ]
+        );
 
         $requestUrl = $this->configProvider->getRequestUrl() . '/v1/notifications/verify-webhook-signature';
 
@@ -443,29 +751,68 @@ class PayPalRequests
             ]);
         } catch (\GuzzleHttp\Exception\ClientException $e) {
             $this->logger('PayPal V2 - Verify Webhook Signature EXCEPTION', 'POST', json_encode($headers), $e->getMessage());
+            $this->datadogLogger->log(
+                "error",
+                $signatureVerificationInfo ?? [],
+                [
+                    'environment' => 'development',
+                    'api_version' => 'v2',
+                    'integration_type' => 'webhook',
+                    'message_custom' => ["PayPal V2 - Verify Webhook Signature EXCEPTION", $e->getMessage()],
+                ]
+            );
             throw new \Exception($e->getResponse()->getBody()->getContents());
         } catch (\GuzzleHttp\Exception\ServerException $e) {
             $this->logger('PayPal V2 - Verify Webhook Signature EXCEPTION', 'POST', json_encode($headers), $e->getMessage());
+            $this->datadogLogger->log(
+                "error",
+                $signatureVerificationInfo ?? [],
+                [
+                    'environment' => 'development',
+                    'api_version' => 'v2',
+                    'integration_type' => 'webhook',
+                    'message_custom' => ["PayPal V2 - Verify Webhook Signature EXCEPTION", $e->getMessage()],
+                ]
+            );
             throw new \Exception($e->getResponse()->getBody()->getContents());
         }
 
         $content = $response->getBody()->getContents();
 
         $this->logger('PayPal V2 - Create Order RESPONSE', 'POST', json_encode($response->getHeaders()), $content, $response->getStatusCode());
-
+        $this->datadogLogger->log(
+            "info",
+            json_decode($content, true) ?? [],
+            [
+                'environment' => 'development',
+                'api_version' => 'v2',
+                'integration_type' => 'webhook',
+                'message_custom' => "PayPal V2 - Verify Webhook Signature RESPONSE",
+            ]
+        );
         return json_decode($content);
     }
 
     public function getSellerCredentials($merchantId, $accessToken)
     {
         $headers = [
-        'Authorization' => 'Bearer ' . $accessToken,
-        'Content-Type' => 'application/json',
+            'Authorization' => 'Bearer ' . $accessToken,
+            'Content-Type' => 'application/json',
         ];
 
         $client = new Client();
 
         $this->logger('PayPal V1 - Get Seller Credential REQUEST', 'GET', json_encode($headers), '');
+        $this->datadogLogger->log(
+            "info",
+            [],
+            [
+                'environment' => 'development',
+                'api_version' => 'v1',
+                'integration_type' => 'webhook',
+                'message_custom' => "PayPal V1 - Get Seller Credential REQUEST",
+            ]
+        );
 
         $requestUrl = 'https://api-m.sandbox.paypal.com/v1/customer/partners/YZ4YR9LNRW4RQ/merchant-integrations/credentials/';
         // $requestUrl = $this->configProvider->getRequestUrl() . '/v1/customer/partners/JBMW273Y5U3LY/merchant-integrations/credentials/';
@@ -476,16 +823,45 @@ class PayPalRequests
             ]);
         } catch (\GuzzleHttp\Exception\ClientException $e) {
             $this->logger('PayPal V2 - Verify Webhook Signature EXCEPTION', 'POST', json_encode($headers), $e->getMessage());
+            $this->datadogLogger->log(
+                "error",
+                [],
+                [
+                    'environment' => 'development',
+                    'api_version' => 'v2',
+                    'integration_type' => 'webhook',
+                    'message_custom' => ["PayPal V2 - Verify Webhook Signature EXCEPTION", $e->getMessage()],
+                ]
+            );
             throw new \Exception($e->getResponse()->getBody()->getContents());
         } catch (\GuzzleHttp\Exception\ServerException $e) {
             $this->logger('PayPal V2 - Verify Webhook Signature EXCEPTION', 'POST', json_encode($headers), $e->getMessage());
+            $this->datadogLogger->log(
+                "error",
+                [],
+                [
+                    'environment' => 'development',
+                    'api_version' => 'v2',
+                    'integration_type' => 'webhook',
+                    'message_custom' => ["PayPal V2 - Verify Webhook Signature EXCEPTION", $e->getMessage()],
+                ]
+            );
             throw new \Exception($e->getResponse()->getBody()->getContents());
         }
 
         $content = $response->getBody()->getContents();
 
         $this->logger('PayPal V2 - Get Order RESPONSE', 'GET', json_encode($response->getHeaders()), $content, $response->getStatusCode());
-
+        $this->datadogLogger->log(
+            "info",
+            json_decode($content, true) ?? [],
+            [
+                'environment' => 'development',
+                'api_version' => 'v2',
+                'integration_type' => 'webhook',
+                'message_custom' => "PayPal V2 - Get Order RESPONSE",
+            ]
+        );
         return json_decode($content);
     }
 
@@ -504,7 +880,7 @@ class PayPalRequests
         $now = new DateTime();
         $sellerNonce = hash('sha256', $now->format('Y-m-d H:i:s'));
 
-        setcookie("sellerNonce", $sellerNonce, time() + (8*60*60), "/");
+        setcookie("sellerNonce", $sellerNonce, time() + (8 * 60 * 60), "/");
 
         $body = json_encode(
             [
@@ -546,7 +922,17 @@ class PayPalRequests
             ]
         );
 
-          $this->logger('PayPal V2 - Create Webhook REQUEST', 'POST', json_encode($headers), $body);
+        $this->logger('PayPal V2 - Create Webhook REQUEST', 'POST', json_encode($headers), $body);
+        $this->datadogLogger->log(
+            "info",
+            json_decode($body, true),
+            [
+                'environment' => 'development',
+                'api_version' => 'v2',
+                'integration_type' => 'webhook',
+                'message_custom' => "PayPal V2 - Create Webhook REQUEST",
+            ]
+        );
 
         // $requestUrl = $this->configProvider->getRequestUrl() . '/v2/customer/partner-referrals';
 
@@ -559,16 +945,45 @@ class PayPalRequests
             ]);
         } catch (\GuzzleHttp\Exception\ClientException $e) {
             $this->logger('PayPal V2 - Refund Order EXCEPTION', 'POST', json_encode($headers), $e->getMessage());
+            $this->datadogLogger->log(
+                "error",
+                json_decode($body, true),
+                [
+                    'environment' => 'development',
+                    'api_version' => 'v2',
+                    'integration_type' => 'webhook',
+                    'message_custom' => ["PayPal V2 - Refund Order EXCEPTION", $e->getMessage()],
+                ]
+            );
             throw new \Exception($e->getResponse()->getBody()->getContents());
         } catch (\GuzzleHttp\Exception\ServerException $e) {
             $this->logger('PayPal V2 - Refund Order EXCEPTION', 'POST', json_encode($headers), $e->getMessage());
+            $this->datadogLogger->log(
+                "error",
+                json_decode($body, true),
+                [
+                    'environment' => 'development',
+                    'api_version' => 'v2',
+                    'integration_type' => 'webhook',
+                    'message_custom' => ["PayPal V2 - Refund Order EXCEPTION", $e->getMessage()],
+                ]
+            );
             throw new \Exception($e->getResponse()->getBody()->getContents());
         }
 
         $content = $response->getBody()->getContents();
 
         $this->logger('PayPal V2 - Refund Order RESPONSE', 'POST', json_encode($response->getHeaders()), $content, $response->getStatusCode());
-
+        $this->datadogLogger->log(
+            "info",
+            json_decode($content, true) ?? [],
+            [
+                'environment' => 'development',
+                'api_version' => 'v2',
+                'integration_type' => 'webhook',
+                'message_custom' => "PayPal V2 - Refund Order RESPONSE",
+            ]
+        );
         $result = json_decode($content);
 
         foreach ($result->links as $item) {
@@ -578,15 +993,26 @@ class PayPalRequests
         }
     }
 
-    public function getOrderDetails($url) {
+    public function getOrderDetails($url)
+    {
         $accessToken = $this->getAccessToken();
         $client = new Client();
 
         $headers = [
-        'Authorization' => 'Bearer ' . $accessToken
+            'Authorization' => 'Bearer ' . $accessToken
         ];
 
         $this->logger('PayPal V2 - Get Order REQUEST', 'GET', json_encode($headers), '');
+        $this->datadogLogger->log(
+            "info",
+            [],
+            [
+                'environment' => 'development',
+                'api_version' => 'v2',
+                'integration_type' => 'webhook',
+                'message_custom' => "PayPal V2 - Get Order REQUEST",
+            ]
+        );
 
         $response = $client->get($url, [
             'headers' => $headers
@@ -595,7 +1021,16 @@ class PayPalRequests
         $content = $response->getBody()->getContents();
 
         $this->logger('PayPal V2 - Get Order RESPONSE', 'GET', json_encode($response->getHeaders()), $content, $response->getStatusCode());
-
+        $this->datadogLogger->log(
+            "info",
+            json_decode($content, true) ?? [],
+            [
+                'environment' => 'development',
+                'api_version' => 'v2',
+                'integration_type' => 'webhook',
+                'message_custom' => "PayPal V2 - Get Order RESPONSE",
+            ]
+        );
         return json_decode($content);
     }
 
@@ -622,7 +1057,8 @@ class PayPalRequests
         return $domain;
     }
 
-    protected function generateAlphanumericID($length = 8) {
+    protected function generateAlphanumericID($length = 8)
+    {
         $characters = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
         $charactersLength = strlen($characters);
         $id = '';

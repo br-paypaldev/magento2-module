@@ -9,10 +9,10 @@ define(
             ) {
         'use strict';
         rendererList.push(
-            {
+           /* {
                 type: 'paypalbr_paypalplus',
                 component: 'PayPalBR_PayPal/js/view/payment/method-renderer/paypal-plus'
-            },
+            },*/
             {
                 type: 'paypalbr_bcdc',
                 component: 'PayPalBR_PayPal/js/view/payment/method-renderer/paypal-bcdc'

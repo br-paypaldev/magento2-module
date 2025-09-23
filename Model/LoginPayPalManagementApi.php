@@ -18,8 +18,10 @@ use PayPalBR\PayPal\Api\LoginPayPalCreateManagementInterface;
 use Magento\Framework\Filesystem\DirectoryList;
 use PayPalBR\PayPal\Logger\Handler;
 use PayPalBR\PayPal\Logger\Logger;
+use PayPalBR\PayPal\DatadogLogger\DatadogLogger;
 
-class LoginPayPalManagementApi implements LoginPayPalCreateManagementInterface
+//TODO - refactor this class to use the new PayPalBR\PayPal\Api\LoginPayPalCreateManagementInterface
+class LoginPayPalManagementApi
 {
 
     /**
@@ -164,6 +166,11 @@ class LoginPayPalManagementApi implements LoginPayPalCreateManagementInterface
     protected $loggerHandler;
 
     /**
+     * @var DatadogLogger
+     */
+    protected $datadogLogger;
+
+    /**
      * LoginPayPalManagementApi constructor.
      * @param \Magento\Framework\App\Config\ScopeConfigInterface $scopeConfig
      * @param \Magento\Checkout\Model\Cart $cart
@@ -237,6 +244,7 @@ class LoginPayPalManagementApi implements LoginPayPalCreateManagementInterface
         $this->dir = $dir;
         $this->customLogger = $customLogger;
         $this->loggerHandler = $loggerHandler;
+        $this->datadogLogger = new DatadogLogger();
     }
 
     /**
@@ -679,6 +687,16 @@ class LoginPayPalManagementApi implements LoginPayPalCreateManagementInterface
             $this->messageManager->addError(__($e->getMessage()));
             $this->_redirect('/checkout/cart', ['_nosecret' => true]);
             $this->logger($e);
+            $this->datadogLogger->log(
+                "error",
+                $payerInfo,
+                [
+                    'environment' => 'development',
+                    'api_version' => 'v1',
+                    'integration_type' => 'webhook',
+                    'message_custom' => "Error saving user: " . $e->getMessage(),
+                ]
+            );
         }
 
         return $customer;
@@ -725,6 +743,16 @@ class LoginPayPalManagementApi implements LoginPayPalCreateManagementInterface
             $this->messageManager->addError(__($e->getMessage()));
             $this->_redirect('/checkout/cart', ['_nosecret' => true]);
             $this->logger($e);
+            $this->datadogLogger->log(
+                "error",
+                $payerInfo,
+                [
+                    'environment' => 'development',
+                    'api_version' => 'v1',
+                    'integration_type' => 'webhook',
+                    'message_custom' => "Error saving address: " . $e->getMessage(),
+                ]
+            );
         }
 
         return $address;

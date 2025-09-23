@@ -27,6 +27,7 @@ use Magento\Sales\Model\Order\Email\Sender\InvoiceSender;
 use Magento\Framework\DB\Transaction;
 use Magento\Framework\Filesystem\DirectoryList;
 use Magento\Sales\Model\Order\Invoice;
+use PayPalBR\PayPal\DatadogLogger\DatadogLogger;
 
 class SalesOrderPlaceAfter implements ObserverInterface
 {
@@ -86,6 +87,11 @@ class SalesOrderPlaceAfter implements ObserverInterface
     protected $loggerHandler;
 
     /**
+     * @var DatadogLogger
+     */
+    protected $datadogLogger;
+
+    /**
      * @param \Magento\Checkout\Model\Session $checkoutSession
      * @param \Psr\Log\LoggerInterface $logger
      * @param Api $api
@@ -116,6 +122,7 @@ class SalesOrderPlaceAfter implements ObserverInterface
         $this->dir = $dir;
         $this->customLogger = $customLogger;
         $this->loggerHandler = $loggerHandler;
+        $this->datadogLogger = new DatadogLogger();
     }
 
     /**
@@ -147,13 +154,34 @@ class SalesOrderPlaceAfter implements ObserverInterface
         if ($order->canCancel() && $status == 'denied') {
             $result = $this->cancelOrder($order);
             $this->logger($result);
+            $this->datadogLogger->log(
+                "info",
+                ['result' => $result],
+                [
+                    'environment' => 'development',
+                    'api_version' => 'v2',
+                    'integration_type' => 'webhook',
+                    'message_custom' => "PayPal V2 - Cancel Order",
+                ]
+            );
         }
 
-        if ($order->getPayment()->getLastTransId() &&
-            ( $order->canInvoice() && $status == 'APPROVED' || $order->canInvoice() && $status == 'COMPLETED' )
+        if (
+            $order->getPayment()->getLastTransId() &&
+            ($order->canInvoice() && $status == 'APPROVED' || $order->canInvoice() && $status == 'COMPLETED')
         ) {
             $result = $this->createInvoice($order);
             $this->logger($result);
+            $this->datadogLogger->log(
+                "info",
+                ['result' => $result],
+                [
+                    'environment' => 'development',
+                    'api_version' => 'v2',
+                    'integration_type' => 'webhook',
+                    'message_custom' => "PayPal V2 - Create Invoice",
+                ]
+            );
         }
 
         return $this;
@@ -232,7 +260,8 @@ class SalesOrderPlaceAfter implements ObserverInterface
     /**
      * @param mixed $data
      */
-    protected function logger($data){
+    protected function logger($data)
+    {
         $this->loggerHandler->setFileName('paypal-SalesOrderPlaceAfter-' . date('Y-m-d'));
         $this->customLogger->info('Debug Initial SalesOrderPlaceAfter');
         $this->customLogger->info($data);
