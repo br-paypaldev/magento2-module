@@ -10,6 +10,7 @@ use PayPal\Api\VerifyWebhookSignature;
 use Magento\Framework\Filesystem\DirectoryList;
 use Magento\PaypalCaptcha\Model\Checkout\ConfigProviderPayPal;
 use PayPalBR\PayPal\Model\PayPalBCDC\ConfigProvider as PayPalBCDCConfigProvider;
+use PayPalBR\PayPal\DatadogLogger\DatadogLogger;
 
 class WebHookManagement implements WebHookManagementInterface
 {
@@ -29,6 +30,11 @@ class WebHookManagement implements WebHookManagementInterface
 
     protected $paypalRequests;
 
+    /**
+     * @var DatadogLogger
+     */
+    protected $datadogLogger;
+
     public function __construct(
         EventsInterface $eventWebhook,
         DirectoryList $dir,
@@ -43,6 +49,7 @@ class WebHookManagement implements WebHookManagementInterface
         $this->loggerHandler = $loggerHandler;
         $this->configProvider = $configProvider;
         $this->paypalRequests = $paypalRequests;
+        $this->datadogLogger = new DatadogLogger();
     }
 
     /**
@@ -98,6 +105,17 @@ class WebHookManagement implements WebHookManagementInterface
                 $this->logger($output);
                 $this->logger('final debug');
 
+                $this->datadogLogger->log(
+                    "error",
+                    $requestBody,
+                    [
+                        'environment' => 'development',
+                        'api_version' => 'v1',
+                        'integration_type' => 'webhook',
+                        'message_custom' => $output,
+                    ]
+                );
+
                 $return = [
                     [
                         'status' => 401,
@@ -110,6 +128,16 @@ class WebHookManagement implements WebHookManagementInterface
         } catch (\Exception $e) {
             $this->logger('initial debug');
             $this->logger($e);
+            $this->datadogLogger->log(
+                    "error",
+                    $requestBody,
+                    [
+                        'environment' => 'development',
+                        'api_version' => 'v1',
+                        'integration_type' => 'webhook',
+                        'message_custom' => $e->getMessage(),
+                    ]
+                );
             $this->logger('final debug');
 
             $return = [
@@ -144,6 +172,17 @@ class WebHookManagement implements WebHookManagementInterface
                     'message' => $e->getMessage()
                 ]
             ];
+
+            $this->datadogLogger->log(
+                "error",
+                $requestBody,
+                [
+                    'environment' => 'development',
+                    'api_version' => 'v1',
+                    'integration_type' => 'webhook',
+                    'message_custom' => $summary,
+                ]
+            );
         }
 
         return [
@@ -195,7 +234,7 @@ class WebHookManagement implements WebHookManagementInterface
     protected function logger($array)
     {
         $this->loggerHandler->setFileName('paypal-webhook-' . date('Y-m-d'));
-        $this->customLogger->info($array);
+        $this->customLogger->info('Webhook management',$array);
     }
 
     /**
