@@ -25,22 +25,12 @@ final class PayPalExpressCheckoutConfigProvider implements ConfigProviderInterfa
     /**
      * Contains the current mode, sandbox or production (live)
      */
-    const XML_PATH_MODE = 'payment/paypalbr_expresscheckout/mode';
+    const XML_PATH_MODE = 'payment/paypalbr/mode';
 
     /**
      * Contains the module active
      */
     const XML_PATH_ACTIVE = 'payment/paypalbr_expresscheckout/active';
-
-    /**
-     * Contains the module iframe height active
-     */
-    const XML_PATH_IFRAME_ACTIVE = 'payment/paypalbr_expresscheckout/iframe_height_active';
-
-    /**
-     * Contains the module iframe height
-     */
-    const XML_PATH_IFRAME_HEIGHT = 'payment/paypalbr_expresscheckout/iframe_height';
 
     /**
      * @var PaymentHelper
@@ -106,37 +96,15 @@ final class PayPalExpressCheckoutConfigProvider implements ConfigProviderInterfa
             'payment' => [
                 $this->methodCode => [
                     'active' => $active,
-                    'login_paypal_active' => $this->configExpressCheckout->isLoginPayPalActive(),
                     'text' => 'payment/paypalbr_expresscheckout/text',
                     'exibitionName' => $exibition,
                     'mode' => $mode,
-                    'options_payments' => $this->toOptionArrayPayments(),
                     'is_payment_ready' => false,
-                    'mode'=> $this->configExpressCheckout->getModeToString(),
                     'color' => $this->configExpressCheckout->getPayPalLoginButtonColor(),
                     'shape' => $this->configExpressCheckout->getPayPalLoginButtonShape(),
-                    'button' => $this->configExpressCheckout->getPayPalLoginButton(),
-                    'mini_cart'=> $this->configExpressCheckout->getPayPalMiniCartActive(),
                     'locale' => $this->configExpressCheckout->getLocaleStore()
                 ]
             ]
         ];
-    }
-
-    public function toOptionArrayPayments()
-    {
-        $payments = $this->_paymentModelConfig->getActiveMethods();
-        $methods = array();
-        foreach ($payments as $paymentCode => $paymentModel) {
-            if ($paymentCode == 'free' || $paymentCode == 'paypal_billing_agreement') {
-                continue;
-            }
-            $paymentTitle = $this->_scopeConfig->getValue('payment/'.$paymentCode.'/title');
-            $methods[$paymentCode] = array(
-                'label' => $paymentTitle,
-                'value' => $paymentCode
-            );
-        }
-        return count($methods);
     }
 }

@@ -6,25 +6,5 @@
                 <container name="form.additional.info" as="form_additional_info"/>
             </block>
         </referenceContainer>
-        <referenceBlock name="checkout.cart.totals">
-            <arguments>
-                <argument name="jsLayout" xsi:type="array">
-                    <item name="components" xsi:type="array">
-                        <item name="block-totals" xsi:type="array">
-                            <item name="children" xsi:type="array">
-                                <item name="processing_fee_paypal" xsi:type="array">
-                                    <item name="component" xsi:type="string">PayPalBR_PayPal/js/view/checkout/cart/totals/processing-fee-paypal</item>
-                                    <item name="sortOrder" xsi:type="string">20</item>
-                                    <item name="config" xsi:type="array">
-                                        <item name="template" xsi:type="string">PayPalBR_PayPal/checkout/cart/totals/processing-fee-paypal</item>
-                                        <item name="title" xsi:type="helper" helper="PayPalBR\PayPal\Helper\Installment::getTitle"/>
-                                    </item>
-                                </item>
-                            </item>
-                        </item>
-                    </item>
-                </argument>
-            </arguments>
-        </referenceBlock>
     </body>
 </page>

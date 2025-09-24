@@ -43,7 +43,7 @@ class PayPalExpressCheckout extends Info
     public function getTerm()
     {
         $term = $this->getInfo()->getAdditionalInformation('term');
-        if ($term == '1') {
+        if ($term == '1' || !$term) {
             $term = $term . "x " . __("(In cash)");
         }else{
             $term = $term . "x";
@@ -63,7 +63,7 @@ class PayPalExpressCheckout extends Info
         if ($state == 'pending') {
             $state = "<span style='color: #efef0b;'>" . __("IN ANALYSIS") . "</span>";
         }
-        
+
         if ($state == 'denied') {
             $state = "<span style='color: red;'>" . __("NOT APPROVED") . "</span>";
         }
@@ -73,5 +73,10 @@ class PayPalExpressCheckout extends Info
         }
 
         return $state;
+    }
+
+    public function getInvoiceId()
+    {
+        return $this->getInfo()->getAdditionalInformation('invoice_id');
     }
 }

@@ -12,7 +12,6 @@ use PayPalBR\PayPal\Gateway\Transaction\Base\Config\ConfigInterface;
 
 class RequestDataProvider
     extends AbstractRequestDataProvider
-    implements PayPalPlusRequestDataProviderInterface
 {
     protected $config;
 

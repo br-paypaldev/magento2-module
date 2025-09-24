@@ -1,3 +1,7 @@
+1.1.5
+- Implementação do BCDC.
+- Implementação logger personalizado.
+
 1.1.4
 - Correções de bugs
 

@@ -9,400 +9,118 @@
     <system>
         <section id="payment">
             <group id="paypalbr" sortOrder="6" showInDefault="0" showInWebsite="0" showInStore="0">
-                <group id="paypalbr_paypalplus" translate="label comment" type="text" showInDefault="1" showInWebsite="1" showInStore="1">
-                    <label>PayPal Plus</label>
-                    <comment>The experience of an unbranded checkout processed with PayPal security. The user makes the payment directly on your website using only his credit card, without the need of a PayPal account.</comment>
-                    <fieldset_css>complex paypalbr-section</fieldset_css>
-                    <frontend_model>Magento\Paypal\Block\Adminhtml\System\Config\Fieldset\Payment</frontend_model>
-                    <attribute type="activity_path">payment/paypalbr_paypalplus/active</attribute>
-                    <attribute type="displayIn">recommended_solutions</attribute>
-                    <field id="osc" translate="label" type="select" sortOrder="1000" showInDefault="1" showInWebsite="1" showInStore="1">
-                        <label>Are you using a custom checkout?</label>
-                        <config_path>payment/paypalbr_paypalplus/osc</config_path>
-                        <source_model>PayPalBR\PayPal\Model\Config\Source\OSC</source_model>
-                    </field>
-                    <field id="active" translate="label" type="select" sortOrder="2000" showInDefault="1" showInWebsite="1" showInStore="1">
-                        <label>Enable this Solution</label>
-                        <config_path>payment/paypalbr_paypalplus/active</config_path>
-                        <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
-                    </field>
-                    <field id="exhibition_name" translate="label comment tooltip" type="text" sortOrder="3000" showInDefault="1" showInWebsite="1" showInStore="1">
-                        <label>Exhibition Name</label>
-                        <config_path>payment/paypalbr_paypalplus/exhibition_name</config_path>
-                        <comment>It's going to be display on checkout: Credit Card 'Exhibition Name'</comment>
-                        <tooltip>By default, the PayPal Plus solution is displayed as a 'Credit Card'. Use this option to set additional text, such as installments or discounts.</tooltip>
-                    </field>
-                    <field id="mode" translate="label comment" type="select" sortOrder="4000" showInDefault="1" showInWebsite="1" showInStore="1">
-                        <label>Mode</label>
-                        <config_path>payment/paypalbr_paypalplus/mode</config_path>
-                        <source_model>PayPalBR\PayPal\Model\Config\Source\Mode</source_model>
-                        <comment>Use this option to switch between Sandbox and Live modes. Sandbox is used for testing and Live for actual purchases.</comment>
-                    </field>
-                    <field id="client_id_sandbox" translate="label comment" type="password" sortOrder="5000" showInDefault="1" showInWebsite="1" showInStore="1">
-                        <label>Client ID (Sandbox)</label>
-                        <config_path>payment/paypalbr_paypalplus/client_id_sandbox</config_path>
-                        <comment>To generate the Client ID, access https://developer.paypal.com/developer/applications/ and look for the REST API Apps section.</comment>
-                        <depends>
-                            <field id="mode">1</field>
-                            <field id="active">1</field>
-                        </depends>
-                        <validate>required-entry</validate>
-                    </field>
-                    <field id="secret_id_sandbox" translate="label comment" type="password" sortOrder="6000" showInDefault="1" showInWebsite="1" showInStore="1">
-                        <label>Secret ID (Sandbox)</label>
-                        <config_path>payment/paypalbr_paypalplus/secret_id_sandbox</config_path>
-                        <comment>To generate the Secret ID, access https://developer.paypal.com/developer/applications/ and look for the REST API Apps section.</comment>
-                        <depends>
-                            <field id="mode">1</field>
-                            <field id="active">1</field>
-                        </depends>
-                        <validate>required-entry</validate>
-                    </field>
-                    <field id="client_id_production" translate="label comment" type="password" sortOrder="7000" showInDefault="1" showInWebsite="1" showInStore="1">
-                        <label>Client ID (Live)</label>
-                        <comment>To generate the Client ID, access https://developer.paypal.com/developer/applications/ and look for the REST API Apps section.</comment>
-                        <config_path>payment/paypalbr_paypalplus/client_id_production</config_path>
-                        <depends>
-                            <field id="mode">2</field>
-                            <field id="active">1</field>
-                        </depends>
-                    </field>
-                    <field id="secret_id_production" translate="label comment" type="password" sortOrder="8000" showInDefault="1" showInWebsite="1" showInStore="1">
-                        <label>Secret ID (Live)</label>
-                        <config_path>payment/paypalbr_paypalplus/secret_id_production</config_path>
-                        <comment>To generate the Secret ID, access https://developer.paypal.com/developer/applications/ and look for the REST API Apps section.</comment>
-                        <depends>
-                            <field id="mode">2</field>
-                            <field id="active">1</field>
-                        </depends>
-                    </field>
-                    <field id="new_order_status" translate="label" type="select" sortOrder="9000" showInDefault="1" showInWebsite="1" showInStore="1" canRestore="1">
-                        <label>New Order Status</label>
-                        <source_model>Magento\Sales\Model\Config\Source\Order\Status\Processing</source_model>
-                        <config_path>payment/paypalbr_paypalplus/new_order_status</config_path>
-                    </field>
-                    <field id="reject_order_status" translate="label" type="select" sortOrder="10000" showInDefault="0" showInWebsite="0" showInStore="1" canRestore="1">
-                        <label>Reject Order Status</label>
-                        <source_model>PayPalBR\PayPal\Model\Config\Source\Review</source_model>
-                        <config_path>payment/paypalbr_paypalplus/reject_order_status</config_path>
-                    </field>
-                    <field id="review_order_status" translate="label" type="select" sortOrder="11000" showInDefault="0" showInWebsite="0" showInStore="1" canRestore="1">
-                        <label>Review Order Status</label>
-                        <source_model>PayPalBR\PayPal\Model\Config\Source\Review</source_model>
-                        <config_path>payment/paypalbr_paypalplus/review_order_status</config_path>
-                    </field>
-                    <field id="sort_order" translate="label" type="text" sortOrder="12000" showInDefault="1" showInWebsite="1" showInStore="1">
-                        <label>Checkout sequence</label>
-                        <config_path>payment/paypalbr_paypalplus/sort_order</config_path>
-                    </field>
-                    <field id="depuration_mode" translate="label comment tooltip" type="select" sortOrder="13000" showInDefault="1" showInWebsite="1" showInStore="1">
-                        <label>Depuration Mode</label>
-                        <config_path>payment/paypalbr_paypalplus/depuration_mode</config_path>
-                        <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
-                        <comment>The logs will be saved at: var/log/</comment>
-                        <tooltip>Enable this mode to debug the application.</tooltip>
-                    </field>
-                    <field id="iframe_height_active" translate="label" type="select" sortOrder="15000" showInDefault="1" showInWebsite="1" showInStore="1">
-                        <label>Enable fixed form height</label>
-                        <config_path>payment/paypalbr_paypalplus/iframe_height_active</config_path>
-                        <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
-                    </field>
-                    <field id="iframe_height" translate="label comment" type="text" sortOrder="16000" showInDefault="1" showInWebsite="1" showInStore="1">
-                        <label>Form height</label>
-                        <config_path>payment/paypalbr_paypalplus/iframe_height</config_path>
-                        <comment>Height in pixel ex: 500</comment>
-                        <depends>
-                            <field id="iframe_height_active">1</field>
-                        </depends>
-                    </field>
-
-                    <group id="paypalbr_cost_to_buyer" translate="label" showInDefault="1" showInWebsite="1" showInStore="1" sortOrder="17000">
-                        <label>Cost to Buyer</label>
-                        <field id="active" translate="label" type="select" sortOrder="10" showInDefault="1" showInWebsite="1" showInStore="1">
-                            <label>Enable this Solution</label>
-                            <config_path>payment/paypalbr_paypalplus/cost_to_buyer_active</config_path>
-                            <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
-                            <comment>Para que essa opção funcione configure sua conta PayPal para aceitar parcelamentos.</comment>
-                            <tooltip>Caso tenha duvidas sobre como habilitar o parcelamento, entre em contato com o PayPal através do 0800 047 4482.</tooltip>
-                        </field>
-                        <field id="has_discount" translate="label" type="select" sortOrder="20" showInDefault="1" showInWebsite="1" showInStore="1">
-                            <label>Has cash discount</label>
-                            <config_path>payment/paypalbr_paypalplus/cost_to_buyer_has_discount</config_path>
-                            <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
-                            <comment>Desconto para pagamento à vista informado na conta PayPal do lojista.</comment>
-                            <depends>
-                                <field id="active">1</field>
-                            </depends>
-                        </field>
-                        <field id="discount" translate="label" type="text" sortOrder="30" showInDefault="1" showInWebsite="1" showInStore="1">
-                            <label>Discount</label>
-                            <config_path>payment/paypalbr_paypalplus/cost_to_buyer_discount</config_path>
-                            <comment>Valor (%) informado na conta PayPal do lojista.</comment>
-                            <depends>
-                                <field id="active">1</field>
-                                <field id="has_discount">1</field>
-                            </depends>
-                        </field>
-                        <field id="qty_installments" translate="label" type="select" sortOrder="40" showInDefault="1" showInWebsite="1" showInStore="1">
-                            <label>Qty Installments</label>
-                            <source_model>PayPalBR\PayPal\Model\Config\Source\QtyInstallment</source_model>
-                            <config_path>payment/paypalbr_paypalplus/cost_to_buyer_qty_installments</config_path>
-                            <comment>Mínimo de 2 parcelas; máximo de 12 parcelas.</comment>
-                            <depends>
-                                <field id="active">1</field>
-                            </depends>
-                        </field>
-                        <field id="minimal_installment" translate="label" type="text" sortOrder="50" showInDefault="1" showInWebsite="1" showInStore="1">
-                            <label>Minimal Installment</label>
-                            <config_path>payment/paypalbr_paypalplus/cost_to_buyer_minimal_installment</config_path>
-                            <comment>Valor mínimo aceito pelo PayPal é de R$10,00. Este valor pode ser alterado para quantias maiores.</comment>
-                            <depends>
-                                <field id="active">1</field>
-                            </depends>
-                        </field>
-                        <field id="installment_2" translate="label" type="text" sortOrder="60" showInDefault="1" showInWebsite="1" showInStore="1">
-                            <label>Cost to 2nd Installment</label>
-                            <config_path>payment/paypalbr_paypalplus/cost_to_buyer_installment_2</config_path>
-                            <tooltip>Formato x.xx</tooltip>
-                            <depends>
-                                <field id="active">1</field>
-                            </depends>
-                        </field>
-                        <field id="installment_3" translate="label" type="text" sortOrder="70" showInDefault="1" showInWebsite="1" showInStore="1">
-                            <label>Cost to 3rd Installment</label>
-                            <config_path>payment/paypalbr_paypalplus/cost_to_buyer_installment_3</config_path>
-                            <tooltip>Formato x.xx</tooltip>
-                            <depends>
-                                <field id="active">1</field>
-                            </depends>
-                        </field>
-                        <field id="installment_4" translate="label" type="text" sortOrder="80" showInDefault="1" showInWebsite="1" showInStore="1">
-                            <label>Cost to 4th Installment</label>
-                            <config_path>payment/paypalbr_paypalplus/cost_to_buyer_installment_4</config_path>
-                            <tooltip>Formato x.xx</tooltip>
-                            <depends>
-                                <field id="active">1</field>
-                            </depends>
-                        </field>
-                        <field id="installment_5" translate="label" type="text" sortOrder="90" showInDefault="1" showInWebsite="1" showInStore="1">
-                            <label>Cost to 5th Installment</label>
-                            <config_path>payment/paypalbr_paypalplus/cost_to_buyer_installment_5</config_path>
-                            <tooltip>Formato x.xx</tooltip>
-                            <depends>
-                                <field id="active">1</field>
-                            </depends>
-                        </field>
-                        <field id="installment_6" translate="label" type="text" sortOrder="100" showInDefault="1" showInWebsite="1" showInStore="1">
-                            <label>Cost to 6th Installment</label>
-                            <config_path>payment/paypalbr_paypalplus/cost_to_buyer_installment_6</config_path>
-                            <tooltip>Formato x.xx</tooltip>
-                            <depends>
-                                <field id="active">1</field>
-                            </depends>
-                        </field>
-                        <field id="installment_7" translate="label" type="text" sortOrder="110" showInDefault="1" showInWebsite="1" showInStore="1">
-                            <label>Cost to 7th Installment</label>
-                            <config_path>payment/paypalbr_paypalplus/cost_to_buyer_installment_7</config_path>
-                            <tooltip>Formato x.xx</tooltip>
-                            <depends>
-                                <field id="active">1</field>
-                            </depends>
-                        </field>
-                        <field id="installment_8" translate="label" type="text" sortOrder="120" showInDefault="1" showInWebsite="1" showInStore="1">
-                            <label>Cost to 8th Installment</label>
-                            <config_path>payment/paypalbr_paypalplus/cost_to_buyer_installment_8</config_path>
-                            <tooltip>Formato x.xx</tooltip>
-                            <depends>
-                                <field id="active">1</field>
-                            </depends>
-                        </field>
-                        <field id="installment_9" translate="label" type="text" sortOrder="130" showInDefault="1" showInWebsite="1" showInStore="1">
-                            <label>Cost to 9th Installment</label>
-                            <config_path>payment/paypalbr_paypalplus/cost_to_buyer_installment_9</config_path>
-                            <tooltip>Formato x.xx</tooltip>
-                            <depends>
-                                <field id="active">1</field>
-                            </depends>
-                        </field>
-                        <field id="installment_10" translate="label" type="text" sortOrder="140" showInDefault="1" showInWebsite="1" showInStore="1">
-                            <label>Cost to 10th Installment</label>
-                            <config_path>payment/paypalbr_paypalplus/cost_to_buyer_installment_10</config_path>
-                            <tooltip>Formato x.xx</tooltip>
-                            <depends>
-                                <field id="active">1</field>
-                            </depends>
-                        </field>
-                        <field id="installment_11" translate="label" type="text" sortOrder="150" showInDefault="1" showInWebsite="1" showInStore="1">
-                            <label>Cost to 11th Installment</label>
-                            <config_path>payment/paypalbr_paypalplus/cost_to_buyer_installment_11</config_path>
-                            <tooltip>Formato x.xx</tooltip>
-                            <depends>
-                                <field id="active">1</field>
-                            </depends>
-                        </field>
-                        <field id="installment_12" translate="label" type="text" sortOrder="160" showInDefault="1" showInWebsite="1" showInStore="1">
-                            <label>Cost to 12th Installment</label>
-                            <config_path>payment/paypalbr_paypalplus/cost_to_buyer_installment_12</config_path>
-                            <tooltip>Formato x.xx</tooltip>
-                            <depends>
-                                <field id="active">1</field>
-                            </depends>
-                        </field>
-                        <field id="heading_installments" translate="label" type="text" sortOrder="170" showInDefault="1" showInWebsite="1" showInStore="1">
-                            <label>Personalization</label>
-                            <frontend_model>Magento\Config\Block\System\Config\Form\Field\Heading</frontend_model>
-                            <depends>
-                                <field id="active">1</field>
-                            </depends>
-                        </field>
-                        <field id="installment_text" translate="label" type="text" sortOrder="180" showInDefault="1" showInWebsite="1" showInStore="1">
-                            <label>Exibition Name</label>
-                            <config_path>payment/paypalbr_paypalplus/cost_to_buyer_installment_text</config_path>
-                            <tooltip>Valor Padrão - Juros</tooltip>
-                            <comment>Texto que será exibido ao cliente no checkout.</comment>
-                            <depends>
-                                <field id="active">1</field>
-                            </depends>
-                        </field>
-                    </group>
-                </group>
-
-                <group id="paypalbr_expresscheckout" translate="label comment" type="text" showInDefault="1" showInWebsite="1" showInStore="1">
-                    <label>PayPal Smart Payment Button</label>
-                    <comment>Traditional PayPal solution where your customer pay using his PayPal account or creates one on the purchase flow. Now your customer does not leave your website to complete the payment, all the purchase process happens on the same page with all PayPal protection and security.</comment>
+                <group id="paypal_bazil" translate="label comment" type="text" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>PayPal Brazil</label>
+                    <comment>The experience of an unbranded checkout processed with PayPal security. The user makes the payment directly on your website. You can choose paying using your credit card or your PayPal account.</comment>
                     <fieldset_css>complex paypalexpresscheckout-section</fieldset_css>
                     <frontend_model>Magento\Paypal\Block\Adminhtml\System\Config\Fieldset\Payment</frontend_model>
                     <attribute type="activity_path">payment/paypalbr_expresscheckout/active</attribute>
                     <attribute type="displayIn">recommended_solutions</attribute>
 
-
-                    <group id="paypalbr_login_paypal" translate="label" showInDefault="1" showInWebsite="1" showInStore="1" sortOrder="1">
-                        <label>Login with PayPal</label>
-                        <field id="active_login" translate="label" type="select" sortOrder="0" showInDefault="1" showInWebsite="1" showInStore="1">
-                            <label>Enable this Solution</label>
-                            <config_path>payment/paypalbr_expresscheckout/active_login</config_path>
-                            <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
-                            <comment>When activated, the customer will be able to use his PayPal account to login and pay faster</comment>
-                        </field>
-                    </group>
-
-                    <group id="paypalbr_login_paypal_minicart" translate="label" showInDefault="1" showInWebsite="1" showInStore="1" sortOrder="1">
-                        <label>PayPal Shortcut</label>
-                        <field id="active_login_minicart" translate="label" type="select" sortOrder="0" showInDefault="1" showInWebsite="1" showInStore="1">
-                            <label>Enable this Solution</label>
-                            <config_path>payment/paypalbr_expresscheckout/active_login_minicart</config_path>
-                            <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
-                            <comment>When activated, the customer will be able to make the payment directly from the cart</comment>
-                        </field>
-                    </group>
-
-                    <group id="paypalbr_login_paypal_button" translate="label" showInDefault="1" showInWebsite="1" showInStore="1" sortOrder="1">
-                        <label>Button settings</label>
-                        <field id="active_login_button" translate="label comment" type="select" sortOrder="0" showInDefault="1" showInWebsite="1" showInStore="1">
-                            <label>Text of button</label>
-                            <config_path>payment/paypalbr_paypalplus/button_login_button</config_path>
-                            <source_model>PayPalBR\PayPal\Model\Config\Source\Button</source_model>
-                            <comment>Use this to customize the text of the button.</comment>
-                        </field>
-
-                        <field id="active_login_shape" translate="label comment" type="select" sortOrder="0" showInDefault="1" showInWebsite="1" showInStore="1">
-                            <label>Format of button</label>
-                            <config_path>payment/paypalbr_paypalplus/button_login_shape</config_path>
-                            <source_model>PayPalBR\PayPal\Model\Config\Source\Shape</source_model>
-                            <comment>Use this to customize the format of button.</comment>
-                        </field>
-
-                        <field id="active_login_color" translate="label comment" type="select" sortOrder="0" showInDefault="1" showInWebsite="1" showInStore="1">
-                            <label>Color of button</label>
-                            <config_path>payment/paypalbr_paypalplus/button_login_color</config_path>
-                            <source_model>PayPalBR\PayPal\Model\Config\Source\Color</source_model>
-                            <comment>Use this to customize the color of button.</comment>
-                        </field>
-
-                    </group>
-
-                    <field id="active" translate="label" type="select" sortOrder="0" showInDefault="1" showInWebsite="1" showInStore="1">
-                        <label>Enable this Solution</label>
-                        <config_path>payment/paypalbr_expresscheckout/active</config_path>
-                        <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
-                    </field>
-                    <field id="exhibition_name" translate="label comment tooltip" type="text" sortOrder="0" showInDefault="1" showInWebsite="1" showInStore="1">
-                        <label>Exhibition Name</label>
-                        <config_path>payment/paypalbr_expresscheckout/exhibition_name</config_path>
-                        <comment>It's going to be display on checkout: PayPal 'Exhibition Name'</comment>
-                        <tooltip>By default, the PayPal Express Checkout solution is displayed as a 'PayPal'. Use this option to set additional text, such as installments or discounts.</tooltip>
-                    </field>
                     <field id="mode" translate="label comment" type="select" sortOrder="0" showInDefault="1" showInWebsite="1" showInStore="1">
                         <label>Mode</label>
-                        <config_path>payment/paypalbr_expresscheckout/mode</config_path>
+                        <config_path>payment/paypalbr/mode</config_path>
                         <source_model>PayPalBR\PayPal\Model\Config\Source\Mode</source_model>
                         <comment>Use this option to switch between Sandbox and Live modes. Sandbox is used for testing and Live for actual purchases.</comment>
                     </field>
+
+                    <field id="get_credentials" translate="label" type="text" sortOrder="0" showInDefault="1" showInWebsite="1" showInStore="1">
+                        <frontend_model>PayPalBR\PayPal\Block\Adminhtml\Form\Field\Credentials</frontend_model>
+                        <depends>
+                            <field id="mode">1</field>
+                        </depends>
+                    </field>
+
                     <field id="client_id_sandbox" translate="label comment" type="password" sortOrder="0" showInDefault="1" showInWebsite="1" showInStore="1">
                         <label>Client ID (Sandbox)</label>
-                        <config_path>payment/paypalbr_expresscheckout/client_id_sandbox</config_path>
+                        <config_path>payment/paypalbr/client_id_sandbox</config_path>
                         <comment>To generate the Client ID, access https://developer.paypal.com/developer/applications/ and look for the REST API Apps section.</comment>
                         <depends>
                             <field id="mode">1</field>
-                            <field id="active">1</field>
                         </depends>
-                        <validate>required-entry</validate>
                     </field>
                     <field id="secret_id_sandbox" translate="label comment" type="password" sortOrder="0" showInDefault="1" showInWebsite="1" showInStore="1">
                         <label>Secret ID (Sandbox)</label>
-                        <config_path>payment/paypalbr_expresscheckout/secret_id_sandbox</config_path>
+                        <config_path>payment/paypalbr/secret_id_sandbox</config_path>
                         <comment>To generate the Secret ID, access https://developer.paypal.com/developer/applications/ and look for the REST API Apps section.</comment>
                         <depends>
                             <field id="mode">1</field>
-                            <field id="active">1</field>
                         </depends>
-                        <validate>required-entry</validate>
                     </field>
                     <field id="client_id_production" translate="label comment" type="password" sortOrder="0" showInDefault="1" showInWebsite="1" showInStore="1">
                         <label>Client ID (Live)</label>
                         <comment>To generate the Client ID, access https://developer.paypal.com/developer/applications/ and look for the REST API Apps section.</comment>
-                        <config_path>payment/paypalbr_expresscheckout/client_id_production</config_path>
+                        <config_path>payment/paypalbr/client_id_production</config_path>
                         <depends>
                             <field id="mode">2</field>
-                            <field id="active">1</field>
                         </depends>
                     </field>
                     <field id="secret_id_production" translate="label comment" type="password" sortOrder="0" showInDefault="1" showInWebsite="1" showInStore="1">
                         <label>Secret ID (Live)</label>
-                        <config_path>payment/paypalbr_expresscheckout/secret_id_production</config_path>
+                        <config_path>payment/paypalbr/secret_id_production</config_path>
                         <comment>To generate the Secret ID, access https://developer.paypal.com/developer/applications/ and look for the REST API Apps section.</comment>
                         <depends>
                             <field id="mode">2</field>
-                            <field id="active">1</field>
                         </depends>
-                        <validate>required-entry</validate>
                     </field>
-                    <field id="new_order_status" translate="label" type="select" sortOrder="0" showInDefault="1" showInWebsite="1" showInStore="1" canRestore="1">
-                        <label>New Order Status</label>
-                        <source_model>Magento\Sales\Model\Config\Source\Order\Status\Processing</source_model>
-                        <config_path>payment/paypalbr_expresscheckout/new_order_status</config_path>
-                    </field>
-                    <field id="reject_order_status" translate="label" type="select" sortOrder="0" showInDefault="0" showInWebsite="0" showInStore="1" canRestore="1">
-                        <label>Reject Order Status</label>
-                        <source_model>PayPalBR\PayPal\Model\Config\Source\Review</source_model>
-                        <config_path>payment/paypalbr_expresscheckout/reject_order_status</config_path>
-                    </field>
-                    <field id="review_order_status" translate="label" type="select" sortOrder="0" showInDefault="0" showInWebsite="0" showInStore="1" canRestore="1">
-                        <label>Review Order Status</label>
-                        <source_model>PayPalBR\PayPal\Model\Config\Source\Review</source_model>
-                        <config_path>payment/paypalbr_expresscheckout/review_order_status</config_path>
-                    </field>
-                    <field id="sort_order" translate="label" type="text" sortOrder="0" showInDefault="1" showInWebsite="1" showInStore="1">
-                        <label>Checkout sequence</label>
-                        <config_path>payment/paypalbr_expresscheckout/sort_order</config_path>
-                    </field>
-                    <field id="depuration_mode" translate="label comment tooltip" type="select" sortOrder="0" showInDefault="1" showInWebsite="1" showInStore="1">
-                        <label>Depuration Mode</label>
-                        <config_path>payment/paypalbr_expresscheckout/depuration_mode</config_path>
-                        <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
-                        <comment>The logs will be saved at: var/log/</comment>
-                        <tooltip>Enable this mode to debug the application.</tooltip>
-                    </field>
+
+                    <group id="paypalbr_expresscheckout" translate="label comment" type="text" showInDefault="1" showInWebsite="1" showInStore="1">
+                        <label>PayPal Smart Payment Button</label>
+                        <comment>Traditional PayPal solution where your customer pay using his PayPal account or creates one on the purchase flow. Now your customer does not leave your website to complete the payment, all the purchase process happens on the same page with all PayPal protection and security.</comment>
+
+                        <group id="paypalbr_login_paypal_button" translate="label" showInDefault="1" showInWebsite="1" showInStore="1" sortOrder="1">
+                            <label>Button settings</label>
+                            <field id="active_login_button" translate="label comment" type="select" sortOrder="0" showInDefault="1" showInWebsite="1" showInStore="1">
+                                <label>Text of button</label>
+                                <config_path>payment/paypalbr_expresscheckout/button_login_button</config_path>
+                                <source_model>PayPalBR\PayPal\Model\Config\Source\Button</source_model>
+                                <comment>Use this to customize the text of the button.</comment>
+                            </field>
+
+                            <field id="active_login_shape" translate="label comment" type="select" sortOrder="0" showInDefault="1" showInWebsite="1" showInStore="1">
+                                <label>Format of button</label>
+                                <config_path>payment/paypalbr_expresscheckout/button_login_shape</config_path>
+                                <source_model>PayPalBR\PayPal\Model\Config\Source\Shape</source_model>
+                                <comment>Use this to customize the format of button.</comment>
+                            </field>
+
+                            <field id="active_login_color" translate="label comment" type="select" sortOrder="0" showInDefault="1" showInWebsite="1" showInStore="1">
+                                <label>Color of button</label>
+                                <config_path>payment/paypalbr_expresscheckout/button_login_color</config_path>
+                                <source_model>PayPalBR\PayPal\Model\Config\Source\Color</source_model>
+                                <comment>Use this to customize the color of button.</comment>
+                            </field>
+
+                        </group>
+
+                        <field id="active" translate="label" type="select" sortOrder="0" showInDefault="1" showInWebsite="1" showInStore="1">
+                            <label>Enable this Solution</label>
+                            <config_path>payment/paypalbr_expresscheckout/active</config_path>
+                            <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                        </field>
+                        <field id="exhibition_name" translate="label comment tooltip" type="text" sortOrder="0" showInDefault="1" showInWebsite="1" showInStore="1">
+                            <label>Exhibition Name</label>
+                            <config_path>payment/paypalbr_expresscheckout/exhibition_name</config_path>
+                            <comment>It's going to be display on checkout: PayPal 'Exhibition Name'</comment>
+                            <tooltip>By default, the PayPal Express Checkout solution is displayed as a 'PayPal'. Use this option to set additional text, such as installments or discounts.</tooltip>
+                        </field>
+                    </group>
+
+                    <group id="paypalbr_bcdc" translate="label comment" type="text" showInDefault="1" showInWebsite="1" showInStore="1">
+                        <label>PayPal BC/DC</label>
+                        <comment>The experience of an unbranded checkout processed with PayPal security. The user makes the payment directly on your website using only his credit card, without the need of a PayPal account.</comment>
+                        <field id="active" translate="label" type="select" sortOrder="2000" showInDefault="1" showInWebsite="1" showInStore="1">
+                            <label>Enable this Solution</label>
+                            <config_path>payment/paypalbr_bcdc/active</config_path>
+                            <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                        </field>
+                        <field id="exhibition_name" translate="label comment tooltip" type="text" sortOrder="3000" showInDefault="1" showInWebsite="1" showInStore="1">
+                            <label>Exhibition Name</label>
+                            <config_path>payment/paypalbr_bcdc/exhibition_name</config_path>
+                            <comment>It's going to be display on checkout: Credit Card 'Exhibition Name'</comment>
+                            <tooltip>By default, the PayPal Plus solution is displayed as a 'Credit Card'. Use this option to set additional text, such as installments or discounts.</tooltip>
+                        </field>
+                    </group>
                 </group>
 
             </group>

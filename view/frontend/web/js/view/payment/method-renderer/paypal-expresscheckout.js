@@ -2,33 +2,22 @@ define([
     'PayPalBR_PayPal/js/view/payment/default-paypal-ec',
     'Magento_Paypal/js/model/iframe',
     'jquery',
-    'Magento_Checkout/js/model/quote',
-    'mage/storage',
-    'Magento_Checkout/js/model/error-processor',
-    'Magento_Checkout/js/model/full-screen-loader',
-    'PayPalBR_PayPal/js/model/full-screen-loader-paypal',
+    'ko',
     'Magento_Checkout/js/checkout-data',
     'Magento_Checkout/js/action/select-payment-method',
-    'Magento_Checkout/js/model/postcode-validator',
-    'ko',
-    'mage/url',
-    'pplec',
+    'Magento_Checkout/js/model/quote',
+    'Magento_Catalog/js/price-utils',
     'mage/translate'
 ], function (
         Component,
         iframe,
         $,
-        quote,
-        storage,
-        errorProcesor,
-        fullScreenLoader,
-        fullScreenLoaderPayPal,
+        ko,
         checkoutData,
         selectPaymentMethodAction,
-        postcodeValidator,
-        ko,
-        urlBuilder,
-        ppec
+        quote,
+        priceUtils,
+        $t
         ) {
     'use strict';
 
@@ -36,20 +25,10 @@ define([
         defaults: {
             template: 'PayPalBR_PayPal/payment/paypal-expresscheckout',
             paymentReady: true,
-            paypalPayerId: '',
-            payerIdCustomer: '',
-            token: '',
-            term: '',
             isPaymentReady: false,
-            CREATE_URL: '',
+            formattedTotalLabel: ko.observable('')
         },
-        breakError: false,
-        errorProcessor: errorProcesor,
-        customerInfo: quote.billingAddress._latestValue,
-        paymentApiServiceUrl: 'paypalplus/payment',
         isPaymentReady: false,
-        defaultQuote: quote,
-        shippingValue: quote.totals().base_shipping_amount,
 
         getNamePay: function () {
             return "PayPal " + window.checkoutConfig.payment.paypalbr_expresscheckout.exibitionName;
@@ -59,14 +38,14 @@ define([
             return window.checkoutConfig.payment.paypalbr_expresscheckout.active;
         },
 
-        paypalObject: {},
-
         initialize: function () {
-
             this._super();
-            // this._render();
-            var self = this;
 
+            quote.totals.subscribe(() => {
+                const total = quote.totals().grand_total;
+                const formattedPrice = priceUtils.formatPrice(total, quote.getPriceFormat());
+                this.formattedTotalLabel($t('Order Total: ') + formattedPrice);
+            });
         },
 
         getUrlMagento: function (argument) {
@@ -96,22 +75,9 @@ define([
             var colorButton = window.checkoutConfig.payment.paypalbr_expresscheckout.color;
             var shapeButton = window.checkoutConfig.payment.paypalbr_expresscheckout.shape;
             var buttonButton = window.checkoutConfig.payment.paypalbr_expresscheckout.button;
-            var mode = window.checkoutConfig.payment.paypalbr_expresscheckout.mode;
-            var locale = window.checkoutConfig.payment.paypalbr_expresscheckout.locale;
 
-            // fullScreenLoaderPayPal.startLoader();
-
-            self.CREATE_URL = urlBuilder.build('paypalplus/payment/expresscheckout');
-
-            this.paypalObject = paypal.Button.render({
-
-                env: mode, // sandbox | production
-                locale: locale,
-
-                // Show the buyer a 'Pay Now' button in the checkout flow
-                // commit: true,
-
-
+            paypal.Buttons({
+                fundingSource: paypal.FUNDING.PAYPAL,
                 style: {
                     label: buttonButton,
                     size: 'responsive', // small | medium | large | responsive
@@ -119,85 +85,63 @@ define([
                     color: colorButton   // gold | blue | silver | black
                 },
 
-                // payment() is called when the button is clicked
-                payment: function (data, actions) {
+                createOrder: function(data, actions) {
+                    return fetch('/expresscheckout/payment/paypal/', {
+                        method: 'post'
+                    }).then(function(res) {
+                        return res.json();
+                    }).then(function(orderData) {
+                        if (!orderData.id) {
+                            var jsonObj = JSON.parse(orderData.message);
 
-                    // Make a call to your server to set up the payment
-                    return paypal.request.post(self.CREATE_URL)
-                            .then(function (res) {
-                                var response;
-                                jQuery.ajax({
-                                    url: self.CREATE_URL,
-                                    type: "POST",
-                                    dataType: 'json',
-                                    async: false,
-                                }).done(function (data) {
-                                    // console.log(data);
-                                    // console.log(data.id)
-                                    response = data.id;
-                                });
-                                return response;
+                            messageList.addErrorMessage({
+                                message: `${jsonObj.name}: ${jsonObj.message}`
                             });
+
+                            return null;
+                        }
+                        self.orderData = orderData;
+                        return orderData.id;
+                    });
                 },
-                // onAuthorize() is called when the buyer approves the payment
-                onAuthorize: function (data, actions) {
 
-                    $('#paypalbr_expresscheckout_payId').val(data.paymentID);
-                    $('#paypalbr_expresscheckout_payerId').val(data.payerID);
-                    $('#paypalbr_v_token').val(data.paymentToken);
+                onApprove: function(data, actions) {
+                    return fetch('/expresscheckout/transaction/approve/', {
+                        method: 'post',
+                    }).then(function(res) {
+                        return res.json();
+                    }).then(function(orderData) {
+                        var errorDetail = Array.isArray(orderData.details) && orderData.details[0];
 
-                    return actions.payment.get().then(function (data) {
-                        var term;
-                        if (typeof data.credit_financing_offered === 'undefined') {
-                            term = '1';
-                            term = term;
-                        } else {
-                            term = data.credit_financing_offered.term;
+                        if (errorDetail && errorDetail.issue === 'INSTRUMENT_DECLINED') {
+                            return actions.restart();
                         }
 
-                        $('#paypalbr_expresscheckout_term').val(term);
+                        if (errorDetail) {
+                            var msg = 'Sorry, your transaction could not be processed.';
+                            if (errorDetail.description) msg += '\n\n' + errorDetail.description;
+                            if (orderData.debug_id) msg += ' (' + orderData.debug_id + ')';
+                            return alert(msg);
+                        }
+
                         self.placePendingOrder();
                     });
-
                 },
-                onError: function (err) {
-                    var pos = err.message.indexOf("}");
-                    var res = err.message.substring(0, pos).trim();
-                    pos = res.indexOf("{");
-                    res = res.substr(pos).trim();
-                    res = res.replace("{", "").trim();
-                    res = "{" + res + "}";
-                    err = JSON.parse(res);
-
-                    var message;
-                    if(err.message) {
-                        message = err.message;
-                    } else {
-                        message = $.mage.__('An unexpected error occurred, please try again.');
-                    }
-                    alert(message);
-                    location.reload();
+                onCancel: function(data, actions) {
+                    messageList.addErrorMessage({
+                        message: `aborted: payment canceled by the user`
+                    });
+                },
+                onError: function(err) {
+                    console.log(err);
                 }
 
-            }, '#paypal-button-container');
+            }).render('#paypal-button-container');
         },
 
         placePendingOrder: function () {
-            var self = this;
             if (this.placeOrder()) {
                 document.addEventListener('click', iframe.stopEventPropagation, true);
-            }
-        },
-
-        doContinue: function () {
-            var self = this;
-            if (this.validateAddress() !== false) {
-                self.paypalObject.doContinue();
-            } else {
-                var message = {
-                    message: $.mage.__('Please verify shipping address.')
-                };
-                self.messageContainer.addErrorMessage(message);
             }
         },
 
@@ -205,58 +149,11 @@ define([
             return {
                 'method': this.item.method,
                 'additional_data': {
-                    'payId': $('#paypalbr_expresscheckout_payId').val(),
-                    'payerId': $('#paypalbr_expresscheckout_payerId').val(),
-                    'token': $('#paypalbr_expresscheckout_token').val(),
-                    'term': $('#paypalbr_expresscheckout_term').val(),
+                    'orderData': JSON.stringify(this.orderData)
                 }
             };
         },
 
-        initObservable: function () {
-            this._super()
-                    .observe([
-                        'payId_expresscheckout',
-                        'payerId_expresscheckout',
-                        'token_expresscheckout',
-                        'term_expresscheckout',
-                    ]);
-
-            return this;
-        },
-
-        /**
-         * Validate shipping address.
-         *
-         * @returns {Boolean}
-         */
-        validateAddress: function () {
-
-
-            this.customerData = quote.billingAddress._latestValue;
-            if (!this.customerData.city) {
-                this.customerData = quote.shippingAddress._latestValue;
-            }
-            if (typeof this.customerData.city === 'undefined' || this.customerData.city.length === 0) {
-                return false;
-            }
-
-            if (typeof this.customerData.countryId === 'undefined' || this.customerData.countryId.length === 0) {
-                return false;
-            }
-
-            if (typeof this.customerData.postcode === 'undefined' || this.customerData.postcode.length === 0) {
-                return false;
-            }
-
-            if (typeof this.customerData.street === 'undefined' || this.customerData.street[0].length === 0) {
-                return false;
-            }
-            if (typeof this.customerData.region === 'undefined' || this.customerData.region.length === 0) {
-                return false;
-            }
-            return true;
-        }
     });
 });
 

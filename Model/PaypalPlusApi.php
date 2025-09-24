@@ -34,12 +34,7 @@ use PayPal\Api\Details;
 class PaypalPlusApi extends PaypalCommonApi
 {
 
-    /**
-     * Contains the config provider for Magento 2 back-end configurations
-     *
-     * @var ConfigProvider
-     */
-    protected $configProvider;
+
 
     /**
      * Contains the config ID to be used in PayPal API
@@ -117,7 +112,7 @@ class PaypalPlusApi extends PaypalCommonApi
         \Magento\Checkout\Model\Cart $cart,
         \Magento\Customer\Model\Session $customerSession,
         \Magento\Store\Model\StoreManagerInterface $storeManager,
-        \PayPalBR\PayPal\Model\PayPalPlus\ConfigProvider $configProvider,
+        //\PayPalBR\PayPal\Model\PayPalPlus\ConfigProvider $configProvider,
         \Magento\Payment\Model\Cart\SalesModel\Factory $cartSalesModelFactory,
         \Magento\Checkout\Model\Session $checkoutSession,
         \Psr\Log\LoggerInterface $logger,
@@ -139,7 +134,7 @@ class PaypalPlusApi extends PaypalCommonApi
             $logger
         );
         $this->storeManager = $storeManager;
-        $this->configProvider = $configProvider;
+        //$this->configProvider = $configProvider;
         $this->checkoutSession = $checkoutSession;
         $this->productMetadata = $productMetadata;
         $this->cookieManager = $cookieManager;
@@ -159,9 +154,9 @@ class PaypalPlusApi extends PaypalCommonApi
     protected function getApiContext()
     {
 
-        $debug = $this->configProvider->isDebugEnabled();
-        $this->configId = $this->configProvider->getClientId();
-        $this->secretId = $this->configProvider->getSecretId();
+        //$debug = $this->configProvider->isDebugEnabled();
+        //$this->configId = $this->configProvider->getClientId();
+        //$this->secretId = $this->configProvider->getSecretId();
         $edition = $this->productMetadata->getEdition();
         $logDir = $this->dir->getPath('log');
 
@@ -172,7 +167,7 @@ class PaypalPlusApi extends PaypalCommonApi
         }
         $sdkConfig = array(
             'http.headers.PayPal-Partner-Attribution-Id' => 'MagentoBrazil_Ecom_PPPlus2',
-            'mode' => $this->configProvider->isModeSandbox() ? 'sandbox' : 'live',
+            //'mode' => $this->configProvider->isModeSandbox() ? 'sandbox' : 'live',
             'log.LogEnabled' => $debug,
             'log.FileName' => $logDir . '/paypal-plus-' . date('Y-m-d') . '.log',
             'cache.FileName' => $logDir . '/auth.cache',

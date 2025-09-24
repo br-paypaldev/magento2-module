@@ -21,12 +21,13 @@ use PayPalBR\PayPal\Logger\Logger;
 use Psr\Log\LoggerInterface;
 use Magento\Sales\Model\Service\OrderService;
 use Magento\Customer\Model\CustomerFactory;
-use Magento\Customer\Model\SessionFactory;
 use Magento\Customer\Api\CustomerRepositoryInterface;
 use Magento\Sales\Model\Service\InvoiceService;
 use Magento\Sales\Model\Order\Email\Sender\InvoiceSender;
 use Magento\Framework\DB\Transaction;
 use Magento\Framework\Filesystem\DirectoryList;
+use Magento\Sales\Model\Order\Invoice;
+use PayPalBR\PayPal\DatadogLogger\DatadogLogger;
 
 class SalesOrderPlaceAfter implements ObserverInterface
 {
@@ -86,6 +87,11 @@ class SalesOrderPlaceAfter implements ObserverInterface
     protected $loggerHandler;
 
     /**
+     * @var DatadogLogger
+     */
+    protected $datadogLogger;
+
+    /**
      * @param \Magento\Checkout\Model\Session $checkoutSession
      * @param \Psr\Log\LoggerInterface $logger
      * @param Api $api
@@ -95,7 +101,7 @@ class SalesOrderPlaceAfter implements ObserverInterface
         LoggerInterface $logger,
         OrderService $orderService,
         CustomerFactory $customerFactory,
-        SessionFactory $sessionFactory,
+        // SessionFactory $sessionFactory,
         CustomerRepositoryInterface $customerRepository,
         InvoiceService $invoiceService,
         Transaction $transaction,
@@ -111,11 +117,12 @@ class SalesOrderPlaceAfter implements ObserverInterface
         $this->setInvoiceService($invoiceService);
         $this->setInvoiceSender($invoiceSender);
         $this->customerFactory = $customerFactory;
-        $this->sessionFactory = $sessionFactory;
+        // $this->sessionFactory = $sessionFactory;
         $this->customerRepository = $customerRepository;
         $this->dir = $dir;
         $this->customLogger = $customLogger;
         $this->loggerHandler = $loggerHandler;
+        $this->datadogLogger = new DatadogLogger();
     }
 
     /**
@@ -128,33 +135,53 @@ class SalesOrderPlaceAfter implements ObserverInterface
         $order = $event->getOrder();
         $payment = $order->getPayment();
 
-        if ($payment->getMethod() != 'paypalbr_paypalplus') {
+        if (($payment->getMethod() != 'paypalbr_expresscheckout') && ($payment->getMethod() != 'paypalbr_bcdc')) {
             return $this;
         }
 
         $status = $payment->getAdditionalInformation('state_payPal');
 
-
-        $customerSession = $this->sessionFactory->create();
-        if ($customerSession->isLoggedIn()){
-            $r_card = $payment->getAdditionalInformation('remembered_card');
-            $customer = $customerSession->getCustomer();
-            $customer = $this->customerRepository->getById($customer->getId());
-            $customer->getCustomAttribute('remembered_card');
-            $customer->setCustomAttribute('remembered_card', $r_card);
-            $customer = $this->customerRepository->save($customer);
-        }
+        // $customerSession = $this->sessionFactory->create();
+        // if ($customerSession->isLoggedIn()){
+        //     $r_card = $payment->getAdditionalInformation('remembered_card');
+        //     $customer = $customerSession->getCustomer();
+        //     $customer = $this->customerRepository->getById($customer->getId());
+        //     $customer->getCustomAttribute('remembered_card');
+        //     $customer->setCustomAttribute('remembered_card', $r_card);
+        //     $customer = $this->customerRepository->save($customer);
+        // }
 
         if ($order->canCancel() && $status == 'denied') {
             $result = $this->cancelOrder($order);
             $this->logger($result);
+            $this->datadogLogger->log(
+                "info",
+                ['result' => $result],
+                [
+                    'environment' => 'development',
+                    'api_version' => 'v2',
+                    'integration_type' => 'webhook',
+                    'message_custom' => "PayPal V2 - Cancel Order",
+                ]
+            );
         }
 
-        if ($order->getPayment()->getLastTransId() &&
-            ( $order->canInvoice() && $status == 'approved' || $order->canInvoice() && $status == 'completed' )
+        if (
+            $order->getPayment()->getLastTransId() &&
+            ($order->canInvoice() && $status == 'APPROVED' || $order->canInvoice() && $status == 'COMPLETED')
         ) {
             $result = $this->createInvoice($order);
             $this->logger($result);
+            $this->datadogLogger->log(
+                "info",
+                ['result' => $result],
+                [
+                    'environment' => 'development',
+                    'api_version' => 'v2',
+                    'integration_type' => 'webhook',
+                    'message_custom' => "PayPal V2 - Create Invoice",
+                ]
+            );
         }
 
         return $this;
@@ -175,13 +202,27 @@ class SalesOrderPlaceAfter implements ObserverInterface
                 $order->getBaseGrandTotal(),
                 true
             );
-        $order->save();
         // notify customer
         if ($order->canInvoice()) {
             $invoice = $this->invoiceService->prepareInvoice($order);
-            $invoice->getOrder()->setFee(2);
-            $invoice->getOrder()->setBaseFee(2);
+            $invoice->setRequestedCaptureCase(Invoice::CAPTURE_ONLINE);
+            $invoice->setState(Invoice::STATE_PAID);
+            $invoice->setBaseGrandTotal($order->getBaseGrandTotal());
             $invoice->register();
+            $invoice->getOrder()->setIsInProcess(true);
+            $invoice->setTransactionId($order->getPayment()->getAdditionalInformation('pay_id'));
+            $invoice->pay();
+
+            $transactionSave = $this->transaction
+                ->addObject($invoice)
+                ->addObject($order);
+
+            $order->setTotalPaid($order->getTotalPaid());
+            $order->setBaseTotalPaid($order->getBaseTotalPaid());
+
+            $order->save();
+
+            $transactionSave->save();
             $invoice->save();
             $transactionSave = $this->transaction->addObject(
                 $invoice
@@ -219,7 +260,8 @@ class SalesOrderPlaceAfter implements ObserverInterface
     /**
      * @param mixed $data
      */
-    protected function logger($data){
+    protected function logger($data)
+    {
         $this->loggerHandler->setFileName('paypal-SalesOrderPlaceAfter-' . date('Y-m-d'));
         $this->customLogger->info('Debug Initial SalesOrderPlaceAfter');
         $this->customLogger->info($data);

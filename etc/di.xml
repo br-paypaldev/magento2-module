@@ -3,73 +3,8 @@
     <preference for="PayPalBR\PayPal\Api\WebHookManagementInterface" type="PayPalBR\PayPal\Model\WebHookManagement"/>
     <preference for="PayPalBR\PayPal\Api\EventsInterface" type="PayPalBR\PayPal\Model\Webhook\Event"/>
     <preference for="PayPalBR\PayPal\Gateway\Transaction\Base\Config\ConfigInterface" type="PayPalBR\PayPal\Gateway\Transaction\Base\Config\Config"/>
-    <preference for="PayPalBR\PayPal\Api\CartItemRequestDataProviderInterface" type="PayPalBR\PayPal\Gateway\Transaction\Base\ResourceGateway\Request\CartItemRequestDataProvider"/>
     <preference for="PayPalBR\PayPal\Api\PayPalPlusRequestDataProviderInterface" type="PayPalBR\PayPal\Gateway\Transaction\PayPalPlus\ResourceGateway\Create\RequestDataProvider"/>
-    <preference for="PayPalBR\PayPal\Api\LoginPayPalCreateManagementInterface" type="PayPalBR\PayPal\Model\LoginPayPalManagementApi"/>
-    <preference for="Magento\Checkout\Model\PaymentInformationManagement" type="PayPalBR\PayPal\Model\PaymentInformationManagement"/>
-    <preference for="Magento\Checkout\Model\GuestPaymentInformationManagement" type="PayPalBR\PayPal\Model\GuestPaymentInformationManagement"/>
     <preference for="Magento\Sales\Block\Order\Totals" type="PayPalBR\PayPal\Block\Order\Totals"/>
-
-    <!-- PayPalPlus Adapter -->
-    <virtualType name="PayPalPlusRemoteMethodAdapter" type="Magento\Payment\Model\Method\Adapter">
-        <arguments>
-            <argument name="code" xsi:type="const">PayPalBR\PayPal\Model\PayPalPlus::PAYMENT_METHOD_PAYPALPLUS_CODE</argument>
-            <argument name="valueHandlerPool" xsi:type="object">PayPalPlusValueHandlerPool</argument>
-            <argument name="commandPool" xsi:type="object">PayPalPlusCommandPool</argument>
-            <argument name="formBlockType" xsi:type="string">Magento\Payment\Block\Form</argument>
-            <argument name="infoBlockType" xsi:type="string">PayPalBR\PayPal\Block\Payment\Info\PayPalPlus</argument>
-        </arguments>
-    </virtualType>
-
-    <!-- Value Handler Pool -->
-    <virtualType name="PayPalPlusValueHandlerPool" type="Magento\Payment\Gateway\Config\ValueHandlerPool">
-        <arguments>
-            <argument name="handlers" xsi:type="array">
-                <item name="default" xsi:type="string">PayPalPlusConfigValueHandler</item>
-            </argument>
-        </arguments>
-    </virtualType>
-
-    <virtualType name="PayPalPlusConfigValueHandler" type="Magento\Payment\Gateway\Config\ConfigValueHandler">
-        <arguments>
-            <argument name="configInterface" xsi:type="object">PayPalPlusConfig</argument>
-        </arguments>
-    </virtualType>
-
-    <virtualType name="PayPalPlusConfig" type="Magento\Payment\Gateway\Config\Config">
-        <arguments>
-            <argument name="methodCode" xsi:type="const">PayPalBR\PayPal\Model\PayPalPlus::PAYMENT_METHOD_PAYPALPLUS_CODE</argument>
-        </arguments>
-    </virtualType>
-    <!-- /Value Handler Pool -->
-
-    <!-- Command Pool -->
-    <virtualType name="PayPalPlusCommandPool" type="Magento\Payment\Gateway\Command\CommandPool">
-        <arguments>
-            <argument name="commands" xsi:type="array">
-                <item name="initialize" xsi:type="string">PayPalBR\PayPal\Gateway\Transaction\Base\Command\InitializeCommand</item>
-                <item name="authorize" xsi:type="string">PayPalPlusAuthorizeCommand</item>
-            </argument>
-        </arguments>
-    </virtualType>
-
-    <virtualType name="PayPalPlusAuthorizeCommand" type="PayPalBR\PayPal\Gateway\Transaction\PayPalPlus\Command\AuthorizeCommand">
-        <arguments>
-            <argument name="requestBuilder" xsi:type="object">PayPalBR\PayPal\Gateway\Transaction\PayPalPlus\ResourceGateway\Create\RequestBuilder</argument>
-            <argument name="responseHandler" xsi:type="object">PayPalPlusAuthorizeCommandResponseHandlerPool</argument>
-            <argument name="validator" xsi:type="object">PayPalBR\PayPal\Gateway\Transaction\PayPalPlus\ResourceGateway\Create\Response\Validator</argument>
-        </arguments>
-    </virtualType>
-
-    <virtualType name="PayPalPlusAuthorizeCommandResponseHandlerPool" type="Magento\Payment\Gateway\Response\HandlerChain">
-        <arguments>
-            <argument name="handlers" xsi:type="array">
-                <item name="general" xsi:type="string">PayPalBR\PayPal\Gateway\Transaction\PayPalPlus\ResourceGateway\Create\Response\GeneralHandler</item>
-            </argument>
-        </arguments>
-    </virtualType>
-    <!-- /Command Pool -->
-    <!-- /PayPalPlus Adapter -->
 
     <!-- PayPalExpressCheckout Adapter -->
     <virtualType name="PayPalExpressCheckoutRemoteMethodAdapter" type="Magento\Payment\Model\Method\Adapter">
@@ -144,4 +79,82 @@
             </argument>
         </arguments>
     </type>
+
+        <!-- PayPalBCDC Adapter -->
+    <virtualType name="PayPalBCDCRemoteMethodAdapter" type="Magento\Payment\Model\Method\Adapter">
+        <arguments>
+            <argument name="code" xsi:type="const">PayPalBR\PayPal\Model\PayPalBCDC::PAYMENT_METHOD_PAYPALBCDC_CODE</argument>
+            <argument name="valueHandlerPool" xsi:type="object">PayPalBCDCValueHandlerPool</argument>
+            <argument name="commandPool" xsi:type="object">PayPalBCDCCommandPool</argument>
+            <argument name="formBlockType" xsi:type="string">Magento\Payment\Block\Form</argument>
+            <argument name="infoBlockType" xsi:type="string">PayPalBR\PayPal\Block\Payment\Info\PayPalBCDC</argument>
+        </arguments>
+    </virtualType>
+
+    <!-- Value Handler Pool -->
+    <virtualType name="PayPalBCDCValueHandlerPool" type="Magento\Payment\Gateway\Config\ValueHandlerPool">
+        <arguments>
+            <argument name="handlers" xsi:type="array">
+                <item name="default" xsi:type="string">PayPalBCDCConfigValueHandler</item>
+            </argument>
+        </arguments>
+    </virtualType>
+
+    <virtualType name="PayPalBCDCConfigValueHandler" type="Magento\Payment\Gateway\Config\ConfigValueHandler">
+        <arguments>
+            <argument name="configInterface" xsi:type="object">PayPalBCDCConfig</argument>
+        </arguments>
+    </virtualType>
+
+    <virtualType name="PayPalBCDCConfig" type="Magento\Payment\Gateway\Config\Config">
+        <arguments>
+            <argument name="methodCode" xsi:type="const">PayPalBR\PayPal\Model\PayPalBCDC::PAYMENT_METHOD_PAYPALBCDC_CODE</argument>
+        </arguments>
+    </virtualType>
+    <!-- /Value Handler Pool -->
+
+    <!-- Command Pool -->
+    <virtualType name="PayPalBCDCCommandPool" type="Magento\Payment\Gateway\Command\CommandPool">
+        <arguments>
+            <argument name="commands" xsi:type="array">
+                <item name="initialize" xsi:type="string">PayPalBR\PayPal\Gateway\Transaction\Base\Command\InitializeCommand</item>
+                <item name="authorize" xsi:type="string">PayPalBCDCAuthorizeCommand</item>
+                <item name="refund" xsi:type="string">PayPalBCDCRefundCommand</item>
+            </argument>
+        </arguments>
+    </virtualType>
+
+    <virtualType name="PayPalBCDCAuthorizeCommand" type="PayPalBR\PayPal\Gateway\Transaction\PayPalBCDC\Command\AuthorizeCommand">
+        <arguments>
+            <argument name="requestBuilder" xsi:type="object">PayPalBR\PayPal\Gateway\Transaction\PayPalBCDC\ResourceGateway\Create\RequestBuilder</argument>
+            <argument name="responseHandler" xsi:type="object">PayPalBCDCAuthorizeCommandResponseHandlerPool</argument>
+            <argument name="validator" xsi:type="object">PayPalBR\PayPal\Gateway\Transaction\PayPalBCDC\ResourceGateway\Create\Response\Validator</argument>
+        </arguments>
+    </virtualType>
+
+    <virtualType name="PayPalBCDCRefundCommand" type="PayPalBR\PayPal\Gateway\Transaction\PayPalBCDC\Command\RefundCommand">
+        <arguments>
+            <argument name="requestBuilder" xsi:type="object">PayPalBR\PayPal\Gateway\Transaction\PayPalBCDC\ResourceGateway\Refund\RequestBuilder</argument>
+            <argument name="responseHandler" xsi:type="object">PayPalBCDCRefundCommandResponseHandlerPool</argument>
+            <argument name="validator" xsi:type="object">PayPalBR\PayPal\Gateway\Transaction\PayPalBCDC\ResourceGateway\Create\Response\Validator</argument>
+        </arguments>
+    </virtualType>
+
+    <virtualType name="PayPalBCDCAuthorizeCommandResponseHandlerPool" type="Magento\Payment\Gateway\Response\HandlerChain">
+        <arguments>
+            <argument name="handlers" xsi:type="array">
+                <item name="general" xsi:type="string">PayPalBR\PayPal\Gateway\Transaction\PayPalBCDC\ResourceGateway\Create\Response\GeneralHandler</item>
+            </argument>
+        </arguments>
+    </virtualType>
+
+    <virtualType name="PayPalBCDCRefundCommandResponseHandlerPool" type="Magento\Payment\Gateway\Response\HandlerChain">
+        <arguments>
+            <argument name="handlers" xsi:type="array">
+                <item name="general" xsi:type="string">PayPalBR\PayPal\Gateway\Transaction\PayPalBCDC\ResourceGateway\Refund\Response\GeneralHandler</item>
+            </argument>
+        </arguments>
+    </virtualType>
+    <!-- /Command Pool -->
+    <!-- /PayPalBCDC Adapter -->
 </config>

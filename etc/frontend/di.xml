@@ -3,7 +3,7 @@
     <type name="Magento\Checkout\Model\CompositeConfigProvider">
         <arguments>
             <argument name="configProviders" xsi:type="array">
-                <item name="paypalbr_paypalplus_config_provider" xsi:type="object">PayPalBR\PayPal\Model\Ui\PayPalPlus\PayPalPlusConfigProvider</item>
+                <item name="paypalbr_bcdc_config_provider" xsi:type="object">PayPalBR\PayPal\Model\Ui\PayPalBCDC\PayPalBCDCConfigProvider</item>
                 <item name="paypalbr_paypaexpresscheckout_config_provider" xsi:type="object">PayPalBR\PayPal\Model\Ui\PayPalExpressCheckout\PayPalExpressCheckoutConfigProvider</item>
             </argument>
         </arguments>
